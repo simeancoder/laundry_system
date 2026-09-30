@@ -11,7 +11,30 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $primaryKey = 'id';
+    protected static $resolvedPrimaryKey = null;
+
+    /**
+     * Get the primary key for the model dynamically.
+     */
+    public function getKeyName()
+    {
+        if (static::$resolvedPrimaryKey !== null) {
+            return static::$resolvedPrimaryKey;
+        }
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'user_id')) {
+                return static::$resolvedPrimaryKey = 'user_id';
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'id')) {
+                return static::$resolvedPrimaryKey = 'id';
+            }
+        } catch (\Throwable $e) {
+            // fallback
+        }
+
+        return static::$resolvedPrimaryKey = (isset($this->attributes['user_id']) ? 'user_id' : 'id');
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -19,6 +42,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'user_id',
         'name',
         'email',
         'password',
@@ -88,5 +112,21 @@ class User extends Authenticatable
             : $value;
         $this->attributes['password'] = $hash;
         $this->attributes['password_hash'] = $hash;
+    }
+
+    /**
+     * Accessor for id.
+     */
+    public function getIdAttribute()
+    {
+        return $this->attributes['id'] ?? ($this->attributes['user_id'] ?? null);
+    }
+
+    /**
+     * Accessor for user_id.
+     */
+    public function getUserIdAttribute()
+    {
+        return $this->attributes['user_id'] ?? ($this->attributes['id'] ?? null);
     }
 }
