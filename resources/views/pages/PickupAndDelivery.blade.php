@@ -343,7 +343,8 @@
                             <div class="flex items-center justify-center space-x-1.5">
                                 <!-- View Details Action (Blue Eye Button) -->
                                 <button type="button" 
-                                        onclick="openTaskDrawer({{ json_encode($t) }})"
+                                        data-task-id="{{ $t->id }}"
+                                        onclick="openTaskFromButton(this)"
                                         class="w-7 h-7 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         title="View Details">
                                     <svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
@@ -354,7 +355,8 @@
 
                                 <!-- Edit Details Action (Blue Pencil Button) -->
                                 <button type="button" 
-                                        onclick="editTask({{ json_encode($t) }})"
+                                        data-task-id="{{ $t->id }}"
+                                        onclick="editTaskFromButton(this)"
                                         class="w-7 h-7 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         title="Edit Task">
                                     <svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
@@ -364,7 +366,9 @@
 
                                 <!-- Delete Action (Red Trash Button) -->
                                 <button type="button" 
-                                        onclick="confirmDeleteTask({{ $t->id }}, '{{ addslashes($t->order_number) }}')"
+                                        data-task-id="{{ $t->id }}"
+                                        data-order-number="{{ $t->order_number }}"
+                                        onclick="confirmDeleteFromButton(this)"
                                         class="w-7 h-7 rounded-lg bg-[#EF4444] hover:bg-red-600 text-white flex items-center justify-center transition cursor-pointer shadow-2xs"
                                         title="Delete Task">
                                     <svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
@@ -826,8 +830,43 @@
     <span id="toastMessage" class="font-medium"></span>
 </div>
 
+<!-- Raw Task Data for JS Interaction -->
+<script type="application/json" id="tasks-json">
+    {!! json_encode($tasks->items()) !!}
+</script>
+
 @push('scripts')
 <script>
+    // Task data registry loaded safely from JSON container
+    let taskRegistry = [];
+    try {
+        const tasksJsonEl = document.getElementById('tasks-json');
+        if (tasksJsonEl && tasksJsonEl.textContent) {
+            taskRegistry = JSON.parse(tasksJsonEl.textContent);
+        }
+    } catch (err) {
+        taskRegistry = [];
+    }
+
+    function openTaskFromButton(btn) {
+        if (!btn) return;
+        const id = btn.getAttribute('data-task-id');
+        const task = taskRegistry.find(item => String(item.id) === String(id));
+        if (task) {
+            openTaskDrawer(task);
+        }
+    }
+
+    function editTaskFromButton(btn) {
+        openTaskFromButton(btn);
+    }
+
+    function confirmDeleteFromButton(btn) {
+        if (!btn) return;
+        const id = btn.getAttribute('data-task-id');
+        const orderNo = btn.getAttribute('data-order-number') || '';
+        confirmDeleteTask(id, orderNo);
+    }
     // Header dropdown toggle
     function toggleRoleMenu() {
         const menu = document.getElementById('role-menu');
