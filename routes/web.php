@@ -93,8 +93,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/pickup-and-delivery', [PickupAndDeliveryController::class, 'index'])->name('pickup-and-delivery.index');
     Route::get('/PickupAndDelivery', [PickupAndDeliveryController::class, 'index'])->name('PickupAndDelivery');
     Route::get('/pickup-delivery', [PickupAndDeliveryController::class, 'index'])->name('pickup-delivery.index');
+    Route::post('/pickup-and-delivery', [PickupAndDeliveryController::class, 'store'])->name('pickup-and-delivery.store');
     Route::post('/pickup-and-delivery/schedule', [PickupAndDeliveryController::class, 'scheduleTask'])->name('pickup-and-delivery.schedule');
+    Route::get('/pickup-and-delivery/{id}', [PickupAndDeliveryController::class, 'show'])->name('pickup-and-delivery.show');
+    Route::put('/pickup-and-delivery/{id}', [PickupAndDeliveryController::class, 'update'])->name('pickup-and-delivery.update');
+    Route::post('/pickup-and-delivery/{id}/update', [PickupAndDeliveryController::class, 'update'])->name('pickup-and-delivery.update-post');
     Route::post('/pickup-and-delivery/assign/{id}', [PickupAndDeliveryController::class, 'assignStaff'])->name('pickup-and-delivery.assign');
+    Route::post('/pickup-and-delivery/{id}/status', [PickupAndDeliveryController::class, 'updateStatus'])->name('pickup-and-delivery.status');
+    Route::delete('/pickup-and-delivery/{id}', [PickupAndDeliveryController::class, 'destroy'])->name('pickup-and-delivery.destroy');
     Route::get('/pickup-and-delivery/export', [PickupAndDeliveryController::class, 'export'])->name('pickup-and-delivery.export');
 
     // Report Management Module

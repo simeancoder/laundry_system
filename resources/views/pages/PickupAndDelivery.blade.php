@@ -1,858 +1,1091 @@
-<?php $__env->startSection('content'); ?>
-<div class="space-y-6 max-w-[1580px] mx-auto pb-12">
+@extends('layouts.navbar')
 
-    <?php if(request()->has('standalone')): ?>
-    <!-- Top Navigation Header Bar (Standalone Mode Only) -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <!-- Top Left: Title & Greeting -->
+@section('title', 'Pickup & Delivery Management - Laundry 6 Plus')
+
+@section('header')
+<header class="bg-white px-6 sm:px-8 py-3.5 sm:py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] rounded-b-2xl sm:rounded-b-3xl flex items-center justify-between z-30 sticky top-0 border-b border-gray-100">
+    <!-- Left: Hamburger & Page Title/Subtitle -->
+    <div class="flex items-center space-x-3 sm:space-x-4">
+        <!-- Hamburger Button -->
+        <button type="button" onclick="toggleSidebar()" class="p-1.5 -ml-1 text-gray-800 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition focus:outline-none cursor-pointer" title="Toggle Navigation Menu" aria-label="Toggle navigation menu">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+
         <div>
-            <h1 class="text-3xl font-bold text-gray-900 tracking-tight leading-tight">Pickup & Delivery</h1>
-            <p class="text-gray-500 text-sm mt-0.5 font-medium">Welcome back, Admin!</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight leading-tight">Pickup & Delivery Management</h1>
+            <p class="text-[12px] sm:text-[13px] text-gray-400 font-medium leading-none mt-1">Schedule pickups and deliveries, assign delivery staff, and track status.</p>
+        </div>
+    </div>
+
+    <!-- Right: Notification Bell & Role Switcher User Profile (Matching Dashboard Header) -->
+    <div class="flex items-center space-x-3 sm:space-x-5">
+        <!-- Blue Notification Bell with Solid Dot -->
+        <a href="{{ route('notifications.index') }}" class="relative p-2 text-blue-600 hover:bg-blue-50 rounded-full transition focus:outline-none" title="Notifications">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path>
+            </svg>
+            <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#2563EB] rounded-full ring-2 ring-white"></span>
+        </a>
+
+        <!-- User Role Switcher Dropdown Trigger -->
+        <div class="relative" id="role-switcher-container">
+            <button id="role-menu-button" type="button" onclick="toggleRoleMenu()" aria-haspopup="menu" aria-expanded="false" class="flex items-center space-x-2.5 pl-2 pr-2.5 py-1.5 rounded-full hover:bg-gray-100 transition focus:outline-none cursor-pointer group">
+                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200 group-hover:border-blue-400 transition-colors">
+                    <i class="fa-solid fa-circle-user text-2xl text-[#2563EB]"></i>
+                </div>
+                <span class="text-sm sm:text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Admin</span>
+                <i id="role-chevron" class="fa-solid fa-chevron-down text-[11px] text-gray-500 transition-transform duration-200"></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="role-menu" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 transform origin-top-right transition-all duration-150">
+                <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Role</p>
+                        <p class="text-sm font-bold text-gray-800">Admin User</p>
+                    </div>
+                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700">Manager</span>
+                </div>
+                <div class="px-2 py-1">
+                    <a href="{{ route('logout') }}" class="flex items-center space-x-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition font-medium">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Log Out</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+@endsection
+
+@section('content')
+<div class="space-y-6 max-w-[1580px] mx-auto pb-12 pt-4">
+
+    <!-- Top Action Row: Create Pickup / Delivery Button -->
+    <div class="flex items-center justify-end">
+        <button type="button" 
+                onclick="openCreateModal()"
+                class="bg-[#2563EB] hover:bg-blue-700 active:scale-[0.98] text-white px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center space-x-2 shadow-sm transition cursor-pointer">
+            <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>Create Pickup /Delivery</span>
+        </button>
+    </div>
+
+    <!-- 1. Statistics Cards Row (4 KPI Cards Matching Screenshot) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Card 1: Total Pickups -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center flex-shrink-0">
+                <!-- Delivery Van Icon -->
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 7h-3V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1a3 3 0 0 0 6 0h4a3 3 0 0 0 6 0h1a2 2 0 0 0 2-2v-5l-5-4zM7 19a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm11 0a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm1-8h-3V8.5l3.5 2.5z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-gray-500">Total Pickups</p>
+                <div class="flex items-baseline space-x-2 mt-0.5">
+                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $stats['total_pickups'] ?? 12 }}</h3>
+                    <span class="text-xs font-semibold text-[#16A34A] flex items-center">
+                        <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                        </svg>
+                        2 today
+                    </span>
+                </div>
+            </div>
         </div>
 
-        <!-- Top Right: Search Service & Admin Profile -->
-        <div class="flex items-center space-x-4">
-            <!-- Search Service Bar -->
-            <div class="relative w-full md:w-[320px]">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-500">
-                    <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+        <!-- Card 2: Total Deliveries -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center flex-shrink-0">
+                <!-- Green Delivery Van Icon -->
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 7h-3V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1a3 3 0 0 0 6 0h4a3 3 0 0 0 6 0h1a2 2 0 0 0 2-2v-5l-5-4zM7 19a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm11 0a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm1-8h-3V8.5l3.5 2.5z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-gray-500">Total Deliveries</p>
+                <div class="flex items-baseline space-x-2 mt-0.5">
+                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $stats['total_deliveries'] ?? 15 }}</h3>
+                    <span class="text-xs font-semibold text-[#16A34A] flex items-center">
+                        <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                        </svg>
+                        3 today
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: In Progress -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
+                <!-- Clock Icon -->
+                <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-gray-500">In Progress</p>
+                <div class="flex items-baseline space-x-2 mt-0.5">
+                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $stats['in_progress'] ?? 5 }}</h3>
+                    <span class="text-xs font-semibold text-[#16A34A] flex items-center">
+                        <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                        </svg>
+                        1 today
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Completed -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-2xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center flex-shrink-0">
+                <!-- Checkmark in circle -->
+                <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-gray-500">Completed</p>
+                <div class="flex items-baseline space-x-2 mt-0.5">
+                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $stats['completed'] ?? 20 }}</h3>
+                    <span class="text-xs font-semibold text-[#16A34A] flex items-center">
+                        <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                        </svg>
+                        4 today
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Tabs Row Matching Screenshot Requirements -->
+    <div class="flex items-center space-x-3 overflow-x-auto pb-1">
+        <!-- Tab 1: Scheduled Pickups -->
+        <a href="{{ route('pickup-and-delivery.index', array_merge(request()->query(), ['tab' => 'pickups', 'page' => 1])) }}" 
+           class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-2 transition cursor-pointer whitespace-nowrap {{ ($activeTab ?? 'pickups') === 'pickups' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-white text-gray-600 hover:text-gray-900 border border-gray-200' }}">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M19 7h-3V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1a3 3 0 0 0 6 0h4a3 3 0 0 0 6 0h1a2 2 0 0 0 2-2v-5l-5-4zM7 19a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm11 0a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm1-8h-3V8.5l3.5 2.5z"/>
+            </svg>
+            <span>Scheduled Pickups</span>
+        </a>
+
+        <!-- Tab 2: Scheduled Deliveries -->
+        <a href="{{ route('pickup-and-delivery.index', array_merge(request()->query(), ['tab' => 'deliveries', 'page' => 1])) }}" 
+           class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-2 transition cursor-pointer whitespace-nowrap {{ ($activeTab ?? '') === 'deliveries' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-white text-gray-600 hover:text-gray-900 border border-gray-200' }}">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M19 7h-3V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1a3 3 0 0 0 6 0h4a3 3 0 0 0 6 0h1a2 2 0 0 0 2-2v-5l-5-4zM7 19a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm11 0a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm1-8h-3V8.5l3.5 2.5z"/>
+            </svg>
+            <span>Scheduled Deliveries</span>
+        </a>
+
+        <!-- Tab 3: In Progress (Track Status) -->
+        <a href="{{ route('pickup-and-delivery.index', array_merge(request()->query(), ['tab' => 'in_progress', 'page' => 1])) }}" 
+           class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-2 transition cursor-pointer whitespace-nowrap {{ ($activeTab ?? '') === 'in_progress' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-white text-gray-600 hover:text-gray-900 border border-gray-200' }}">
+            <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span>In Progress</span>
+        </a>
+
+        <!-- Tab 4: History (Delivery History) -->
+        <a href="{{ route('pickup-and-delivery.index', array_merge(request()->query(), ['tab' => 'history', 'page' => 1])) }}" 
+           class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center space-x-2 transition cursor-pointer whitespace-nowrap {{ ($activeTab ?? '') === 'history' ? 'bg-[#2563EB] text-white shadow-sm' : 'bg-white text-gray-600 hover:text-gray-900 border border-gray-200' }}">
+            <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <circle cx="12" cy="12" r="9"></circle>
+                <polyline points="12 7 12 12 15 15"></polyline>
+            </svg>
+            <span>History</span>
+        </a>
+    </div>
+
+    <!-- 3. Search and Filter Bar Row Matching Screenshot -->
+    <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+        <form method="GET" action="{{ route('pickup-and-delivery.index') }}" class="flex flex-col md:flex-row items-center gap-3">
+            <input type="hidden" name="tab" value="{{ $activeTab ?? 'pickups' }}">
+
+            <!-- Search input -->
+            <div class="relative flex-1 w-full">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                 </span>
                 <input type="text" 
-                       id="serviceSearchInput" 
-                       value="<?php echo e(request('search', $search ?? '')); ?>"
-                       oninput="handleTaskSearch(this.value)"
-                       placeholder="Search Service" 
-                       class="w-full bg-[#E5E7EB] text-gray-800 placeholder-gray-500 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30 border border-transparent transition">
+                       name="search" 
+                       value="{{ request('search', $search ?? '') }}"
+                       placeholder="Search by order number, customer name, or phone..." 
+                       class="w-full text-xs sm:text-sm bg-gray-50/70 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
             </div>
 
-            <!-- Blue Notification Bell Icon with Dot -->
-            <button type="button" class="relative text-[#2563EB] hover:text-blue-700 transition cursor-pointer p-1" title="Notifications">
-                <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-                <span class="absolute top-1 right-1 w-2 h-2 bg-[#2563EB] rounded-full ring-2 ring-white"></span>
-            </button>
-
-            <!-- Admin Profile Indicator with Dropdown Caret -->
-            <div class="flex items-center space-x-2 select-none cursor-pointer">
-                <div class="text-[#2563EB]">
-                    <svg class="w-7 h-7 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <circle cx="12" cy="10" r="3"></circle>
-                        <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path>
-                    </svg>
-                </div>
-                <div class="flex items-center space-x-1">
-                    <span class="text-gray-900 font-semibold text-sm tracking-tight">Admin</span>
-                    <svg class="w-3.5 h-3.5 text-gray-600 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </div>
+            <!-- Status Dropdown Filter -->
+            <div class="w-full sm:w-auto min-w-[150px]">
+                <select name="status" 
+                        onchange="this.form.submit()" 
+                        class="w-full text-xs sm:text-sm bg-gray-50/70 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer">
+                    <option value="">All Status</option>
+                    <option value="Scheduled" {{ request('status') === 'Scheduled' ? 'selected' : '' }}>Scheduled</option>
+                    <option value="Assigned" {{ request('status') === 'Assigned' ? 'selected' : '' }}>Assigned</option>
+                    <option value="In Transit" {{ request('status') === 'In Transit' ? 'selected' : '' }}>In Transit</option>
+                    <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                </select>
             </div>
+
+            <!-- Date Dropdown Filter -->
+            <div class="w-full sm:w-auto min-w-[130px]">
+                <select name="date" 
+                        onchange="this.form.submit()" 
+                        class="w-full text-xs sm:text-sm bg-gray-50/70 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer">
+                    <option value="">Date</option>
+                    <option value="Today" {{ request('date') === 'Today' ? 'selected' : '' }}>Today</option>
+                    <option value="This Week" {{ request('date') === 'This Week' ? 'selected' : '' }}>This Week</option>
+                    <option value="This Month" {{ request('date') === 'This Month' ? 'selected' : '' }}>This Month</option>
+                </select>
+            </div>
+
+            <!-- Action Buttons: Search & Reset -->
+            <div class="flex items-center space-x-2 w-full sm:w-auto">
+                <button type="submit" 
+                        class="bg-[#2563EB] hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm flex items-center space-x-2 shadow-xs transition cursor-pointer flex-1 sm:flex-none justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>Search</span>
+                </button>
+
+                <a href="{{ route('pickup-and-delivery.index', ['tab' => $activeTab ?? 'pickups']) }}" 
+                   class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm flex items-center space-x-2 transition cursor-pointer flex-1 sm:flex-none justify-center">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>Reset</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- 4. Main Tasks Table Card Matching Screenshot -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-xs font-semibold text-gray-700 border-b border-gray-100 bg-gray-50/50">
+                        <th class="py-3.5 px-4 w-12 text-center">#</th>
+                        <th class="py-3.5 px-4 font-semibold text-gray-700">Order No.</th>
+                        <th class="py-3.5 px-4 font-semibold text-gray-700">Customer</th>
+                        <th class="py-3.5 px-4 font-semibold text-gray-700">Service Type</th>
+                        <th class="py-3.5 px-4 font-semibold text-gray-700">Pickup Date & Time</th>
+                        <th class="py-3.5 px-4 font-semibold text-gray-700">Delivery Date & Time</th>
+                        <th class="py-3.5 px-4 font-semibold text-gray-700 text-center">Status</th>
+                        <th class="py-3.5 px-4 font-semibold text-gray-700 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-xs sm:text-sm">
+                    @forelse($tasks as $index => $task)
+                    @php
+                        $t = is_array($task) ? (object)$task : $task;
+                        $rowIndex = ($tasks->firstItem() ?? 1) + $index;
+                        $pickupDT = trim(($t->pickup_date instanceof \DateTimeInterface ? $t->pickup_date->format('Y-m-d') : ($t->pickup_date ?? '')) . ' ' . ($t->pickup_time ?? ''));
+                        $deliveryDT = trim(($t->delivery_date instanceof \DateTimeInterface ? $t->delivery_date->format('Y-m-d') : ($t->delivery_date ?? '')) . ' ' . ($t->delivery_time ?? ''));
+                        $statusText = $t->status ?? 'Scheduled';
+                        $statusBadgeClass = match(strtolower(trim($statusText))) {
+                            'scheduled' => 'bg-[#E0F2FE] text-[#0284C7]',
+                            'assigned' => 'bg-[#FEF3C7] text-[#D97706]',
+                            'in transit', 'picked up' => 'bg-[#F3E8FF] text-[#9333EA]',
+                            'pending' => 'bg-[#FEE2E2] text-[#DC2626]',
+                            'delivered', 'completed' => 'bg-[#DCFCE7] text-[#16A34A]',
+                            default => 'bg-gray-100 text-gray-700',
+                        };
+                    @endphp
+                    <tr class="hover:bg-blue-50/30 transition items-row">
+                        <!-- # Row index -->
+                        <td class="py-4 px-4 text-center font-bold text-gray-800">{{ $rowIndex }}</td>
+
+                        <!-- Order No -->
+                        <td class="py-4 px-4 font-medium text-gray-700 whitespace-nowrap">{{ $t->order_number }}</td>
+
+                        <!-- Customer -->
+                        <td class="py-4 px-4 font-medium text-gray-800 whitespace-nowrap">{{ $t->customer_name }}</td>
+
+                        <!-- Service Type -->
+                        <td class="py-4 px-4 text-gray-600 whitespace-nowrap">{{ $t->service_type }}</td>
+
+                        <!-- Pickup Date & Time -->
+                        <td class="py-4 px-4 text-gray-600 whitespace-nowrap">{{ $pickupDT }}</td>
+
+                        <!-- Delivery Date & Time -->
+                        <td class="py-4 px-4 text-gray-600 whitespace-nowrap">{{ $deliveryDT }}</td>
+
+                        <!-- Status Badge -->
+                        <td class="py-4 px-4 text-center whitespace-nowrap">
+                            <span class="inline-block {{ $statusBadgeClass }} text-[11px] font-semibold px-3 py-1 rounded-full">
+                                {{ $statusText }}
+                            </span>
+                        </td>
+
+                        <!-- Actions (View, Edit, Delete Matching Screenshot) -->
+                        <td class="py-4 px-4 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center space-x-1.5">
+                                <!-- View Details Action (Blue Eye Button) -->
+                                <button type="button" 
+                                        onclick="openTaskDrawer({{ json_encode($t) }})"
+                                        class="w-7 h-7 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                        title="View Details">
+                                    <svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </button>
+
+                                <!-- Edit Details Action (Blue Pencil Button) -->
+                                <button type="button" 
+                                        onclick="editTask({{ json_encode($t) }})"
+                                        class="w-7 h-7 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                        title="Edit Task">
+                                    <svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+
+                                <!-- Delete Action (Red Trash Button) -->
+                                <button type="button" 
+                                        onclick="confirmDeleteTask({{ $t->id }}, '{{ addslashes($t->order_number) }}')"
+                                        class="w-7 h-7 rounded-lg bg-[#EF4444] hover:bg-red-600 text-white flex items-center justify-center transition cursor-pointer shadow-2xs"
+                                        title="Delete Task">
+                                    <svg class="w-3.5 h-3.5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="py-12 text-center text-gray-500">
+                            <p class="font-medium text-base text-gray-700">No pickup & delivery records found.</p>
+                            <p class="text-xs text-gray-400 mt-1">Try adjusting your filters or click "+ Create Pickup /Delivery" to schedule one.</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 5. Pagination Bar Matching Screenshot -->
+        <div class="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-gray-500">
+            <div>
+                Showing {{ $tasks->firstItem() ?? 1 }} - {{ $tasks->lastItem() ?? $tasks->count() }} of {{ $tasks->total() ?? $tasks->count() }} pickups
+            </div>
+
+            <!-- Numbered Pagination -->
+            @if($tasks instanceof \Illuminate\Pagination\LengthAwarePaginator && $tasks->lastPage() > 1)
+            <div class="flex items-center space-x-1">
+                <!-- Previous Button -->
+                @if($tasks->onFirstPage())
+                    <span class="w-8 h-8 rounded-lg border border-gray-200 text-gray-300 flex items-center justify-center cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </span>
+                @else
+                    <a href="{{ $tasks->previousPageUrl() }}" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 flex items-center justify-center transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </a>
+                @endif
+
+                <!-- Page Links -->
+                @foreach(range(1, $tasks->lastPage()) as $p)
+                    @if($p == $tasks->currentPage())
+                        <span class="w-8 h-8 rounded-lg bg-[#2563EB] text-white font-bold flex items-center justify-center shadow-xs">{{ $p }}</span>
+                    @else
+                        <a href="{{ $tasks->url($p) }}" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 flex items-center justify-center transition">{{ $p }}</a>
+                    @endif
+                @endforeach
+
+                <!-- Next Button -->
+                @if($tasks->hasMorePages())
+                    <a href="{{ $tasks->nextPageUrl() }}" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 flex items-center justify-center transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                @else
+                    <span class="w-8 h-8 rounded-lg border border-gray-200 text-gray-300 flex items-center justify-center cursor-not-allowed">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </span>
+                @endif
+            </div>
+            @endif
         </div>
     </div>
-    <?php endif; ?>
 
-    <!-- Section Header: Title, Subtitle, and Schedule New Task Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-1">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Pickup & Delivery</h2>
-            <p class="text-gray-500 text-sm mt-0.5">Manage schedules, staff assignments, and delivery logistics.</p>
-        </div>
+</div>
 
-        <!-- Schedule New Task Button with Rocket Icon -->
-        <button type="button" 
-                onclick="openScheduleModal()"
-                class="bg-[#2042E3] hover:bg-[#1A38C2] active:scale-[0.98] text-white px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center space-x-2.5 shadow-md transition cursor-pointer self-start sm:self-auto">
-            <!-- Rocket Icon -->
-            <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
-                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
-                <path d="M9 12H4s.55-3.03 2-4.5c1.62-1.63 5-2 5-2"></path>
-                <path d="M12 15v5s3.03-.55 4.5-2c1.63-1.62 2-5 2-5"></path>
+<!-- ================= SLIDE-OVER DRAWER: PICKUP & DELIVERY DETAILS ================= -->
+<!-- Matching the right-hand panel in the screenshot exactly -->
+<div id="drawerOverlay" class="hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity duration-300" onclick="closeTaskDrawer()"></div>
+
+<div id="taskDrawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-[480px] bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-gray-200">
+    
+    <!-- Drawer Header -->
+    <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-xl font-bold text-gray-900 tracking-tight">Pickup & Delivery Details</h3>
+        <button type="button" onclick="closeTaskDrawer()" class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
-            <span>Schedule New Task</span>
         </button>
     </div>
 
-    <!-- 1. KPI Statistics Cards Row (4 Cards) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- Card 1: Today's Pickups -->
-        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-2xs flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                </svg>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">TODAY'S PICKUPS</p>
-                <h3 class="text-3xl font-black text-gray-900 leading-tight mt-0.5"><?php echo e($kpi['today_pickups'] ?? 24); ?></h3>
-            </div>
-        </div>
+    <!-- Drawer Body Form -->
+    <form id="drawerDetailsForm" onsubmit="submitDrawerUpdate(event)" class="flex-1 overflow-y-auto p-6 space-y-6">
+        @csrf
+        <input type="hidden" id="drawerTaskId" name="id" value="">
 
-        <!-- Card 2: Today's Deliveries -->
-        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-2xs flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-[#ECFDF5] text-[#10B981] flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                </svg>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">TODAY'S DELIVERIES</p>
-                <h3 class="text-3xl font-black text-gray-900 leading-tight mt-0.5"><?php echo e($kpi['today_deliveries'] ?? 18); ?></h3>
-            </div>
-        </div>
-
-        <!-- Card 3: On The Road -->
-        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-2xs flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-[#FFFBEB] text-[#F59E0B] flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
-                    <rect x="1" y="3" width="15" height="13"></rect>
-                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                </svg>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">ON THE ROAD</p>
-                <h3 class="text-3xl font-black text-gray-900 leading-tight mt-0.5"><?php echo e($kpi['on_the_road'] ?? 6); ?></h3>
-            </div>
-        </div>
-
-        <!-- Card 4: Pending Assignment -->
-        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-2xs flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-[#FEF2F2] text-[#EF4444] flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">PENDING ASSIGNMENT</p>
-                <h3 class="text-3xl font-black text-[#EF4444] leading-tight mt-0.5"><?php echo e($kpi['pending_assignment'] ?? 4); ?></h3>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Main Middle Grid: Live Fleet Logistics (Left) & Active Fleet (Right) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <!-- LEFT COLUMN: Live Fleet Logistics (Span 8) -->
-        <div class="lg:col-span-8 bg-white border border-gray-200/80 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
-            <!-- Header Row with Map / List Toggle -->
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-900">Live Fleet Logistics</h3>
-                
-                <!-- Map View / List View Toggle -->
-                <div class="bg-gray-100 p-1 rounded-xl flex items-center space-x-1 text-xs font-semibold">
-                    <button type="button" 
-                            id="btnMapView"
-                            onclick="setLogisticsView('map')" 
-                            class="bg-[#38C6BA] text-white px-3.5 py-1.5 rounded-lg shadow-2xs transition">
-                        Map View
-                    </button>
-                    <button type="button" 
-                            id="btnListView"
-                            onclick="setLogisticsView('list')" 
-                            class="text-gray-500 hover:text-gray-800 px-3.5 py-1.5 rounded-lg transition">
-                        List View
-                    </button>
+        <!-- 1. Order Information Box -->
+        <div>
+            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Order Information</h4>
+            <div class="bg-gray-50/80 rounded-2xl p-4 border border-gray-100 grid grid-cols-2 gap-4 text-xs sm:text-sm">
+                <div>
+                    <span class="text-gray-400 block text-[11px]">Order No.</span>
+                    <strong id="drawerOrderNo" class="font-bold text-gray-900 text-sm block mt-0.5">ORD-0015</strong>
                 </div>
-            </div>
-
-            <!-- Stylized Dynamic Map Visual Container -->
-            <div id="mapContainer" class="relative w-full rounded-2xl overflow-hidden min-h-[380px] bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#60A5FA] p-6 shadow-inner flex flex-col justify-between">
-                
-                <!-- Subtle Vector Street Map Overlay Background Grid -->
-                <div class="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                <svg class="absolute inset-0 w-full h-full stroke-white/20 fill-none pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M -50,180 Q 200,90 400,220 T 900,160" stroke-width="4" stroke-dasharray="8 6" />
-                    <path d="M 150,380 Q 300,240 500,260 T 800,100" stroke-width="2" />
-                    <path d="M 380,-20 L 410,400" stroke-width="1.5" />
-                    <path d="M 620,-20 L 590,400" stroke-width="1.5" />
-                </svg>
-
-                <!-- Map Controls (Top Right: Zoom +/-, Satellite Dropdown) -->
-                <div class="absolute top-4 right-4 flex flex-col items-end space-y-2 z-10">
-                    <!-- Zoom In / Zoom Out Widget -->
-                    <div class="bg-white rounded-xl shadow-md border border-gray-100 flex flex-col divide-y divide-gray-100 overflow-hidden text-gray-700">
-                        <button type="button" onclick="zoomMap('in')" class="w-8 h-8 flex items-center justify-center hover:bg-gray-50 font-bold text-base leading-none transition" title="Zoom In">+</button>
-                        <button type="button" onclick="zoomMap('out')" class="w-8 h-8 flex items-center justify-center hover:bg-gray-50 font-bold text-base leading-none transition" title="Zoom Out">–</button>
-                    </div>
-
-                    <!-- Satellite Dropdown Button -->
-                    <button type="button" class="bg-white rounded-xl shadow-md border border-gray-100 px-3.5 py-1.5 text-xs font-bold text-gray-800 flex items-center space-x-1 hover:bg-gray-50 transition cursor-pointer">
-                        <span>SATELLITE</span>
-                        <svg class="w-3 h-3 text-gray-600 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
+                <div>
+                    <span class="text-gray-400 block text-[11px]">Customer</span>
+                    <strong id="drawerCustomerName" class="font-bold text-gray-900 text-sm block mt-0.5">Neang Pheaktra</strong>
                 </div>
-
-                <!-- Animated Interactive Vehicle Position on Map -->
-                <div class="absolute top-1/2 left-[44%] -translate-y-1/2 -translate-x-1/2 z-10 group cursor-pointer" onclick="highlightDelivery()">
-                    <!-- Pulse Ring -->
-                    <div class="absolute -inset-2 bg-white/40 rounded-full animate-ping"></div>
-                    <!-- Van Icon Circle -->
-                    <div class="relative w-10 h-10 rounded-full bg-[#2042E3] text-white flex items-center justify-center shadow-2xl border-2 border-white">
-                        <svg class="w-5 h-5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <rect x="1" y="3" width="15" height="13"></rect>
-                            <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
-                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                        </svg>
-                    </div>
+                <div>
+                    <span class="text-gray-400 block text-[11px]">Service Type</span>
+                    <strong id="drawerServiceType" class="font-bold text-gray-900 text-sm block mt-0.5">Wash & Fold</strong>
                 </div>
-
-                <!-- Destination Target Waypoint Pin on Map -->
-                <div class="absolute top-[48%] left-[58%] -translate-y-1/2 -translate-x-1/2 z-10 cursor-pointer" title="Destination: Grand Plaza Residences">
-                    <div class="w-10 h-10 rounded-full bg-white text-[#0D9488] flex items-center justify-center shadow-xl border-2 border-[#0D9488]">
-                        <svg class="w-5 h-5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Floating Active Delivery Overlay Card (Bottom-Left on Map) -->
-                <div id="activeDeliveryCard" class="relative mt-auto z-20 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl max-w-[340px] border border-white/40 animate-in fade-in duration-300">
-                    <!-- Card Top Header -->
-                    <div class="flex items-center justify-between text-gray-400">
-                        <span class="text-[10px] font-bold tracking-wider uppercase">ACTIVE DELIVERY #4402</span>
-                        <button type="button" onclick="toggleActiveDeliveryCard()" class="text-gray-400 hover:text-gray-600 transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
-
-                    <!-- Destination Title -->
-                    <h4 class="text-base font-bold text-gray-900 mt-1 mb-2.5">Grand Plaza Residences</h4>
-
-                    <!-- Progress Bar Track -->
-                    <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                        <div class="bg-[#2042E3] h-full rounded-full transition-all duration-500" style="width: 85%;"></div>
-                    </div>
-
-                    <!-- Progress Stats (Left: 85% Complete, Right: Arrival: 14:30) -->
-                    <div class="flex items-center justify-between text-xs mt-2.5">
-                        <span class="text-[#2563EB] font-bold">85% Complete</span>
-                        <div class="text-right">
-                            <span class="text-gray-900 font-bold block">Arrival: 14:30</span>
-                            <span class="text-gray-400 text-[10px] uppercase font-semibold block">(12 MIN)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alternate List View Container (Hidden by Default) -->
-            <div id="listContainer" class="hidden w-full rounded-2xl border border-gray-200 overflow-hidden min-h-[380px] p-4 space-y-3">
-                <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] font-bold text-blue-700 uppercase">ACTIVE DISPATCH #4402</span>
-                        <h4 class="text-sm font-bold text-gray-900">Grand Plaza Residences</h4>
-                        <p class="text-xs text-gray-500">Driver: Marcus Lawson • Truck #402</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="bg-[#2563EB] text-white text-xs font-bold px-2.5 py-1 rounded-full">In Transit</span>
-                        <p class="text-xs text-gray-500 mt-1">ETA: 14:30</p>
-                    </div>
-                </div>
-                <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] font-bold text-emerald-700 uppercase">SCHEDULED PICKUP #4403</span>
-                        <h4 class="text-sm font-bold text-gray-900">Hotel Aris</h4>
-                        <p class="text-xs text-gray-500">Driver: Sara Thompson • Truck #211</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="bg-emerald-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">En Route</span>
-                        <p class="text-xs text-gray-500 mt-1">ETA: 15:30</p>
-                    </div>
+                <div>
+                    <span class="text-gray-400 block text-[11px]">Total Amount</span>
+                    <strong id="drawerTotalAmount" class="font-bold text-gray-900 text-sm block mt-0.5">$14.00</strong>
                 </div>
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: Active Fleet (Span 4) -->
-        <div class="lg:col-span-4 bg-white border border-gray-200/80 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
-            <div>
-                <!-- Header: Active Fleet & View All Link -->
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-bold text-gray-900">Active Fleet</h3>
-                    <button type="button" onclick="openAllFleetModal()" class="text-[#2563EB] hover:text-blue-700 text-xs font-bold tracking-wide transition cursor-pointer">
-                        View All
-                    </button>
+        <!-- 2. Pickup Information (Requirement 1: Schedule Pickup) -->
+        <div>
+            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2.5">Pickup Information</h4>
+            
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <!-- Pickup Date -->
+                <div>
+                    <label class="block text-[11px] font-medium text-gray-500 mb-1">Pickup Date</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        </span>
+                        <input type="date" 
+                               id="drawerPickupDate" 
+                               name="pickup_date" 
+                               value="2025-09-17" 
+                               class="w-full text-xs sm:text-sm bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    </div>
                 </div>
 
-                <!-- Driver List -->
-                <div class="space-y-4">
-                    <?php $__currentLoopData = array_slice($fleet, 0, 2); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $driver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <div class="border border-gray-100 rounded-2xl p-4 hover:border-gray-300 hover:shadow-xs transition flex items-center justify-between cursor-pointer" onclick="viewDriverDetails(<?php echo e(json_encode($driver)); ?>)">
-                        <!-- Driver Details & Avatar -->
-                        <div class="flex items-start space-x-3.5">
-                            <!-- Avatar with Online Green Dot -->
-                            <div class="relative flex-shrink-0">
-                                <img src="<?php echo e($driver['avatar']); ?>" alt="<?php echo e($driver['name']); ?>" class="w-12 h-12 rounded-full object-cover border border-gray-200 shadow-2xs">
-                                <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#10B981] rounded-full ring-2 ring-white"></span>
-                            </div>
-
-                            <div>
-                                <!-- Driver Name & Status Pill -->
-                                <div class="flex items-center space-x-2">
-                                    <h4 class="text-sm font-bold text-gray-900 leading-tight"><?php echo e($driver['name']); ?></h4>
-                                    <span class="bg-[#DCFCE7] text-[#15803D] text-[10px] font-black px-2 py-0.5 rounded tracking-wide uppercase">
-                                        <?php echo e($driver['status']); ?>
-
-                                    </span>
-                                </div>
-                                <!-- Vehicle -->
-                                <p class="text-xs text-gray-400 mt-1 font-normal"><?php echo e($driver['vehicle']); ?></p>
-                                <!-- Active Drops -->
-                                <p class="text-xs font-semibold text-[#2563EB] mt-1.5 flex items-center space-x-1">
-                                    <span class="inline-block w-1.5 h-1.5 bg-[#2563EB] rounded-full"></span>
-                                    <span><?php echo e($driver['active_drops']); ?> Active Drops</span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Chevron Arrow -->
-                        <div class="text-gray-300 pl-2">
-                            <svg class="w-5 h-5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </div>
+                <!-- Pickup Time -->
+                <div>
+                    <label class="block text-[11px] font-medium text-gray-500 mb-1">Pickup Time</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </span>
+                        <input type="text" 
+                               id="drawerPickupTime" 
+                               name="pickup_time" 
+                               value="08:00 AM" 
+                               placeholder="e.g. 08:00 AM" 
+                               class="w-full text-xs sm:text-sm bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                     </div>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
 
-            <!-- Quick Driver Status Summary Pill at bottom -->
-            <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                <span>Fleet Availability: <strong class="text-gray-800">4 / 4 Units</strong></span>
-                <span class="text-emerald-600 font-bold flex items-center space-x-1">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                    <span>100% Operational</span>
+            <!-- Pickup Address -->
+            <div>
+                <label class="block text-[11px] font-medium text-gray-500 mb-1">Pickup Address</label>
+                <input type="text" 
+                       id="drawerPickupAddress" 
+                       name="pickup_address" 
+                       value="#12, Street 63, Siem Reap" 
+                       placeholder="Enter street, commune, city" 
+                       class="w-full text-xs sm:text-sm bg-white border border-gray-200 rounded-xl px-3.5 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+            </div>
+        </div>
+
+        <!-- 3. Delivery Information (Requirement 2: Schedule Delivery) -->
+        <div>
+            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2.5">Delivery Information</h4>
+            
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <!-- Delivery Date -->
+                <div>
+                    <label class="block text-[11px] font-medium text-gray-500 mb-1">Delivery Date</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        </span>
+                        <input type="date" 
+                               id="drawerDeliveryDate" 
+                               name="delivery_date" 
+                               value="2025-09-18" 
+                               class="w-full text-xs sm:text-sm bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Delivery Time -->
+                <div>
+                    <label class="block text-[11px] font-medium text-gray-500 mb-1">Delivery Time</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </span>
+                        <input type="text" 
+                               id="drawerDeliveryTime" 
+                               name="delivery_time" 
+                               value="12:00 PM" 
+                               placeholder="e.g. 12:00 PM" 
+                               class="w-full text-xs sm:text-sm bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Address -->
+            <div>
+                <label class="block text-[11px] font-medium text-gray-500 mb-1">Delivery Address</label>
+                <input type="text" 
+                       id="drawerDeliveryAddress" 
+                       name="delivery_address" 
+                       value="#45, Pokambor Ave, Siem Reap" 
+                       placeholder="Enter street, commune, city" 
+                       class="w-full text-xs sm:text-sm bg-white border border-gray-200 rounded-xl px-3.5 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+            </div>
+        </div>
+
+        <!-- 4. Delivery Staff (Requirement 3: Assign Delivery Staff) -->
+        <div>
+            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2">Delivery Staff</h4>
+            <div class="relative">
+                <select id="drawerDeliveryStaff" 
+                        name="delivery_staff_id" 
+                        onchange="syncStaffName(this)"
+                        class="w-full text-xs sm:text-sm bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none cursor-pointer">
+                    <option value="">Unassigned</option>
+                    @foreach($staffList as $staff)
+                    <option value="{{ $staff['id'] }}" data-name="{{ $staff['name'] }}" {{ $staff['name'] === 'Sok Chanthy' ? 'selected' : '' }}>
+                        {{ $staff['name'] }} ({{ $staff['role'] }})
+                    </option>
+                    @endforeach
+                </select>
+                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </span>
             </div>
+            <input type="hidden" id="drawerDeliveryStaffName" name="delivery_staff_name" value="Sok Chanthy">
         </div>
 
-    </div>
+        <!-- 5. Status Stepper (Requirement 4: Track Pickup & Delivery Status) -->
+        <div>
+            <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">Status</h4>
+            <input type="hidden" id="drawerStatusInput" name="status" value="Scheduled">
+            
+            <!-- Horizontal Progress Stepper Matching Screenshot -->
+            <div class="relative flex items-center justify-between px-3 pt-2">
+                <!-- Connecting Line -->
+                <div class="absolute top-4 left-6 right-6 h-0.5 bg-gray-200 z-0">
+                    <div id="stepperProgressLine" class="h-full bg-[#2563EB] transition-all duration-300" style="width: 0%;"></div>
+                </div>
 
-    <!-- 3. Bottom Grid: Upcoming Tasks (Left Span 8) & Fleet Insights (Right Span 4) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Step 1: Scheduled -->
+                <div class="relative z-10 flex flex-col items-center cursor-pointer group" onclick="setStepperStatus('Scheduled')">
+                    <div id="stepDot-Scheduled" class="w-4 h-4 rounded-full border-2 border-[#2563EB] bg-[#2563EB] ring-4 ring-blue-100 transition-all"></div>
+                    <span id="stepLabel-Scheduled" class="text-[11px] font-bold text-[#2563EB] mt-2">Scheduled</span>
+                </div>
 
-        <!-- LEFT COLUMN: Upcoming Tasks Table (Span 8) -->
-        <div class="lg:col-span-8 bg-white border border-gray-200/80 rounded-2xl p-6 shadow-2xs">
-            <!-- Header Row with Filter & Download Action Buttons -->
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-900">Upcoming Tasks</h3>
+                <!-- Step 2: Picked Up -->
+                <div class="relative z-10 flex flex-col items-center cursor-pointer group" onclick="setStepperStatus('Picked Up')">
+                    <div id="stepDot-PickedUp" class="w-4 h-4 rounded-full border-2 border-gray-300 bg-white group-hover:border-blue-400 transition-all"></div>
+                    <span id="stepLabel-PickedUp" class="text-[11px] font-medium text-gray-500 mt-2">Picked Up</span>
+                </div>
 
-                <div class="flex items-center space-x-2">
-                    <!-- Filter Button -->
-                    <button type="button" 
-                            onclick="toggleTaskFilterModal()"
-                            class="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50 flex items-center justify-center transition cursor-pointer shadow-2xs"
-                            title="Filter Tasks">
-                        <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                        </svg>
-                    </button>
+                <!-- Step 3: In Transit -->
+                <div class="relative z-10 flex flex-col items-center cursor-pointer group" onclick="setStepperStatus('In Transit')">
+                    <div id="stepDot-InTransit" class="w-4 h-4 rounded-full border-2 border-gray-300 bg-white group-hover:border-blue-400 transition-all"></div>
+                    <span id="stepLabel-InTransit" class="text-[11px] font-medium text-gray-500 mt-2">In Transit</span>
+                </div>
 
-                    <!-- Export / Download Button -->
-                    <a href="<?php echo e(route('pickup-and-delivery.export')); ?>" 
-                       class="w-9 h-9 rounded-xl border border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50 flex items-center justify-center transition cursor-pointer shadow-2xs"
-                       title="Export Tasks CSV">
-                        <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
-                    </a>
+                <!-- Step 4: Delivered -->
+                <div class="relative z-10 flex flex-col items-center cursor-pointer group" onclick="setStepperStatus('Delivered')">
+                    <div id="stepDot-Delivered" class="w-4 h-4 rounded-full border-2 border-gray-300 bg-white group-hover:border-blue-400 transition-all"></div>
+                    <span id="stepLabel-Delivered" class="text-[11px] font-medium text-gray-500 mt-2">Delivered</span>
                 </div>
             </div>
-
-            <!-- Tasks Table -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse" id="tasksTable">
-                    <thead>
-                        <tr class="text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                            <th class="py-3 px-3">DATE & TIME</th>
-                            <th class="py-3 px-3">CUSTOMER</th>
-                            <th class="py-3 px-3">TASK TYPE</th>
-                            <th class="py-3 px-3">ADDRESS</th>
-                            <th class="py-3 px-3">STAFF</th>
-                            <th class="py-3 px-3 text-center">STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-sm" id="tasksTableBody">
-                        <?php $__empty_1 = true; $__currentLoopData = $tasks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <tr class="hover:bg-gray-50/60 transition">
-                            <!-- Date & Time -->
-                            <td class="py-3.5 px-3 whitespace-nowrap">
-                                <span class="font-bold text-gray-900 block"><?php echo e($task['date']); ?>,</span>
-                                <span class="text-gray-500 text-xs block"><?php echo e($task['time']); ?></span>
-                            </td>
-
-                            <!-- Customer -->
-                            <td class="py-3.5 px-3 whitespace-nowrap font-bold text-gray-900">
-                                <?php echo e($task['customer']); ?>
-
-                            </td>
-
-                            <!-- Task Type Badge (PICKUP vs DELIVERY) -->
-                            <td class="py-3.5 px-3 whitespace-nowrap">
-                                <?php if(strtoupper($task['task_type']) === 'PICKUP'): ?>
-                                    <span class="inline-block bg-[#DBEAFE] text-[#2563EB] text-[10px] font-bold px-2.5 py-0.5 rounded tracking-wide uppercase">
-                                        PICKUP
-                                    </span>
-                                <?php else: ?>
-                                    <span class="inline-block bg-[#CCFBF1] text-[#0D9488] text-[10px] font-bold px-2.5 py-0.5 rounded tracking-wide uppercase">
-                                        DELIVERY
-                                    </span>
-                                <?php endif; ?>
-                            </td>
-
-                            <!-- Address -->
-                            <td class="py-3.5 px-3 whitespace-nowrap text-gray-700 text-xs sm:text-sm">
-                                <?php echo e($task['address']); ?>
-
-                            </td>
-
-                            <!-- Staff -->
-                            <td class="py-3.5 px-3 whitespace-nowrap">
-                                <?php if(!empty($task['is_unassigned'])): ?>
-                                    <button type="button" 
-                                            onclick="openAssignModal(<?php echo e($task['id']); ?>, '<?php echo e(addslashes($task['customer'])); ?>')" 
-                                            class="text-[#EF4444] font-bold italic text-sm hover:underline cursor-pointer" 
-                                            title="Click to Assign Driver">
-                                        Unassigned
-                                    </button>
-                                <?php else: ?>
-                                    <div class="flex items-center space-x-2">
-                                        <img src="<?php echo e($task['staff_avatar'] ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'); ?>" alt="<?php echo e($task['staff_name']); ?>" class="w-6 h-6 rounded-full object-cover">
-                                        <span class="font-medium text-gray-800 text-sm"><?php echo e($task['staff_name']); ?></span>
-                                    </div>
-                                <?php endif; ?>
-                            </td>
-
-                            <!-- Status Badge -->
-                            <td class="py-3.5 px-3 whitespace-nowrap text-center">
-                                <?php if(strtolower($task['status']) === 'in transit'): ?>
-                                    <span class="inline-block bg-[#FEF3C7] text-[#D97706] text-xs font-semibold px-3 py-1 rounded-full">
-                                        In Transit
-                                    </span>
-                                <?php elseif(strtolower($task['status']) === 'scheduled'): ?>
-                                    <span class="inline-block bg-[#F1F5F9] text-[#475569] text-xs font-semibold px-3 py-1 rounded-full">
-                                        Scheduled
-                                    </span>
-                                <?php elseif(strtolower($task['status']) === 'pending'): ?>
-                                    <span class="inline-block bg-[#FEE2E2] text-[#DC2626] text-xs font-semibold px-3 py-1 rounded-full">
-                                        Pending
-                                    </span>
-                                <?php else: ?>
-                                    <span class="inline-block bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">
-                                        <?php echo e($task['status']); ?>
-
-                                    </span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                        <tr>
-                            <td colspan="6" class="py-8 text-center text-gray-500 text-sm">
-                                No logistics tasks found matching your search.
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
         </div>
 
-        <!-- RIGHT COLUMN: Fleet Insights (Span 4) -->
-        <div class="lg:col-span-4 bg-[#1D4ED8] rounded-2xl p-6 shadow-md text-white flex flex-col justify-between relative overflow-hidden">
-            <!-- Decorative Vector Bar Graph Watermark at bottom-right -->
-            <div class="absolute -bottom-2 right-2 flex items-end space-x-2 opacity-15 pointer-events-none">
-                <div class="w-6 h-16 bg-white rounded-t-sm"></div>
-                <div class="w-6 h-24 bg-white rounded-t-sm"></div>
-                <div class="w-6 h-36 bg-white rounded-t-sm"></div>
+        <!-- 6. Notes (Optional) -->
+        <div>
+            <div class="flex items-center justify-between mb-1.5">
+                <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Notes</h4>
+                <span id="drawerNotesCount" class="text-[10px] text-gray-400 font-mono">0/500</span>
             </div>
-
-            <!-- Top Content -->
-            <div class="relative z-10">
-                <h3 class="text-xl font-bold tracking-tight">Fleet Insights</h3>
-                <p class="text-blue-100 text-sm mt-3 leading-relaxed">
-                    Your average delivery time is down 12% this week. Efficiency is high!
-                </p>
-            </div>
-
-            <!-- Bottom Action: Generate Report Button -->
-            <div class="relative z-10 mt-8">
-                <button type="button" 
-                        onclick="generateFleetReport()" 
-                        class="bg-white hover:bg-blue-50 text-[#1D4ED8] font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer">
-                    Generate Report
-                </button>
-            </div>
+            <textarea id="drawerNotes" 
+                      name="notes" 
+                      rows="3" 
+                      maxlength="500"
+                      oninput="updateCharCount(this)"
+                      placeholder="Add notes (optional)..." 
+                      class="w-full text-xs sm:text-sm bg-white border border-gray-200 rounded-xl p-3 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
         </div>
 
-    </div>
-
+        <!-- Drawer Footer Buttons -->
+        <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100">
+            <button type="button" 
+                    onclick="closeTaskDrawer()" 
+                    class="px-5 py-2.5 text-xs sm:text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition cursor-pointer">
+                Cancel
+            </button>
+            <button type="submit" 
+                    class="px-6 py-2.5 text-xs sm:text-sm font-semibold text-white bg-[#2563EB] hover:bg-blue-700 rounded-xl transition shadow-sm flex items-center space-x-2 cursor-pointer">
+                <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                <span>Update</span>
+            </button>
+        </div>
+    </form>
 </div>
 
-<!-- ================= INTERACTIVE MODALS ================= -->
-
-<!-- 1. SCHEDULE NEW TASK MODAL -->
-<div id="scheduleModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+<!-- ================= CREATE PICKUP / DELIVERY MODAL ================= -->
+<div id="createModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
         <div class="flex items-center justify-between pb-4 border-b border-gray-100">
             <div>
-                <h3 class="text-xl font-bold text-gray-900">Schedule Logistics Task</h3>
-                <p class="text-xs text-gray-500 mt-0.5">Create a new on-demand pickup or scheduled delivery order.</p>
+                <h3 class="text-xl font-bold text-gray-900">Schedule Pickup & Delivery</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Enter details to schedule laundry pickup and delivery logistics.</p>
             </div>
-            <button onclick="closeScheduleModal()" class="w-8 h-8 text-gray-400 hover:text-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-100">
+            <button type="button" onclick="closeCreateModal()" class="w-8 h-8 text-gray-400 hover:text-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-100">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
 
-        <form id="scheduleTaskForm" onsubmit="submitScheduleTask(event)" class="mt-5 space-y-4">
-            <?php echo csrf_field(); ?>
-            <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Customer Name *</label>
-                <input type="text" name="customer" required placeholder="e.g. Metro Sports Club, Lincoln Suite" class="w-full text-sm rounded-xl border border-gray-300 px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <form id="createTaskForm" onsubmit="submitCreateTask(event)" class="mt-4 space-y-4">
+            @csrf
+
+            <!-- Customer & Service -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Customer Name *</label>
+                    <input type="text" name="customer_name" required placeholder="e.g. Sokha Dara" class="w-full text-xs sm:text-sm rounded-xl border border-gray-200 px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Phone Number</label>
+                    <input type="text" name="customer_phone" placeholder="e.g. 012 345 678" class="w-full text-xs sm:text-sm rounded-xl border border-gray-200 px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Task Type *</label>
-                    <select name="task_type" required class="w-full text-sm rounded-xl border border-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
-                        <option value="PICKUP">PICKUP</option>
-                        <option value="DELIVERY">DELIVERY</option>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Service Type *</label>
+                    <select name="service_type" required class="w-full text-xs sm:text-sm rounded-xl border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                        <option value="Wash & Dry">Wash & Dry</option>
+                        <option value="Wash & Fold">Wash & Fold</option>
+                        <option value="Wash Only">Wash Only</option>
+                        <option value="Dry Cleaning">Dry Cleaning</option>
+                        <option value="Ironing">Ironing</option>
+                        <option value="Blanket Cleaning">Blanket Cleaning</option>
+                        <option value="Curtain Cleaning">Curtain Cleaning</option>
+                        <option value="Shoe Cleaning">Shoe Cleaning</option>
+                        <option value="Carpet Cleaning">Carpet Cleaning</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Target Time *</label>
-                    <input type="time" name="time" value="14:30" required class="w-full text-sm rounded-xl border border-gray-300 px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Total Amount ($)</label>
+                    <input type="number" step="0.01" name="total_amount" value="15.00" class="w-full text-xs sm:text-sm rounded-xl border border-gray-200 px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Destination Address *</label>
-                <input type="text" name="address" required placeholder="e.g. 500 N Michigan Ave, Suite 100" class="w-full text-sm rounded-xl border border-gray-300 px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Assign Driver</label>
-                    <select name="staff_id" class="w-full text-sm rounded-xl border border-gray-300 px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
-                        <option value="">Leave Unassigned (Pending)</option>
-                        <?php $__currentLoopData = $fleet; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $driver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($driver['id']); ?>"><?php echo e($driver['name']); ?> (<?php echo e($driver['vehicle']); ?>)</option>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Cargo Details</label>
-                    <input type="text" name="items_count" placeholder="e.g. 3 Bags, 2 Linens" class="w-full text-sm rounded-xl border border-gray-300 px-3.5 py-2.5 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100">
-                <button type="button" onclick="closeScheduleModal()" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition">
-                    Cancel
-                </button>
-                <button type="submit" class="bg-[#2042E3] hover:bg-[#1A38C2] text-white px-5 py-2 rounded-xl text-sm font-semibold transition shadow-xs">
-                    Dispatch Task
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- 2. ASSIGN DRIVER MODAL -->
-<div id="assignModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
-        <h3 class="text-lg font-bold text-gray-900 mb-1">Assign Fleet Driver</h3>
-        <p class="text-xs text-gray-500 mb-4">Select an on-duty driver for <strong id="assignCustomerName" class="text-gray-800"></strong>.</p>
-
-        <form id="assignForm" onsubmit="submitAssignStaff(event)">
-            <?php echo csrf_field(); ?>
-            <input type="hidden" id="assignTaskId" name="task_id">
-
-            <div class="space-y-2 mb-5">
-                <?php $__currentLoopData = $fleet; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $driver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <label class="border border-gray-200 rounded-xl p-3 flex items-center justify-between cursor-pointer hover:bg-blue-50/40 transition">
-                    <div class="flex items-center space-x-3">
-                        <input type="radio" name="staff_id" value="<?php echo e($driver['id']); ?>" required class="text-blue-600 focus:ring-blue-500">
-                        <img src="<?php echo e($driver['avatar']); ?>" alt="<?php echo e($driver['name']); ?>" class="w-8 h-8 rounded-full object-cover">
-                        <div>
-                            <span class="text-sm font-bold text-gray-900 block leading-tight"><?php echo e($driver['name']); ?></span>
-                            <span class="text-[10px] text-gray-400 block"><?php echo e($driver['vehicle']); ?></span>
-                        </div>
+            <!-- Schedule Pickup Fields (Requirement 1) -->
+            <div class="p-3.5 bg-blue-50/40 rounded-xl border border-blue-100">
+                <span class="text-xs font-bold text-blue-700 uppercase tracking-wider block mb-2">1. Schedule Pickup</span>
+                <div class="grid grid-cols-2 gap-3 mb-2">
+                    <div>
+                        <label class="block text-[11px] text-gray-600 mb-1">Pickup Date</label>
+                        <input type="date" name="pickup_date" value="{{ date('Y-m-d') }}" class="w-full text-xs rounded-lg border border-gray-200 px-2.5 py-1.5 bg-white">
                     </div>
-                    <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full"><?php echo e($driver['active_drops']); ?> drops</span>
-                </label>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <div>
+                        <label class="block text-[11px] text-gray-600 mb-1">Pickup Time</label>
+                        <input type="text" name="pickup_time" value="10:00 AM" placeholder="10:00 AM" class="w-full text-xs rounded-lg border border-gray-200 px-2.5 py-1.5 bg-white">
+                    </div>
+                </div>
+                <input type="text" name="pickup_address" placeholder="Pickup Address (e.g. #12, Street 63, Siem Reap)" class="w-full text-xs rounded-lg border border-gray-200 px-3 py-1.5 bg-white">
             </div>
 
-            <div class="flex items-center justify-end space-x-2 border-t border-gray-100 pt-4">
-                <button type="button" onclick="closeAssignModal()" class="px-3.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition">
+            <!-- Schedule Delivery Fields (Requirement 2) -->
+            <div class="p-3.5 bg-emerald-50/40 rounded-xl border border-emerald-100">
+                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider block mb-2">2. Schedule Delivery</span>
+                <div class="grid grid-cols-2 gap-3 mb-2">
+                    <div>
+                        <label class="block text-[11px] text-gray-600 mb-1">Delivery Date</label>
+                        <input type="date" name="delivery_date" value="{{ date('Y-m-d', strtotime('+1 day')) }}" class="w-full text-xs rounded-lg border border-gray-200 px-2.5 py-1.5 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-gray-600 mb-1">Delivery Time</label>
+                        <input type="text" name="delivery_time" value="02:00 PM" placeholder="02:00 PM" class="w-full text-xs rounded-lg border border-gray-200 px-2.5 py-1.5 bg-white">
+                    </div>
+                </div>
+                <input type="text" name="delivery_address" placeholder="Delivery Address (e.g. #45, Pokambor Ave, Siem Reap)" class="w-full text-xs rounded-lg border border-gray-200 px-3 py-1.5 bg-white">
+            </div>
+
+            <!-- Assign Staff (Requirement 3) & Initial Status (Requirement 4) -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Assign Delivery Staff</label>
+                    <select name="delivery_staff_id" class="w-full text-xs sm:text-sm rounded-xl border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                        <option value="">Leave Unassigned</option>
+                        @foreach($staffList as $staff)
+                        <option value="{{ $staff['id'] }}">{{ $staff['name'] }} ({{ $staff['role'] }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Initial Status</label>
+                    <select name="status" class="w-full text-xs sm:text-sm rounded-xl border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="In Transit">In Transit</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Delivered">Delivered</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Notes</label>
+                <textarea name="notes" rows="2" placeholder="Special delivery instructions..." class="w-full text-xs sm:text-sm rounded-xl border border-gray-200 p-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-gray-100">
+                <button type="button" onclick="closeCreateModal()" class="px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition">
                     Cancel
                 </button>
-                <button type="submit" class="bg-[#2042E3] hover:bg-blue-700 text-white px-4 py-1.5 text-xs font-semibold rounded-lg shadow-xs transition">
-                    Confirm Assignment
+                <button type="submit" class="bg-[#2563EB] hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs">
+                    Schedule Task
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- 3. VIEW DRIVER DETAILS MODAL -->
-<div id="driverModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/50 flex items-center justify-center p-4">
+<!-- ================= DELETE CONFIRMATION MODAL ================= -->
+<div id="deleteModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200 text-center">
-        <button onclick="closeDriverModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-
-        <img id="modalDriverAvatar" src="" alt="Driver" class="w-20 h-20 rounded-full mx-auto object-cover border-4 border-emerald-100 shadow-md">
-        <h3 id="modalDriverName" class="text-xl font-bold text-gray-900 mt-3"></h3>
-        <p id="modalDriverVehicle" class="text-xs text-gray-500"></p>
-
-        <div class="mt-4 bg-gray-50 rounded-xl p-4 text-left space-y-2 text-xs">
-            <div class="flex justify-between">
-                <span class="text-gray-400">Phone:</span>
-                <span id="modalDriverPhone" class="font-semibold text-gray-800"></span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-400">Current Area:</span>
-                <span id="modalDriverLocation" class="font-semibold text-gray-800"></span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-400">Active Drops:</span>
-                <span id="modalDriverDrops" class="font-semibold text-blue-600"></span>
-            </div>
+        <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
         </div>
+        <h3 class="text-lg font-bold text-gray-900 mb-1">Delete Pickup/Delivery?</h3>
+        <p class="text-xs text-gray-500 mb-5">Are you sure you want to delete order <strong id="deleteOrderNumber"></strong>? This action cannot be undone.</p>
 
-        <button type="button" onclick="closeDriverModal()" class="mt-5 w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-xs py-2 rounded-xl transition">
-            Close Driver Details
-        </button>
-    </div>
-</div>
-
-<!-- 4. FLEET INSIGHTS REPORT MODAL -->
-<div id="reportModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900">Weekly Fleet Performance Report</h3>
-            <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-700">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-
-        <div class="mt-4 space-y-3 text-sm">
-            <div class="p-3 bg-blue-50 rounded-xl">
-                <span class="text-xs font-bold text-blue-700 uppercase">SPEED & LATENCY</span>
-                <p class="text-xl font-black text-gray-900 mt-1">18.4 mins <span class="text-xs text-emerald-600 font-bold">(-12% from last week)</span></p>
+        <form id="deleteTaskForm" onsubmit="submitDeleteTask(event)">
+            @csrf
+            @method('DELETE')
+            <input type="hidden" id="deleteTaskId" name="task_id">
+            <div class="flex items-center justify-center space-x-3">
+                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-xl transition">
+                    Cancel
+                </button>
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl text-xs font-semibold shadow-xs transition">
+                    Yes, Delete
+                </button>
             </div>
-            <div class="p-3 bg-emerald-50 rounded-xl">
-                <span class="text-xs font-bold text-emerald-700 uppercase">ON-TIME DELIVERY RATE</span>
-                <p class="text-xl font-black text-gray-900 mt-1">98.6%</p>
-            </div>
-            <div class="p-3 bg-purple-50 rounded-xl">
-                <span class="text-xs font-bold text-purple-700 uppercase">FUEL & LOGISTICS COST</span>
-                <p class="text-xl font-black text-gray-900 mt-1">$482.50 <span class="text-xs text-purple-600 font-bold">(Within budget)</span></p>
-            </div>
-        </div>
-
-        <div class="flex justify-end pt-4 border-t border-gray-100 mt-4">
-            <button type="button" onclick="closeReportModal()" class="bg-[#2042E3] text-white px-4 py-2 rounded-xl text-xs font-semibold">
-                Done
-            </button>
-        </div>
+        </form>
     </div>
 </div>
 
 <!-- Toast Alert -->
-<div id="logisticsToast" class="hidden fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 text-sm transition-all duration-300 transform translate-y-2 opacity-0">
+<div id="toastAlert" class="hidden fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 text-xs sm:text-sm transition-all duration-300 transform translate-y-2 opacity-0">
     <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
     </svg>
-    <span id="toastLogisticsMessage" class="font-medium"></span>
+    <span id="toastMessage" class="font-medium"></span>
 </div>
 
-<?php $__env->startPush('scripts'); ?>
+@push('scripts')
 <script>
-    function showLogisticsToast(message) {
-        const toast = document.getElementById('logisticsToast');
-        const text = document.getElementById('toastLogisticsMessage');
+    // Header dropdown toggle
+    function toggleRoleMenu() {
+        const menu = document.getElementById('role-menu');
+        const chevron = document.getElementById('role-chevron');
+        if (menu) {
+            menu.classList.toggle('hidden');
+            if (chevron) {
+                chevron.classList.toggle('rotate-180');
+            }
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const container = document.getElementById('role-switcher-container');
+        const menu = document.getElementById('role-menu');
+        if (container && menu && !container.contains(e.target)) {
+            menu.classList.add('hidden');
+            const chevron = document.getElementById('role-chevron');
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+    });
+
+    // Toast Alert
+    function showToast(message) {
+        const toast = document.getElementById('toastAlert');
+        const text = document.getElementById('toastMessage');
         text.innerText = message;
         toast.classList.remove('hidden');
         setTimeout(() => {
             toast.classList.remove('opacity-0', 'translate-y-2');
             toast.classList.add('opacity-100', 'translate-y-0');
         }, 10);
-
         setTimeout(() => {
             toast.classList.remove('opacity-100', 'translate-y-0');
             toast.classList.add('opacity-0', 'translate-y-2');
             setTimeout(() => toast.classList.add('hidden'), 300);
-        }, 3000);
+        }, 3200);
     }
 
-    // Toggle Map vs List View
-    function setLogisticsView(mode) {
-        const mapDiv = document.getElementById('mapContainer');
-        const listDiv = document.getElementById('listContainer');
-        const btnMap = document.getElementById('btnMapView');
-        const btnList = document.getElementById('btnListView');
+    // Drawer Management
+    function openTaskDrawer(task) {
+        if (!task) return;
+        
+        document.getElementById('drawerTaskId').value = task.id || '';
+        document.getElementById('drawerOrderNo').innerText = task.order_number || '';
+        document.getElementById('drawerCustomerName').innerText = task.customer_name || '';
+        document.getElementById('drawerServiceType').innerText = task.service_type || '';
+        
+        const amt = parseFloat(task.total_amount || 0).toFixed(2);
+        document.getElementById('drawerTotalAmount').innerText = '$' + amt;
 
-        if (mode === 'map') {
-            mapDiv.classList.remove('hidden');
-            listDiv.classList.add('hidden');
-            btnMap.className = "bg-[#38C6BA] text-white px-3.5 py-1.5 rounded-lg shadow-2xs transition";
-            btnList.className = "text-gray-500 hover:text-gray-800 px-3.5 py-1.5 rounded-lg transition";
-        } else {
-            mapDiv.classList.add('hidden');
-            listDiv.classList.remove('hidden');
-            btnList.className = "bg-[#38C6BA] text-white px-3.5 py-1.5 rounded-lg shadow-2xs transition";
-            btnMap.className = "text-gray-500 hover:text-gray-800 px-3.5 py-1.5 rounded-lg transition";
+        // Pickup
+        let pDate = task.pickup_date ? (task.pickup_date.substring(0, 10)) : '2025-09-17';
+        document.getElementById('drawerPickupDate').value = pDate;
+        document.getElementById('drawerPickupTime').value = task.pickup_time || '08:00 AM';
+        document.getElementById('drawerPickupAddress').value = task.pickup_address || '#12, Street 63, Siem Reap';
+
+        // Delivery
+        let dDate = task.delivery_date ? (task.delivery_date.substring(0, 10)) : '2025-09-18';
+        document.getElementById('drawerDeliveryDate').value = dDate;
+        document.getElementById('drawerDeliveryTime').value = task.delivery_time || '12:00 PM';
+        document.getElementById('drawerDeliveryAddress').value = task.delivery_address || '#45, Pokambor Ave, Siem Reap';
+
+        // Staff
+        const staffSelect = document.getElementById('drawerDeliveryStaff');
+        let staffMatched = false;
+        if (staffSelect) {
+            for (let i = 0; i < staffSelect.options.length; i++) {
+                if (staffSelect.options[i].value == task.delivery_staff_id || staffSelect.options[i].getAttribute('data-name') === task.delivery_staff_name) {
+                    staffSelect.selectedIndex = i;
+                    staffMatched = true;
+                    break;
+                }
+            }
+            if (!staffMatched) {
+                staffSelect.selectedIndex = 0;
+            }
         }
+        document.getElementById('drawerDeliveryStaffName').value = task.delivery_staff_name || '';
+
+        // Status Stepper
+        setStepperStatus(task.status || 'Scheduled');
+
+        // Notes
+        const notesEl = document.getElementById('drawerNotes');
+        notesEl.value = task.notes || '';
+        updateCharCount(notesEl);
+
+        // Open Drawer
+        document.getElementById('drawerOverlay').classList.remove('hidden');
+        document.getElementById('taskDrawer').classList.remove('translate-x-full');
     }
 
-    // Zoom Map Stub
-    function zoomMap(dir) {
-        showLogisticsToast(`Map Zoom ${dir.toUpperCase()}`);
+    function editTask(task) {
+        openTaskDrawer(task);
     }
 
-    // Highlight Delivery
-    function highlightDelivery() {
-        const card = document.getElementById('activeDeliveryCard');
-        card.classList.remove('hidden');
-        card.classList.add('ring-4', 'ring-blue-400');
-        setTimeout(() => card.classList.remove('ring-4', 'ring-blue-400'), 1200);
-    }
-
-    function toggleActiveDeliveryCard() {
-        const card = document.getElementById('activeDeliveryCard');
-        card.classList.toggle('hidden');
-    }
-
-    // Search tasks
-    let taskTimer = null;
-    function handleTaskSearch(query) {
-        clearTimeout(taskTimer);
-        taskTimer = setTimeout(() => {
-            const rows = document.querySelectorAll('#tasksTableBody tr');
-            const q = query.toLowerCase().trim();
-            rows.forEach(r => {
-                const text = r.innerText.toLowerCase();
-                r.style.display = text.includes(q) ? '' : 'none';
-            });
+    function closeTaskDrawer() {
+        document.getElementById('taskDrawer').classList.add('translate-x-full');
+        setTimeout(() => {
+            document.getElementById('drawerOverlay').classList.add('hidden');
         }, 200);
     }
 
-    // Modals
-    function openScheduleModal() {
-        document.getElementById('scheduleModal').classList.remove('hidden');
-    }
-    function closeScheduleModal() {
-        document.getElementById('scheduleModal').classList.add('hidden');
-        document.getElementById('scheduleTaskForm').reset();
-    }
+    // Status Stepper Controller (Requirement 4: Track Status)
+    function setStepperStatus(statusName) {
+        document.getElementById('drawerStatusInput').value = statusName;
 
-    function openAssignModal(taskId, customerName) {
-        document.getElementById('assignTaskId').value = taskId;
-        document.getElementById('assignCustomerName').innerText = customerName;
-        document.getElementById('assignModal').classList.remove('hidden');
-    }
-    function closeAssignModal() {
-        document.getElementById('assignModal').classList.add('hidden');
-    }
+        const stages = ['Scheduled', 'Picked Up', 'In Transit', 'Delivered'];
+        let activeIdx = stages.indexOf(statusName);
+        if (activeIdx === -1) {
+            // Map Assigned or Pending to Scheduled
+            activeIdx = 0;
+        }
 
-    function viewDriverDetails(driver) {
-        document.getElementById('modalDriverAvatar').src = driver.avatar;
-        document.getElementById('modalDriverName').innerText = driver.name;
-        document.getElementById('modalDriverVehicle').innerText = driver.vehicle;
-        document.getElementById('modalDriverPhone').innerText = driver.phone;
-        document.getElementById('modalDriverLocation').innerText = driver.current_location;
-        document.getElementById('modalDriverDrops').innerText = `${driver.active_drops} Active Drops`;
-        document.getElementById('driverModal').classList.remove('hidden');
-    }
-    function closeDriverModal() {
-        document.getElementById('driverModal').classList.add('hidden');
-    }
+        // Update Line Progress
+        const percent = (activeIdx / (stages.length - 1)) * 100;
+        document.getElementById('stepperProgressLine').style.width = percent + '%';
 
-    function openAllFleetModal() {
-        showLogisticsToast('Viewing all 4 fleet units.');
-    }
+        // Update Dots & Labels
+        stages.forEach((stage, idx) => {
+            const key = stage.replace(/\s+/g, '');
+            const dot = document.getElementById('stepDot-' + key);
+            const label = document.getElementById('stepLabel-' + key);
 
-    function generateFleetReport() {
-        document.getElementById('reportModal').classList.remove('hidden');
-    }
-    function closeReportModal() {
-        document.getElementById('reportModal').classList.add('hidden');
-    }
+            if (!dot || !label) return;
 
-    function toggleTaskFilterModal() {
-        showLogisticsToast('Filtering active tasks.');
-    }
-
-    // Submit Schedule Task
-    function submitScheduleTask(e) {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData(form);
-
-        fetch('<?php echo e(route("pickup-and-delivery.schedule")); ?>', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+            if (idx <= activeIdx) {
+                dot.className = 'w-4 h-4 rounded-full border-2 border-[#2563EB] bg-[#2563EB] ring-4 ring-blue-100 transition-all';
+                label.className = 'text-[11px] font-bold text-[#2563EB] mt-2';
+            } else {
+                dot.className = 'w-4 h-4 rounded-full border-2 border-gray-300 bg-white group-hover:border-blue-400 transition-all';
+                label.className = 'text-[11px] font-medium text-gray-500 mt-2';
             }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                closeScheduleModal();
-                showLogisticsToast(data.message || 'Logistics task scheduled!');
-                setTimeout(() => window.location.reload(), 800);
-            }
-        })
-        .catch(err => {
-            console.error('Task error:', err);
-            alert('Failed to schedule task.');
         });
     }
 
-    // Submit Assign Staff
-    function submitAssignStaff(e) {
+    function syncStaffName(select) {
+        const selectedOption = select.options[select.selectedIndex];
+        const staffName = selectedOption ? selectedOption.getAttribute('data-name') : '';
+        document.getElementById('drawerDeliveryStaffName').value = staffName || '';
+    }
+
+    function updateCharCount(textarea) {
+        const len = textarea.value.length;
+        document.getElementById('drawerNotesCount').innerText = len + '/500';
+    }
+
+    // Submit Drawer Update (Handles Schedule Pickup, Schedule Delivery, Assign Staff, Track Status)
+    async function submitDrawerUpdate(e) {
         e.preventDefault();
-        const form = e.target;
-        const taskId = document.getElementById('assignTaskId').value;
+        const taskId = document.getElementById('drawerTaskId').value;
+        if (!taskId) return;
+
+        const formData = new FormData(document.getElementById('drawerDetailsForm'));
+
+        try {
+            const res = await fetch(`/pickup-and-delivery/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                closeTaskDrawer();
+                showToast(data.message || 'Updated successfully!');
+                setTimeout(() => window.location.reload(), 600);
+            } else {
+                alert(data.message || 'Failed to update.');
+            }
+        } catch (err) {
+            console.error(err);
+            // Fallback reload
+            window.location.reload();
+        }
+    }
+
+    // Create Modal
+    function openCreateModal() {
+        document.getElementById('createModal').classList.remove('hidden');
+    }
+
+    function closeCreateModal() {
+        document.getElementById('createModal').classList.add('hidden');
+    }
+
+    async function submitCreateTask(e) {
+        e.preventDefault();
+        const form = document.getElementById('createTaskForm');
         const formData = new FormData(form);
 
-        fetch(`<?php echo e(url('pickup-and-delivery/assign')); ?>/${taskId}`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
+        try {
+            const res = await fetch('{{ route("pickup-and-delivery.store") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await res.json();
             if (data.success) {
-                closeAssignModal();
-                showLogisticsToast(data.message || 'Driver assigned!');
-                setTimeout(() => window.location.reload(), 800);
+                closeCreateModal();
+                showToast(data.message || 'Task scheduled successfully!');
+                setTimeout(() => window.location.reload(), 600);
+            } else {
+                alert(data.message || 'Error creating task.');
             }
-        })
-        .catch(err => {
-            console.error('Assign error:', err);
-            alert('Failed to assign driver.');
-        });
+        } catch (err) {
+            console.error(err);
+            window.location.reload();
+        }
+    }
+
+    // Delete Modal
+    function confirmDeleteTask(id, orderNo) {
+        document.getElementById('deleteTaskId').value = id;
+        document.getElementById('deleteOrderNumber').innerText = orderNo;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    async function submitDeleteTask(e) {
+        e.preventDefault();
+        const id = document.getElementById('deleteTaskId').value;
+        if (!id) return;
+
+        try {
+            const res = await fetch(`/pickup-and-delivery/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                closeDeleteModal();
+                showToast(data.message || 'Deleted successfully!');
+                setTimeout(() => window.location.reload(), 600);
+            }
+        } catch (err) {
+            console.error(err);
+            window.location.reload();
+        }
     }
 </script>
-<?php $__env->stopPush(); ?>
-<?php $__env->stopSection(); ?>
-
-<?php echo $__env->make(request()->has('standalone') ? 'layouts.blank' : 'layouts.navbar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/Laundry_Managerment_System/laundry_system/resources/views/pages/PickupAndDelivery.blade.php ENDPATH**/ ?>
+@endpush
+@endsection

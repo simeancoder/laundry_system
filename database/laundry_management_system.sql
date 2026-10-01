@@ -355,5 +355,69 @@ ON DUPLICATE KEY UPDATE
   `reference_no` = VALUES(`reference_no`),
   `notes` = VALUES(`notes`);
 
+-- --------------------------------------------------------
+-- Table structure for table `pickup_deliveries`
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `pickup_deliveries` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `order_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `customer_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `customer_phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `service_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `pickup_date` date DEFAULT NULL,
+  `pickup_time` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pickup_address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delivery_date` date DEFAULT NULL,
+  `delivery_time` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delivery_address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `delivery_staff_id` bigint(20) unsigned DEFAULT NULL,
+  `delivery_staff_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Scheduled',
+  `notes` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_pd_order_number` (`order_number`),
+  KEY `idx_pd_customer_name` (`customer_name`),
+  KEY `idx_pd_status` (`status`),
+  KEY `idx_pd_pickup_date` (`pickup_date`),
+  KEY `idx_pd_delivery_date` (`delivery_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Dumping sample data for table `pickup_deliveries` (12 Initial Logistics Tasks)
+-- --------------------------------------------------------
+INSERT INTO `pickup_deliveries` (`id`, `order_number`, `customer_name`, `customer_phone`, `service_type`, `total_amount`, `pickup_date`, `pickup_time`, `pickup_address`, `delivery_date`, `delivery_time`, `delivery_address`, `delivery_staff_id`, `delivery_staff_name`, `status`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 'ORD-0003', 'Sokha Dara', '012 345 678', 'Wash & Dry', 15.00, '2025-09-15', '10:00 AM', '#12, Street 63, Siem Reap', '2025-09-16', '02:00 PM', '#45, Pokambor Ave, Siem Reap', 1, 'Sok Chanthy', 'Scheduled', 'Customer requested eco-friendly detergent.', NOW(), NOW()),
+(2, 'ORD-0006', 'Chan Sreyneath', '011 234 567', 'Wash Only', 12.00, '2025-09-15', '11:30 AM', '#88, Street 10, Wat Bo, Siem Reap', '2025-09-16', '04:00 PM', '#88, Street 10, Wat Bo, Siem Reap', 5, 'Soum Rern', 'Scheduled', 'Handle delicate fabrics with care.', NOW(), NOW()),
+(3, 'ORD-0009', 'Heng Channa', '017 890 123', 'Dry Cleaning', 25.00, '2025-09-16', '09:00 AM', '#14, Charles de Gaulle, Siem Reap', '2025-09-17', '01:00 PM', '#14, Charles de Gaulle, Siem Reap', 1, 'Sok Chanthy', 'Assigned', 'Business suits - extra starch on collars.', NOW(), NOW()),
+(4, 'ORD-0012', 'Kim Sovannary', '015 678 901', 'Ironing', 18.50, '2025-09-16', '10:30 AM', '#55, Pub Street Area, Siem Reap', '2025-09-17', '03:00 PM', '#55, Pub Street Area, Siem Reap', 5, 'Soum Rern', 'In Transit', 'On delivery route today.', NOW(), NOW()),
+(5, 'ORD-0015', 'Neang Pheaktra', '010 555 888', 'Wash & Fold', 14.00, '2025-09-17', '08:00 AM', '#12, Street 63, Siem Reap', '2025-09-18', '12:00 PM', '#45, Pokambor Ave, Siem Reap', 1, 'Sok Chanthy', 'Scheduled', 'Customer requested contactless delivery.', NOW(), NOW()),
+(6, 'ORD-0017', 'Lim Vannak', '016 222 333', 'Blanket Cleaning', 22.00, '2025-09-17', '11:00 AM', '#7, Airport Road, Siem Reap', '2025-09-18', '04:00 PM', '#7, Airport Road, Siem Reap', 5, 'Soum Rern', 'Scheduled', '2 heavy winter blankets.', NOW(), NOW()),
+(7, 'ORD-0020', 'Thon Sreynich', '092 777 666', 'Curtain Cleaning', 30.00, '2025-09-18', '09:30 AM', '#99, Ring Road, Siem Reap', '2025-09-19', '02:00 PM', '#99, Ring Road, Siem Reap', 1, 'Sok Chanthy', 'Assigned', 'Living room velvet curtains.', NOW(), NOW()),
+(8, 'ORD-0023', 'Pich Sothey', '012 999 444', 'Shoe Cleaning', 16.00, '2025-09-18', '10:00 AM', '#34, Lok Taneuy St, Siem Reap', '2025-09-19', '03:00 PM', '#34, Lok Taneuy St, Siem Reap', 5, 'Soum Rern', 'In Transit', 'Leather white sneakers treatment.', NOW(), NOW()),
+(9, 'ORD-0026', 'Chea Ratanak', '097 333 222', 'Carpet Cleaning', 35.00, '2025-09-19', '08:30 AM', '#19, Banteay Chas, Siem Reap', '2025-09-20', '01:00 PM', '#19, Banteay Chas, Siem Reap', NULL, 'Unassigned', 'Pending', 'Awaiting staff assignment.', NOW(), NOW()),
+(10, 'ORD-0028', 'Va Sovan', '099 666 777', 'Wash & Dry', 14.00, '2025-09-19', '10:00 AM', '#81, Sivutha Blvd, Siem Reap', '2025-09-20', '02:00 PM', '#81, Sivutha Blvd, Siem Reap', NULL, 'Unassigned', 'Pending', 'Needs quick tumble dry.', NOW(), NOW()),
+(11, 'ORD-0030', 'Keo Pisey', '012 445 566', 'Wash & Fold', 20.00, '2025-09-12', '09:00 AM', '#101, River Road, Siem Reap', '2025-09-13', '03:00 PM', '#101, River Road, Siem Reap', 5, 'Soum Rern', 'Delivered', 'Delivered and signed by client.', NOW(), NOW()),
+(12, 'ORD-0032', 'Meng Chhay', '015 778 899', 'Dry Cleaning', 28.00, '2025-09-11', '11:00 AM', '#40, Achar Sva St, Siem Reap', '2025-09-12', '04:00 PM', '#40, Achar Sva St, Siem Reap', 1, 'Sok Chanthy', 'Delivered', 'Completed and confirmed.', NOW(), NOW())
+ON DUPLICATE KEY UPDATE
+  `order_number` = VALUES(`order_number`),
+  `customer_name` = VALUES(`customer_name`),
+  `customer_phone` = VALUES(`customer_phone`),
+  `service_type` = VALUES(`service_type`),
+  `total_amount` = VALUES(`total_amount`),
+  `pickup_date` = VALUES(`pickup_date`),
+  `pickup_time` = VALUES(`pickup_time`),
+  `pickup_address` = VALUES(`pickup_address`),
+  `delivery_date` = VALUES(`delivery_date`),
+  `delivery_time` = VALUES(`delivery_time`),
+  `delivery_address` = VALUES(`delivery_address`),
+  `delivery_staff_id` = VALUES(`delivery_staff_id`),
+  `delivery_staff_name` = VALUES(`delivery_staff_name`),
+  `status` = VALUES(`status`),
+  `notes` = VALUES(`notes`);
+
+
 
 
