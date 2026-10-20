@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use App\Models\Customer;
+use App\Models\Order;
+use App\Models\Payment;
+use App\Models\Machine;
 
 class DashboardController extends Controller
 {
@@ -162,12 +167,34 @@ class DashboardController extends Controller
      */
     private function getStatCards(string $role): array
     {
-        // Default / Admin Cards (Exact match to design screenshot)
+        $hasOrders = false;
+        $hasCustomers = false;
+        $hasPayments = false;
+        $hasMachines = false;
+        try {
+            $hasOrders = Schema::hasTable('orders');
+            $hasCustomers = Schema::hasTable('customers');
+            $hasPayments = Schema::hasTable('payments');
+            $hasMachines = Schema::hasTable('machines');
+        } catch (\Throwable $e) {
+            //
+        }
+
+        $totalCustomers = $hasCustomers ? Customer::count() : 0;
+        $totalOrders = $hasOrders ? Order::count() : 0;
+        $pendingOrders = $hasOrders ? Order::whereIn('status', ['Received', 'Pending'])->count() : 0;
+        $washingOrders = $hasOrders ? Order::where('status', 'Washing')->count() : 0;
+        $readyPickup = $hasOrders ? Order::where('status', 'Ready for Pickup')->count() : 0;
+        $deliveredOrders = $hasOrders ? Order::whereIn('status', ['Delivered', 'Completed', 'Out for Delivery'])->count() : 0;
+        $todaysRevenue = $hasOrders ? Order::whereDate('created_at', today())->sum('total_price') : 0.00;
+        $monthlyRevenue = $hasOrders ? Order::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total_price') : 0.00;
+
+        // Default / Admin Cards (Dynamic Real Database Values)
         $adminCards = [
             [
                 'id' => 'total_customers',
                 'label' => 'Total Customers',
-                'value' => '128',
+                'value' => (string) $totalCustomers,
                 'trend_pct' => '12%',
                 'trend_direction' => 'up',
                 'trend_text' => 'compared to last month',
@@ -180,7 +207,7 @@ class DashboardController extends Controller
             [
                 'id' => 'total_laundry_orders',
                 'label' => 'Total Laundry Orders',
-                'value' => '245',
+                'value' => (string) $totalOrders,
                 'trend_pct' => '8%',
                 'trend_direction' => 'up',
                 'trend_text' => 'compared to last month',
@@ -193,7 +220,7 @@ class DashboardController extends Controller
             [
                 'id' => 'pending_orders',
                 'label' => 'Pending Orders',
-                'value' => '32',
+                'value' => (string) $pendingOrders,
                 'trend_pct' => '5%',
                 'trend_direction' => 'up',
                 'trend_text' => 'compared to yesterday',
@@ -206,7 +233,7 @@ class DashboardController extends Controller
             [
                 'id' => 'washing_orders',
                 'label' => 'Washing Orders',
-                'value' => '78',
+                'value' => (string) $washingOrders,
                 'trend_pct' => '6%',
                 'trend_direction' => 'up',
                 'trend_text' => 'compared to yesterday',
@@ -219,7 +246,7 @@ class DashboardController extends Controller
             [
                 'id' => 'ready_for_pickup',
                 'label' => 'Ready for Pickup',
-                'value' => '45',
+                'value' => (string) $readyPickup,
                 'trend_pct' => '10%',
                 'trend_direction' => 'up',
                 'trend_text' => 'compared to yesterday',
@@ -232,7 +259,7 @@ class DashboardController extends Controller
             [
                 'id' => 'delivered_orders',
                 'label' => 'Delivered Orders',
-                'value' => '58',
+                'value' => (string) $deliveredOrders,
                 'trend_pct' => '7%',
                 'trend_direction' => 'up',
                 'trend_text' => 'compared to yesterday',
@@ -245,7 +272,7 @@ class DashboardController extends Controller
             [
                 'id' => 'todays_revenue',
                 'label' => "Today's Revenue",
-                'value' => '$ 312.50',
+                'value' => '$ ' . number_format($todaysRevenue, 2),
                 'trend_pct' => '15%',
                 'trend_direction' => 'up',
                 'trend_text' => 'compared to yesterday',
@@ -258,7 +285,7 @@ class DashboardController extends Controller
             [
                 'id' => 'monthly_revenue',
                 'label' => 'Monthly Revenue',
-                'value' => '$ 4,860.75',
+                'value' => '$ ' . number_format($monthlyRevenue, 2),
                 'trend_pct' => '12%',
                 'trend_direction' => 'up',
                 'trend_text' => 'compared to last month',
@@ -272,26 +299,42 @@ class DashboardController extends Controller
 
         if ($role === 'Staff') {
             // Staff customized cards
+            $activeWashers = $hasMachines ? Machine::where('status', 'Available')->count() : 0;
             $adminCards[0]['label'] = 'Shift Capacity';
-            $adminCards[0]['value'] = '94%';
+            $adminCards[0]['value'] = '100%';
             $adminCards[6]['label'] = 'Units Washed';
-            $adminCards[6]['value'] = '64 Items';
+            $adminCards[6]['value'] = (string) $deliveredOrders . ' Orders';
             $adminCards[7]['label'] = 'Active Washers';
-            $adminCards[7]['value'] = '20 Units';
+            $adminCards[7]['value'] = (string) $activeWashers . ' Units';
         } elseif ($role === 'Delivery') {
             // Delivery customized cards
             $adminCards[0]['label'] = 'Assigned Routes';
-            $adminCards[0]['value'] = '6 Routes';
+            $adminCards[0]['value'] = '0 Routes';
             $adminCards[6]['label'] = 'Van Fuel Efficiency';
-            $adminCards[6]['value'] = '98.5%';
+            $adminCards[6]['value'] = '100%';
             $adminCards[7]['label'] = 'Avg Dispatch Time';
-            $adminCards[7]['value'] = '14 Mins';
+            $adminCards[7]['value'] = '15 Mins';
         } elseif ($role === 'Receptionist') {
             // Receptionist customized cards
+            $walkinCash = 0.00;
+            $digitalPayments = 0.00;
+            if ($hasPayments) {
+                try {
+                    $cols = Schema::getColumnListing('payments');
+                    $amtCol = in_array('amount', $cols) ? 'amount' : (in_array('total_amount', $cols) ? 'total_amount' : (in_array('paid_amount', $cols) ? 'paid_amount' : null));
+                    if ($amtCol) {
+                        $walkinCash = (float) Payment::where('payment_method', 'Cash')->sum($amtCol);
+                        $digitalPayments = (float) Payment::where('payment_method', '!=', 'Cash')->sum($amtCol);
+                    }
+                } catch (\Throwable $e) {
+                    $walkinCash = 0.00;
+                    $digitalPayments = 0.00;
+                }
+            }
             $adminCards[6]['label'] = 'Walk-in Cash';
-            $adminCards[6]['value'] = '$ 185.00';
+            $adminCards[6]['value'] = '$ ' . number_format($walkinCash, 2);
             $adminCards[7]['label'] = 'Digital Payments';
-            $adminCards[7]['value'] = '$ 127.50';
+            $adminCards[7]['value'] = '$ ' . number_format($digitalPayments, 2);
         }
 
         return $adminCards;
@@ -302,12 +345,25 @@ class DashboardController extends Controller
      */
     private function getOrderStatusData(): array
     {
+        $hasOrders = false;
+        try {
+            $hasOrders = Schema::hasTable('orders');
+        } catch (\Throwable $e) {
+            //
+        }
+
+        $pendingCount = $hasOrders ? Order::whereIn('status', ['Received', 'Pending'])->count() : 0;
+        $washingCount = $hasOrders ? Order::where('status', 'Washing')->count() : 0;
+        $readyCount = $hasOrders ? Order::where('status', 'Ready for Pickup')->count() : 0;
+        $deliveredCount = $hasOrders ? Order::whereIn('status', ['Delivered', 'Completed'])->count() : 0;
+        $cancelledCount = $hasOrders ? Order::where('status', 'Cancelled')->count() : 0;
+
         $categories = [
-            ['name' => 'Pending', 'count' => 32, 'color' => '#F59E0B'],
-            ['name' => 'Washing', 'count' => 78, 'color' => '#3B82F6'],
-            ['name' => 'Ready for Pickup', 'count' => 45, 'color' => '#10B981'],
-            ['name' => 'Delivered', 'count' => 58, 'color' => '#8B5CF6'],
-            ['name' => 'Cancelled', 'count' => 32, 'color' => '#EF4444'],
+            ['name' => 'Pending', 'count' => $pendingCount, 'color' => '#F59E0B'],
+            ['name' => 'Washing', 'count' => $washingCount, 'color' => '#3B82F6'],
+            ['name' => 'Ready for Pickup', 'count' => $readyCount, 'color' => '#10B981'],
+            ['name' => 'Delivered', 'count' => $deliveredCount, 'color' => '#8B5CF6'],
+            ['name' => 'Cancelled', 'count' => $cancelledCount, 'color' => '#EF4444'],
         ];
 
         $total = array_sum(array_column($categories, 'count'));

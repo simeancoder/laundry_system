@@ -2,1119 +2,687 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Machine;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class MachineController extends Controller
 {
     /**
-     * Get all machines with session persistence.
+     * Official 12 baseline machines matching the teacher's screenshot.
      */
-    private function getAllMachines(): array
-    {
-        if (session()->has('mock_machines')) {
-            return session('mock_machines');
-        }
-        $defaults = $this->getBaselineMachines();
-        session(['mock_machines' => $defaults]);
-        return $defaults;
-    }
-
-    /**
-     * Complete 24 Machine Units Dataset matching "Total Units: 24" in screenshot.
-     */
-    private function getBaselineMachines(): array
+    private function getDefaultMachines(): array
     {
         return [
-            // Page 1 (Matching screenshot exactly)
             [
                 'id' => 1,
-                'serial_id' => 'WM-101',
-                'model' => 'TuboWash 9000',
-                'type' => 'Washer',
-                'full_model' => "TuboWash\n9000\n(Washer)",
-                'installation_date' => '15 Jan 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Main Floor - Zone A',
-                'cycles_today' => 8,
-                'total_cycles' => 1240,
-                'temperature' => '60°C',
-                'motor_health' => '98%',
-                'last_serviced' => '10 Aug 2026',
+                'machine_id' => 'WM-001',
+                'name' => 'Washer 1',
+                'type' => 'Front Load',
+                'capacity' => '10',
+                'model' => 'LG WD-10',
+                'location' => 'Laundry Room 1',
+                'status' => 'In Use',
+                'last_maintenance' => '2025-09-12',
+                'next_maintenance' => '2025-10-12',
+                'maintenance_history' => [
+                    ['date' => '2025-09-12', 'type' => 'Routine Check', 'note' => 'Normal'],
+                    ['date' => '2025-08-10', 'type' => 'Cleaning', 'note' => 'Cleaned filter'],
+                    ['date' => '2025-07-05', 'type' => 'Repair', 'note' => 'Replaced belt'],
+                ],
+                'notes' => 'Heavy duty front load commercial washing unit.',
             ],
             [
                 'id' => 2,
-                'serial_id' => 'WM-111',
-                'model' => 'EcoWash Lite',
-                'type' => 'Washer',
-                'full_model' => "EcoWash\nLite\n(Washer)",
-                'installation_date' => '05 Mar 2024',
-                'status' => 'Idle',
-                'status_color' => 'bg-blue-100 text-blue-700',
-                'location' => 'Express Bay - Zone B',
-                'cycles_today' => 3,
-                'total_cycles' => 420,
-                'temperature' => 'Room Temp',
-                'motor_health' => '100%',
-                'last_serviced' => '01 Sep 2026',
+                'machine_id' => 'WM-002',
+                'name' => 'Washer 2',
+                'type' => 'Front Load',
+                'capacity' => '10',
+                'model' => 'LG WD-10',
+                'location' => 'Laundry Room 1',
+                'status' => 'Available',
+                'last_maintenance' => '2025-09-10',
+                'next_maintenance' => '2025-10-10',
+                'maintenance_history' => [
+                    ['date' => '2025-09-10', 'type' => 'Routine Check', 'note' => 'Normal'],
+                    ['date' => '2025-08-01', 'type' => 'Cleaning', 'note' => 'Drum sanitization'],
+                ],
+                'notes' => 'Standard daily commercial washer.',
             ],
             [
                 'id' => 3,
-                'serial_id' => 'WM-112',
-                'model' => 'HeatDry Pro',
-                'type' => 'Dryer',
-                'full_model' => "HeatDry\nPro (Dryer)",
-                'installation_date' => '25 Oct 2022',
-                'status' => 'Alert',
-                'status_color' => 'bg-amber-100 text-amber-700',
-                'location' => 'Commercial Wing',
-                'cycles_today' => 12,
-                'total_cycles' => 3100,
-                'temperature' => '78°C (High)',
-                'motor_health' => '72%',
-                'last_serviced' => '15 Jun 2026',
+                'machine_id' => 'WM-003',
+                'name' => 'Washer 3',
+                'type' => 'Front Load',
+                'capacity' => '15',
+                'model' => 'Samsung WF-15',
+                'location' => 'Laundry Room 2',
+                'status' => 'Available',
+                'last_maintenance' => '2025-09-08',
+                'next_maintenance' => '2025-10-08',
+                'maintenance_history' => [
+                    ['date' => '2025-09-08', 'type' => 'Routine Check', 'note' => 'Normal'],
+                    ['date' => '2025-07-15', 'type' => 'Inspection', 'note' => 'Water inlet checked'],
+                ],
+                'notes' => 'Large capacity washing machine for bedsheets and blankets.',
             ],
             [
                 'id' => 4,
-                'serial_id' => 'WM-102',
-                'model' => 'SpeedClean Super',
-                'type' => 'Washer',
-                'full_model' => "SpeedClean\nSuper\n(Washer)",
-                'installation_date' => '12 Feb 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Main Floor - Zone A',
-                'cycles_today' => 9,
-                'total_cycles' => 1480,
-                'temperature' => '40°C',
-                'motor_health' => '95%',
-                'last_serviced' => '12 Jul 2026',
+                'machine_id' => 'WM-004',
+                'name' => 'Washer 4',
+                'type' => 'Front Load',
+                'capacity' => '15',
+                'model' => 'Samsung WF-15',
+                'location' => 'Laundry Room 2',
+                'status' => 'In Use',
+                'last_maintenance' => '2025-09-13',
+                'next_maintenance' => '2025-10-13',
+                'maintenance_history' => [
+                    ['date' => '2025-09-13', 'type' => 'Routine Check', 'note' => 'Normal'],
+                ],
+                'notes' => 'Running express wash cycle.',
             ],
             [
                 'id' => 5,
-                'serial_id' => 'HD-102',
-                'model' => 'AeroDry Industrial',
-                'type' => 'Dryer',
-                'full_model' => "AeroDry\nIndustrial\n(Dryer)",
-                'installation_date' => '18 Jun 2023',
-                'status' => 'Repairing',
-                'status_color' => 'bg-rose-100 text-rose-700',
-                'location' => 'Maintenance Bay',
-                'cycles_today' => 0,
-                'total_cycles' => 2950,
-                'temperature' => 'Offline',
-                'motor_health' => '64%',
-                'last_serviced' => 'Under Repair',
+                'machine_id' => 'WM-005',
+                'name' => 'Washer 5',
+                'type' => 'Top Load',
+                'capacity' => '20',
+                'model' => 'Whirlpool Heavy',
+                'location' => 'Main Laundry Bay',
+                'status' => 'Available',
+                'last_maintenance' => '2025-09-09',
+                'next_maintenance' => '2025-10-09',
+                'maintenance_history' => [
+                    ['date' => '2025-09-09', 'type' => 'Routine Check', 'note' => 'Normal'],
+                    ['date' => '2025-07-20', 'type' => 'Cleaning', 'note' => 'Agitator cleaned'],
+                ],
+                'notes' => 'Industrial bulk washing machine.',
             ],
-            // Page 2
             [
                 'id' => 6,
-                'serial_id' => 'WM-103',
-                'model' => 'AquaMaster 500',
-                'type' => 'Washer',
-                'full_model' => "AquaMaster\n500\n(Washer)",
-                'installation_date' => '02 Apr 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Main Floor - Zone A',
-                'cycles_today' => 7,
-                'total_cycles' => 1120,
-                'temperature' => '50°C',
-                'motor_health' => '96%',
-                'last_serviced' => '05 Aug 2026',
+                'machine_id' => 'WM-006',
+                'name' => 'Dryer 1',
+                'type' => 'Dryer',
+                'capacity' => '15',
+                'model' => 'Electrolux Dry',
+                'location' => 'Drying Zone A',
+                'status' => 'In Use',
+                'last_maintenance' => '2025-09-13',
+                'next_maintenance' => '2025-10-13',
+                'maintenance_history' => [
+                    ['date' => '2025-09-13', 'type' => 'Routine Check', 'note' => 'Heating coil tested'],
+                    ['date' => '2025-08-15', 'type' => 'Cleaning', 'note' => 'Lint trap cleared'],
+                ],
+                'notes' => 'Gas-powered high-efficiency tumbling dryer.',
             ],
             [
                 'id' => 7,
-                'serial_id' => 'WM-104',
-                'model' => 'TuboWash 9000',
-                'type' => 'Washer',
-                'full_model' => "TuboWash\n9000\n(Washer)",
-                'installation_date' => '15 Jan 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Main Floor - Zone B',
-                'cycles_today' => 6,
-                'total_cycles' => 1280,
-                'temperature' => '40°C',
-                'motor_health' => '97%',
-                'last_serviced' => '10 Aug 2026',
+                'machine_id' => 'WM-007',
+                'name' => 'Dryer 2',
+                'type' => 'Dryer',
+                'capacity' => '15',
+                'model' => 'Electrolux Dry',
+                'location' => 'Drying Zone A',
+                'status' => 'Available',
+                'last_maintenance' => '2025-09-11',
+                'next_maintenance' => '2025-10-11',
+                'maintenance_history' => [
+                    ['date' => '2025-09-11', 'type' => 'Routine Check', 'note' => 'Normal'],
+                ],
+                'notes' => 'Commercial dryer ready for cycle.',
             ],
             [
                 'id' => 8,
-                'serial_id' => 'HD-103',
-                'model' => 'HeatDry Pro',
+                'machine_id' => 'WM-008',
+                'name' => 'Dryer 3',
                 'type' => 'Dryer',
-                'full_model' => "HeatDry\nPro (Dryer)",
-                'installation_date' => '10 Nov 2022',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Commercial Wing',
-                'cycles_today' => 11,
-                'total_cycles' => 2840,
-                'temperature' => '65°C',
-                'motor_health' => '91%',
-                'last_serviced' => '20 Jul 2026',
+                'capacity' => '20',
+                'model' => 'SpeedQueen Pro',
+                'location' => 'Drying Zone B',
+                'status' => 'Under Maintenance',
+                'last_maintenance' => '2025-09-05',
+                'next_maintenance' => '2025-09-20',
+                'maintenance_history' => [
+                    ['date' => '2025-09-05', 'type' => 'Repair', 'note' => 'Drum bearing replacement scheduled'],
+                    ['date' => '2025-08-01', 'type' => 'Inspection', 'note' => 'Bearing noise detected'],
+                ],
+                'notes' => 'Awaiting replacement parts from technician.',
             ],
             [
                 'id' => 9,
-                'serial_id' => 'PR-101',
-                'model' => 'SteamPress Max',
-                'type' => 'Presser',
-                'full_model' => "SteamPress\nMax (Presser)",
-                'installation_date' => '08 Aug 2023',
-                'status' => 'Idle',
-                'status_color' => 'bg-blue-100 text-blue-700',
-                'location' => 'VIP Section',
-                'cycles_today' => 4,
-                'total_cycles' => 650,
-                'temperature' => '120°C',
-                'motor_health' => '99%',
-                'last_serviced' => '15 Aug 2026',
+                'machine_id' => 'WM-009',
+                'name' => 'Ironing Machine 1',
+                'type' => 'Ironing',
+                'capacity' => '-',
+                'model' => 'Rowenta ProPress',
+                'location' => 'Finishing Area',
+                'status' => 'Available',
+                'last_maintenance' => '2025-09-10',
+                'next_maintenance' => '2025-10-10',
+                'maintenance_history' => [
+                    ['date' => '2025-09-10', 'type' => 'Routine Check', 'note' => 'Plate temperature verified'],
+                ],
+                'notes' => 'Roller iron press for bed sheets and shirts.',
             ],
             [
                 'id' => 10,
-                'serial_id' => 'WM-105',
-                'model' => 'EcoWash Lite',
-                'type' => 'Washer',
-                'full_model' => "EcoWash\nLite\n(Washer)",
-                'installation_date' => '20 Mar 2024',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Express Bay - Zone B',
-                'cycles_today' => 8,
-                'total_cycles' => 380,
-                'temperature' => '30°C',
-                'motor_health' => '100%',
-                'last_serviced' => '25 Aug 2026',
+                'machine_id' => 'WM-010',
+                'name' => 'Ironing Machine 2',
+                'type' => 'Ironing',
+                'capacity' => '-',
+                'model' => 'Rowenta ProPress',
+                'location' => 'Finishing Area',
+                'status' => 'Available',
+                'last_maintenance' => '2025-09-09',
+                'next_maintenance' => '2025-10-09',
+                'maintenance_history' => [
+                    ['date' => '2025-09-09', 'type' => 'Routine Check', 'note' => 'Steam nozzle descaled'],
+                ],
+                'notes' => 'Secondary ironing press station.',
             ],
-            // Page 3
             [
                 'id' => 11,
-                'serial_id' => 'WM-106',
-                'model' => 'HeavyDuty 1200',
-                'type' => 'Washer',
-                'full_model' => "HeavyDuty\n1200\n(Washer)",
-                'installation_date' => '14 May 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Commercial Wing',
-                'cycles_today' => 10,
-                'total_cycles' => 2100,
-                'temperature' => '60°C',
-                'motor_health' => '93%',
-                'last_serviced' => '02 Jul 2026',
+                'machine_id' => 'WM-011',
+                'name' => 'Ironing Machine 3',
+                'type' => 'Ironing',
+                'capacity' => '-',
+                'model' => 'Rowenta ProPress',
+                'location' => 'Finishing Area',
+                'status' => 'Available',
+                'last_maintenance' => '2025-09-13',
+                'next_maintenance' => '2025-10-13',
+                'maintenance_history' => [
+                    ['date' => '2025-09-13', 'type' => 'Routine Check', 'note' => 'Normal'],
+                ],
+                'notes' => 'Finishing garment station.',
             ],
             [
                 'id' => 12,
-                'serial_id' => 'HD-104',
-                'model' => 'HeatDry Pro',
-                'type' => 'Dryer',
-                'full_model' => "HeatDry\nPro (Dryer)",
-                'installation_date' => '22 Dec 2022',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Commercial Wing',
-                'cycles_today' => 9,
-                'total_cycles' => 2750,
-                'temperature' => '70°C',
-                'motor_health' => '89%',
-                'last_serviced' => '18 Jun 2026',
-            ],
-            [
-                'id' => 13,
-                'serial_id' => 'WM-107',
-                'model' => 'TuboWash 9000',
-                'type' => 'Washer',
-                'full_model' => "TuboWash\n9000\n(Washer)",
-                'installation_date' => '15 Jan 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Main Floor - Zone A',
-                'cycles_today' => 7,
-                'total_cycles' => 1310,
-                'temperature' => '40°C',
-                'motor_health' => '96%',
-                'last_serviced' => '10 Aug 2026',
-            ],
-            [
-                'id' => 14,
-                'serial_id' => 'WM-108',
-                'model' => 'EcoWash Lite',
-                'type' => 'Washer',
-                'full_model' => "EcoWash\nLite\n(Washer)",
-                'installation_date' => '05 Apr 2024',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Express Bay - Zone B',
-                'cycles_today' => 5,
-                'total_cycles' => 290,
-                'temperature' => '30°C',
-                'motor_health' => '100%',
-                'last_serviced' => '28 Aug 2026',
-            ],
-            [
-                'id' => 15,
-                'serial_id' => 'PR-102',
-                'model' => 'SteamPress Max',
-                'type' => 'Presser',
-                'full_model' => "SteamPress\nMax (Presser)",
-                'installation_date' => '15 Sep 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'VIP Section',
-                'cycles_today' => 6,
-                'total_cycles' => 780,
-                'temperature' => '130°C',
-                'motor_health' => '97%',
-                'last_serviced' => '12 Aug 2026',
-            ],
-            // Page 4
-            [
-                'id' => 16,
-                'serial_id' => 'WM-109',
-                'model' => 'AquaMaster 500',
-                'type' => 'Washer',
-                'full_model' => "AquaMaster\n500\n(Washer)",
-                'installation_date' => '10 May 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Main Floor - Zone B',
-                'cycles_today' => 8,
-                'total_cycles' => 1190,
-                'temperature' => '40°C',
-                'motor_health' => '95%',
-                'last_serviced' => '08 Aug 2026',
-            ],
-            [
-                'id' => 17,
-                'serial_id' => 'HD-105',
-                'model' => 'AeroDry Industrial',
-                'type' => 'Dryer',
-                'full_model' => "AeroDry\nIndustrial\n(Dryer)",
-                'installation_date' => '30 Jul 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Commercial Wing',
-                'cycles_today' => 10,
-                'total_cycles' => 1950,
-                'temperature' => '65°C',
-                'motor_health' => '92%',
-                'last_serviced' => '14 Jul 2026',
-            ],
-            [
-                'id' => 18,
-                'serial_id' => 'WM-110',
-                'model' => 'SpeedClean Super',
-                'type' => 'Washer',
-                'full_model' => "SpeedClean\nSuper\n(Washer)",
-                'installation_date' => '01 Jul 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Main Floor - Zone A',
-                'cycles_today' => 7,
-                'total_cycles' => 1390,
-                'temperature' => '45°C',
-                'motor_health' => '96%',
-                'last_serviced' => '22 Jul 2026',
-            ],
-            [
-                'id' => 19,
-                'serial_id' => 'HD-106',
-                'model' => 'HeatDry Pro',
-                'type' => 'Dryer',
-                'full_model' => "HeatDry\nPro (Dryer)",
-                'installation_date' => '12 Jan 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Commercial Wing',
-                'cycles_today' => 9,
-                'total_cycles' => 2480,
-                'temperature' => '68°C',
-                'motor_health' => '90%',
-                'last_serviced' => '03 Aug 2026',
-            ],
-            [
-                'id' => 20,
-                'serial_id' => 'WM-113',
-                'model' => 'EcoWash Lite',
-                'type' => 'Washer',
-                'full_model' => "EcoWash\nLite\n(Washer)",
-                'installation_date' => '15 Apr 2024',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Express Bay - Zone B',
-                'cycles_today' => 4,
-                'total_cycles' => 210,
-                'temperature' => '30°C',
-                'motor_health' => '100%',
-                'last_serviced' => '02 Sep 2026',
-            ],
-            // Page 5
-            [
-                'id' => 21,
-                'serial_id' => 'WM-114',
-                'model' => 'TuboWash 9000',
-                'type' => 'Washer',
-                'full_model' => "TuboWash\n9000\n(Washer)",
-                'installation_date' => '15 Jan 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Main Floor - Zone A',
-                'cycles_today' => 6,
-                'total_cycles' => 1290,
-                'temperature' => '40°C',
-                'motor_health' => '96%',
-                'last_serviced' => '10 Aug 2026',
-            ],
-            [
-                'id' => 22,
-                'serial_id' => 'HD-107',
-                'model' => 'HeatDry Pro',
-                'type' => 'Dryer',
-                'full_model' => "HeatDry\nPro (Dryer)",
-                'installation_date' => '18 Feb 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Commercial Wing',
-                'cycles_today' => 8,
-                'total_cycles' => 2340,
-                'temperature' => '65°C',
-                'motor_health' => '93%',
-                'last_serviced' => '19 Jul 2026',
-            ],
-            [
-                'id' => 23,
-                'serial_id' => 'PR-103',
-                'model' => 'SteamPress Max',
-                'type' => 'Presser',
-                'full_model' => "SteamPress\nMax (Presser)",
-                'installation_date' => '25 Oct 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'VIP Section',
-                'cycles_today' => 5,
-                'total_cycles' => 510,
-                'temperature' => '125°C',
-                'motor_health' => '98%',
-                'last_serviced' => '05 Aug 2026',
-            ],
-            [
-                'id' => 24,
-                'serial_id' => 'WM-115',
-                'model' => 'HeavyDuty 1200',
-                'type' => 'Washer',
-                'full_model' => "HeavyDuty\n1200\n(Washer)",
-                'installation_date' => '12 Jun 2023',
-                'status' => 'Running',
-                'status_color' => 'bg-emerald-100 text-emerald-700',
-                'location' => 'Commercial Wing',
-                'cycles_today' => 9,
-                'total_cycles' => 1890,
-                'temperature' => '60°C',
-                'motor_health' => '94%',
-                'last_serviced' => '15 Jul 2026',
+                'machine_id' => 'WM-012',
+                'name' => 'Boiler',
+                'type' => 'Steam',
+                'capacity' => '-',
+                'model' => 'Karcher SteamMax',
+                'location' => 'Utility Room',
+                'status' => 'Available',
+                'last_maintenance' => '2025-09-08',
+                'next_maintenance' => '2025-10-08',
+                'maintenance_history' => [
+                    ['date' => '2025-09-08', 'type' => 'Safety Inspection', 'note' => 'Pressure valve certified'],
+                    ['date' => '2025-07-10', 'type' => 'Routine Check', 'note' => 'Descaling completed'],
+                ],
+                'notes' => 'Central steam generator boiler unit.',
             ],
         ];
     }
 
     /**
-     * Display Machine Management dashboard.
+     * Load machines from Database, JSON Storage, or Session.
+     */
+    private function loadData(): array
+    {
+        // 1. Try MySQL Database
+        try {
+            if (Schema::hasTable('machines')) {
+                $count = Machine::count();
+                if ($count > 0) {
+                    return Machine::orderBy('id', 'asc')->get()->map(function ($item) {
+                        return (object) [
+                            'id' => $item->id,
+                            'machine_id' => $item->machine_id,
+                            'name' => $item->name,
+                            'type' => $item->type,
+                            'capacity' => $item->capacity ?? '-',
+                            'model' => $item->model ?? 'Standard Model',
+                            'location' => $item->location ?? 'Laundry Room 1',
+                            'status' => $item->status,
+                            'last_maintenance' => $item->last_maintenance ?? '2025-09-10',
+                            'next_maintenance' => $item->next_maintenance ?? '2025-10-10',
+                            'maintenance_history' => is_array($item->maintenance_history) ? $item->maintenance_history : json_decode($item->maintenance_history ?? '[]', true),
+                            'notes' => $item->notes ?? '',
+                        ];
+                    })->all();
+                } else {
+                    // Seed initial 12 items into DB
+                    $defaults = $this->getDefaultMachines();
+                    foreach ($defaults as $d) {
+                        Machine::create($d);
+                    }
+                    return $this->loadData();
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fall back to file/session
+        }
+
+        // 2. Try JSON storage file
+        if (Storage::exists('machines.json')) {
+            try {
+                $json = Storage::get('machines.json');
+                $decoded = json_decode($json, true);
+                if (is_array($decoded) && count($decoded) > 0) {
+                    return array_map(function ($d) {
+                        return (object) $d;
+                    }, $decoded);
+                }
+            } catch (\Throwable $e) {
+                // Continue to session
+            }
+        }
+
+        // 3. Try Session
+        if (session()->has('mock_machines')) {
+            $sess = session('mock_machines');
+            if (is_array($sess) && count($sess) > 0) {
+                return array_map(function ($d) {
+                    return is_object($d) ? $d : (object) $d;
+                }, $sess);
+            }
+        }
+
+        // 4. Default baseline items
+        $defaults = $this->getDefaultMachines();
+        Storage::put('machines.json', json_encode($defaults, JSON_PRETTY_PRINT));
+        session(['mock_machines' => $defaults]);
+
+        return array_map(function ($d) {
+            return (object) $d;
+        }, $defaults);
+    }
+
+    /**
+     * Persist machines list across Database, JSON, and Session.
+     */
+    private function saveData(array $items): void
+    {
+        $arrayData = array_map(function ($item) {
+            return (array) $item;
+        }, $items);
+
+        // Update JSON file
+        try {
+            Storage::put('machines.json', json_encode($arrayData, JSON_PRETTY_PRINT));
+        } catch (\Throwable $e) {
+            // Ignore file error
+        }
+
+        // Update Session
+        session(['mock_machines' => $arrayData]);
+    }
+
+    /**
+     * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $search = $request->get('search');
-        $typeFilter = $request->get('type', 'all');
-        $statusFilter = $request->get('status', 'all');
-        $locationFilter = $request->get('location', 'all');
-        $page = (int) $request->get('page', 1);
-        $perPage = 5;
+        $search = trim($request->input('search', ''));
+        $statusFilter = trim($request->input('status', ''));
+        $typeFilter = trim($request->input('type', ''));
 
-        // 4 KPI Stats matching the screenshot exactly
+        $allItems = $this->loadData();
+
+        // Calculate global summary stats
         $stats = [
-            'total_units' => 24,
-            'total_units_change' => '+2 this month',
-            'active_cycles' => 20,
-            'active_cycles_pct' => '83%',
-            'maintenance_alerts' => 2,
-            'maintenance_status' => 'Critical',
-            'upcoming_service' => 24,
-            'upcoming_period' => 'This week',
+            'total' => count($allItems),
+            'available' => count(array_filter($allItems, fn($i) => ($i->status ?? '') === 'Available')),
+            'in_use' => count(array_filter($allItems, fn($i) => ($i->status ?? '') === 'In Use')),
+            'maintenance' => count(array_filter($allItems, fn($i) => ($i->status ?? '') === 'Under Maintenance')),
         ];
 
-        $allMachines = collect($this->getAllMachines());
+        // Apply filtering
+        $filteredItems = array_filter($allItems, function ($item) use ($search, $statusFilter, $typeFilter) {
+            if ($search !== '') {
+                $term = strtolower($search);
+                $name = strtolower($item->name ?? '');
+                $mid = strtolower($item->machine_id ?? '');
+                $model = strtolower($item->model ?? '');
+                $type = strtolower($item->type ?? '');
+                $loc = strtolower($item->location ?? '');
 
-        // Apply Type Filter
-        if (!empty($typeFilter) && $typeFilter !== 'all') {
-            $allMachines = $allMachines->filter(function ($item) use ($typeFilter) {
-                return strtolower($item['type']) === strtolower($typeFilter);
-            });
-        }
+                if (!str_contains($name, $term) && !str_contains($mid, $term) && !str_contains($model, $term) && !str_contains($type, $term) && !str_contains($loc, $term)) {
+                    return false;
+                }
+            }
 
-        // Apply Status Filter
-        if (!empty($statusFilter) && $statusFilter !== 'all') {
-            $allMachines = $allMachines->filter(function ($item) use ($statusFilter) {
-                return strtolower($item['status']) === strtolower($statusFilter);
-            });
-        }
+            if ($statusFilter !== '' && $statusFilter !== 'All Status') {
+                if (($item->status ?? '') !== $statusFilter) {
+                    return false;
+                }
+            }
 
-        // Apply Location Filter
-        if (!empty($locationFilter) && $locationFilter !== 'all') {
-            $allMachines = $allMachines->filter(function ($item) use ($locationFilter) {
-                return str_contains(strtolower($item['location']), strtolower($locationFilter));
-            });
-        }
+            if ($typeFilter !== '' && $typeFilter !== 'All Types') {
+                if (($item->type ?? '') !== $typeFilter) {
+                    return false;
+                }
+            }
 
-        // Apply Search Filter
-        if (!empty($search)) {
-            $searchLower = strtolower($search);
-            $allMachines = $allMachines->filter(function ($item) use ($searchLower) {
-                return str_contains(strtolower($item['serial_id']), $searchLower)
-                    || str_contains(strtolower($item['model']), $searchLower)
-                    || str_contains(strtolower($item['type']), $searchLower)
-                    || str_contains(strtolower($item['location']), $searchLower)
-                    || str_contains(strtolower($item['installation_date']), $searchLower);
-            });
-        }
+            return true;
+        });
 
-        $totalFiltered = $allMachines->count();
-        $totalPages = max(1, (int) ceil($totalFiltered / $perPage));
-        $currentPage = min(max(1, $page), $totalPages);
-        $offset = ($currentPage - 1) * $perPage;
+        // Re-index array
+        $filteredItems = array_values($filteredItems);
 
-        $pagedItems = $allMachines->slice($offset, $perPage)->values();
-        $from = $totalFiltered > 0 ? $offset + 1 : 0;
-        $to = min($offset + $perPage, $totalFiltered);
+        // Unique types for dropdown
+        $types = array_values(array_unique(array_filter(array_map(fn($i) => $i->type ?? null, $allItems))));
+        sort($types);
 
+        // AJAX JSON response
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $pagedItems,
-                'all' => $this->getAllMachines(),
-                'pagination' => [
-                    'current_page' => $currentPage,
-                    'last_page' => $totalPages,
-                    'per_page' => $perPage,
-                    'total' => $totalFiltered,
-                    'from' => $from,
-                    'to' => $to,
-                ],
+                'items' => $filteredItems,
                 'stats' => $stats,
+                'count' => count($filteredItems),
             ]);
         }
 
-        $promotions = $this->getAllPromotions();
-        $promoStats = $this->getPromoStats();
-
         return view('pages.machine', [
+            'machines' => $filteredItems,
             'stats' => $stats,
-            'machines' => $pagedItems,
-            'allMachines' => $this->getAllMachines(),
-            'promotions' => $promotions,
-            'promoStats' => $promoStats,
+            'types' => $types,
             'search' => $search,
-            'typeFilter' => $typeFilter,
-            'statusFilter' => $statusFilter,
-            'locationFilter' => $locationFilter,
-            'currentPage' => $currentPage,
-            'totalPages' => $totalPages,
-            'from' => $from,
-            'to' => $to,
-            'totalItems' => $totalFiltered,
+            'statusFilter' => $statusFilter ?: 'All Status',
+            'typeFilter' => $typeFilter ?: 'All Types',
         ]);
     }
 
     /**
-     * Store a newly created machine unit.
+     * Get a specific machine's details.
+     */
+    public function show($id, $optionalId = null)
+    {
+        if ($id instanceof \Illuminate\Http\Request) {
+            $id = $optionalId ?? $id->route('id') ?? $id->route('machine');
+        }
+
+        $allItems = $this->loadData();
+        $found = null;
+
+        foreach ($allItems as $item) {
+            if ($item->id == $id || ($item->machine_id ?? '') == $id) {
+                $found = $item;
+                break;
+            }
+        }
+
+        if (!$found) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Machine not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'machine' => $found,
+        ]);
+    }
+
+    /**
+     * Store a newly created machine in storage.
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'serial_id' => 'required|string|max:50',
-            'model' => 'required|string|max:100',
-            'type' => 'required|string|in:Washer,Dryer,Presser',
-            'installation_date' => 'required|string|max:50',
-            'status' => 'required|string|in:Running,Idle,Alert,Repairing',
-            'location' => 'required|string|max:100',
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|max:100',
         ]);
 
-        $machines = $this->getAllMachines();
-        $newId = count($machines) > 0 ? (max(array_column($machines, 'id')) + 1) : 1;
+        $allItems = $this->loadData();
 
-        $statusColors = [
-            'Running' => 'bg-emerald-100 text-emerald-700',
-            'Idle' => 'bg-blue-100 text-blue-700',
-            'Alert' => 'bg-amber-100 text-amber-700',
-            'Repairing' => 'bg-rose-100 text-rose-700',
-        ];
+        // Generate next ID and Machine ID if not provided
+        $maxId = 0;
+        foreach ($allItems as $item) {
+            if ($item->id > $maxId) {
+                $maxId = $item->id;
+            }
+        }
+        $newId = $maxId + 1;
+
+        $machineId = trim($request->input('machine_id', ''));
+        if (empty($machineId)) {
+            $machineId = sprintf('WM-%03d', $newId);
+        }
+
+        $nowDate = date('Y-m-d');
+        $nextDate = date('Y-m-d', strtotime('+30 days'));
 
         $newMachine = [
             'id' => $newId,
-            'serial_id' => trim($validated['serial_id']),
-            'model' => trim($validated['model']),
-            'type' => trim($validated['type']),
-            'full_model' => "{$validated['model']}\n({$validated['type']})",
-            'installation_date' => $validated['installation_date'],
-            'status' => $validated['status'],
-            'status_color' => $statusColors[$validated['status']] ?? 'bg-blue-100 text-blue-700',
-            'location' => trim($validated['location']),
-            'cycles_today' => 0,
-            'total_cycles' => 0,
-            'temperature' => 'Room Temp',
-            'motor_health' => '100%',
-            'last_serviced' => date('d M Y'),
+            'machine_id' => $machineId,
+            'name' => trim($request->input('name')),
+            'type' => trim($request->input('type')),
+            'capacity' => trim($request->input('capacity', '-')) ?: '-',
+            'model' => trim($request->input('model', 'Standard Model')) ?: 'Standard Model',
+            'location' => trim($request->input('location', 'Laundry Room 1')) ?: 'Laundry Room 1',
+            'status' => in_array($request->input('status'), ['Available', 'In Use', 'Under Maintenance']) ? $request->input('status') : 'Available',
+            'last_maintenance' => $request->input('last_maintenance', $nowDate) ?: $nowDate,
+            'next_maintenance' => $request->input('next_maintenance', $nextDate) ?: $nextDate,
+            'maintenance_history' => [
+                [
+                    'date' => $nowDate,
+                    'type' => 'Initial Setup',
+                    'note' => 'Machine registered into system',
+                ],
+            ],
+            'notes' => trim($request->input('notes', 'Registered laundry unit.')),
         ];
 
-        array_unshift($machines, $newMachine);
-        session(['mock_machines' => $machines]);
+        // 1. Try DB
+        try {
+            if (Schema::hasTable('machines')) {
+                Machine::create($newMachine);
+            }
+        } catch (\Throwable $e) {
+            // Ignore DB error and continue to file/session
+        }
+
+        // 2. Save in array
+        $allItems[] = (object) $newMachine;
+        $this->saveData($allItems);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Machine unit {$validated['serial_id']} registered successfully!",
-                'data' => $newMachine,
+                'message' => "Machine {$machineId} ({$newMachine['name']}) registered successfully!",
+                'machine' => $newMachine,
             ]);
         }
 
-        return redirect()->back()->with('success', "Machine unit {$validated['serial_id']} added successfully!");
+        return redirect()->route('machines.index')->with('success', "Machine {$machineId} registered successfully!");
     }
 
     /**
-     * Update existing machine unit.
+     * Update the specified machine in storage.
      */
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'serial_id' => 'required|string|max:50',
-            'model' => 'required|string|max:100',
-            'type' => 'required|string',
-            'status' => 'required|string',
-            'location' => 'required|string',
-        ]);
+        $allItems = $this->loadData();
+        $updatedItem = null;
+        $indexFound = -1;
 
-        $machines = $this->getAllMachines();
-        $statusColors = [
-            'Running' => 'bg-emerald-100 text-emerald-700',
-            'Idle' => 'bg-blue-100 text-blue-700',
-            'Alert' => 'bg-amber-100 text-amber-700',
-            'Repairing' => 'bg-rose-100 text-rose-700',
-        ];
-
-        foreach ($machines as &$m) {
-            if ($m['id'] == $id || ($m['serial_id'] ?? '') == $id) {
-                $m['serial_id'] = trim($validated['serial_id']);
-                $m['model'] = trim($validated['model']);
-                $m['type'] = trim($validated['type']);
-                $m['full_model'] = "{$validated['model']}\n({$validated['type']})";
-                $m['status'] = $validated['status'];
-                $m['status_color'] = $statusColors[$validated['status']] ?? 'bg-blue-100 text-blue-700';
-                $m['location'] = trim($validated['location']);
+        foreach ($allItems as $idx => $item) {
+            if ($item->id == $id || ($item->machine_id ?? '') == $id) {
+                $indexFound = $idx;
+                $updatedItem = (array) $item;
                 break;
             }
         }
-        unset($m);
 
-        session(['mock_machines' => $machines]);
+        if ($indexFound === -1 || !$updatedItem) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Machine not found.'], 404);
+            }
+            return redirect()->route('machines.index')->with('error', 'Machine not found.');
+        }
+
+        $oldStatus = $updatedItem['status'] ?? 'Available';
+        $newStatus = $request->input('status', $oldStatus);
+
+        $updatedItem['name'] = trim($request->input('name', $updatedItem['name']));
+        $updatedItem['type'] = trim($request->input('type', $updatedItem['type']));
+        $updatedItem['capacity'] = trim($request->input('capacity', $updatedItem['capacity'] ?? '-')) ?: '-';
+        $updatedItem['model'] = trim($request->input('model', $updatedItem['model'] ?? ''));
+        $updatedItem['location'] = trim($request->input('location', $updatedItem['location'] ?? 'Laundry Room 1'));
+        $updatedItem['status'] = in_array($newStatus, ['Available', 'In Use', 'Under Maintenance']) ? $newStatus : $oldStatus;
+        $updatedItem['last_maintenance'] = $request->input('last_maintenance', $updatedItem['last_maintenance'] ?? date('Y-m-d'));
+        $updatedItem['next_maintenance'] = $request->input('next_maintenance', $updatedItem['next_maintenance'] ?? date('Y-m-d', strtotime('+30 days')));
+        $updatedItem['notes'] = trim($request->input('notes', $updatedItem['notes'] ?? ''));
+
+        // If status changed to Under Maintenance, automatically log it in maintenance history
+        if ($newStatus === 'Under Maintenance' && $oldStatus !== 'Under Maintenance') {
+            $history = is_array($updatedItem['maintenance_history'] ?? null) ? $updatedItem['maintenance_history'] : [];
+            array_unshift($history, [
+                'date' => date('Y-m-d'),
+                'type' => 'Maintenance Scheduled',
+                'note' => 'Status changed to Under Maintenance: ' . ($request->input('notes') ?: 'Routine service required'),
+            ]);
+            $updatedItem['maintenance_history'] = $history;
+        }
+
+        // If user submitted an extra maintenance log entry
+        if ($request->filled('log_type') && $request->filled('log_note')) {
+            $history = is_array($updatedItem['maintenance_history'] ?? null) ? $updatedItem['maintenance_history'] : [];
+            array_unshift($history, [
+                'date' => $request->input('log_date', date('Y-m-d')),
+                'type' => trim($request->input('log_type')),
+                'note' => trim($request->input('log_note')),
+            ]);
+            $updatedItem['maintenance_history'] = $history;
+        }
+
+        // 1. Try DB
+        try {
+            if (Schema::hasTable('machines')) {
+                $dbItem = Machine::where('id', $updatedItem['id'])->orWhere('machine_id', $updatedItem['machine_id'])->first();
+                if ($dbItem) {
+                    $dbItem->update($updatedItem);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore DB error
+        }
+
+        // 2. Save
+        $allItems[$indexFound] = (object) $updatedItem;
+        $this->saveData($allItems);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Machine #{$id} ({$validated['serial_id']}) updated successfully!",
-                'data' => $validated,
+                'message' => "Machine {$updatedItem['machine_id']} updated successfully!",
+                'machine' => $updatedItem,
             ]);
         }
 
-        return redirect()->back()->with('success', "Machine #{$id} updated successfully!");
+        return redirect()->route('machines.index')->with('success', "Machine {$updatedItem['machine_id']} updated successfully!");
     }
 
     /**
-     * Delete or decommission a machine unit.
+     * Remove the specified machine from storage.
      */
     public function destroy(Request $request, $id)
     {
-        $machines = $this->getAllMachines();
-        $machines = array_values(array_filter($machines, function ($m) use ($id) {
-            return $m['id'] != $id && ($m['serial_id'] ?? '') != $id;
-        }));
+        $allItems = $this->loadData();
+        $deletedName = '';
+        $newItems = [];
 
-        session(['mock_machines' => $machines]);
+        foreach ($allItems as $item) {
+            if ($item->id == $id || ($item->machine_id ?? '') == $id) {
+                $deletedName = ($item->machine_id ?? '') . ' - ' . ($item->name ?? '');
+                continue;
+            }
+            $newItems[] = $item;
+        }
+
+        // 1. Try DB
+        try {
+            if (Schema::hasTable('machines')) {
+                Machine::where('id', $id)->orWhere('machine_id', $id)->delete();
+            }
+        } catch (\Throwable $e) {
+            // Ignore DB error
+        }
+
+        // 2. Save
+        $this->saveData($newItems);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Machine unit #{$id} has been decommissioned and archived.",
-                'id' => $id,
+                'message' => "Machine {$deletedName} deleted successfully!",
             ]);
         }
 
-        return redirect()->back()->with('success', "Machine unit #{$id} decommissioned successfully!");
+        return redirect()->route('machines.index')->with('success', "Machine {$deletedName} deleted successfully!");
     }
 
     /**
-     * Export machine inventory report.
+     * Quick status update endpoint.
      */
-    public function export($format = 'csv')
+    public function updateStatus(Request $request, $id)
     {
-        $machines = $this->getAllMachines();
-        $format = strtolower($format);
+        $status = $request->input('status');
+        if (!in_array($status, ['Available', 'In Use', 'Under Maintenance'])) {
+            return response()->json(['success' => false, 'message' => 'Invalid status'], 422);
+        }
 
-        if ($format === 'csv' || $format === 'excel') {
-            $filename = 'machine_inventory_' . date('Y_m_d_His') . '.csv';
-            $headers = [
-                'Content-Type' => 'text/csv; charset=UTF-8',
-                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-                'Pragma' => 'no-cache',
-                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-                'Expires' => '0',
-            ];
+        $allItems = $this->loadData();
+        $found = null;
 
-            $callback = function () use ($machines) {
-                $file = fopen('php://output', 'w');
-                // UTF-8 BOM for Microsoft Excel compatibility
-                fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-                fputcsv($file, ['ID', 'Serial ID', 'Model', 'Type', 'Installation Date', 'Status', 'Location', 'Total Cycles', 'Health', 'Last Serviced']);
+        foreach ($allItems as $item) {
+            if ($item->id == $id || ($item->machine_id ?? '') == $id) {
+                $item->status = $status;
+                $found = $item;
+                break;
+            }
+        }
 
-                foreach ($machines as $m) {
-                    fputcsv($file, [
-                        $m['id'],
-                        $m['serial_id'],
-                        $m['model'],
-                        $m['type'],
-                        $m['installation_date'],
-                        $m['status'],
-                        $m['location'],
-                        $m['total_cycles'],
-                        $m['motor_health'],
-                        $m['last_serviced'] ?? 'N/A',
-                    ]);
+        if ($found) {
+            $this->saveData($allItems);
+            try {
+                if (Schema::hasTable('machines')) {
+                    Machine::where('id', $id)->orWhere('machine_id', $id)->update(['status' => $status]);
                 }
-                fclose($file);
-            };
+            } catch (\Throwable $e) {}
 
-            return response()->stream($callback, 200, $headers);
-        }
-
-        if ($format === 'pdf') {
-            return view('pages.service.machine_print', [
-                'machines' => $machines,
-                'stats' => [
-                    'total_units' => 24,
-                    'active_cycles' => 20,
-                    'maintenance_alerts' => 2,
-                    'upcoming_service' => 24,
-                ],
-                'printedAt' => date('d/M/Y H:i:s'),
-                'printedBy' => auth()->check() ? auth()->user()->name : 'Admin',
+            return response()->json([
+                'success' => true,
+                'message' => "Machine status updated to {$status}",
+                'machine' => $found,
             ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => "Machine inventory report ready for export ({$format}).",
-            'total' => count($machines),
-        ]);
+        return response()->json(['success' => false, 'message' => 'Machine not found'], 404);
     }
 
     /**
-     * Get all promotions with session & database persistence.
+     * Reset machines to the original 12 baseline units.
      */
-    public function getAllPromotions(): array
+    public function reset(Request $request)
     {
-        if (session()->has('mock_promotions')) {
-            return session('mock_promotions');
-        }
+        $defaults = $this->getDefaultMachines();
+        $this->saveData($defaults);
 
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('promotions')) {
-                $dbPromos = \App\Models\Promotion::orderBy('id', 'desc')->get()->toArray();
-                if (!empty($dbPromos)) {
-                    session(['mock_promotions' => $dbPromos]);
-                    return $dbPromos;
+            if (Schema::hasTable('machines')) {
+                Machine::truncate();
+                foreach ($defaults as $d) {
+                    Machine::create($d);
                 }
             }
         } catch (\Throwable $e) {}
 
-        $defaults = $this->getBaselinePromotions();
-        session(['mock_promotions' => $defaults]);
-        return $defaults;
-    }
-
-    /**
-     * Baseline promotional campaigns dataset.
-     */
-    public function getBaselinePromotions(): array
-    {
-        return [
-            [
-                'id' => 1,
-                'code' => 'WASHER20',
-                'title' => 'Washer Wednesday Special',
-                'description' => '20% off all front-load washing cycles on Wednesdays and weekends.',
-                'discount_type' => 'percentage',
-                'discount_value' => 20,
-                'applies_to' => 'Washers',
-                'min_spend' => 10.00,
-                'max_discount' => 15.00,
-                'start_date' => '2026-09-01',
-                'end_date' => '2026-12-31',
-                'usage_limit' => 100,
-                'used_count' => 58,
-                'status' => 'Active',
-            ],
-            [
-                'id' => 2,
-                'code' => 'DRYFREESHIP',
-                'title' => 'Free Drying & Express Dispatch',
-                'description' => 'Save $5.00 instantly on all heavy dryer tumble cycles.',
-                'discount_type' => 'fixed',
-                'discount_value' => 5.00,
-                'applies_to' => 'Dryers',
-                'min_spend' => 20.00,
-                'max_discount' => 5.00,
-                'start_date' => '2026-09-10',
-                'end_date' => '2026-11-15',
-                'usage_limit' => 50,
-                'used_count' => 34,
-                'status' => 'Active',
-            ],
-            [
-                'id' => 3,
-                'code' => 'NEWCLEAN10',
-                'title' => 'First-Time Customer Bonus',
-                'description' => 'Welcome coupon for $3.00 off on any machine cycle or laundry service.',
-                'discount_type' => 'fixed',
-                'discount_value' => 3.00,
-                'applies_to' => 'All Machines',
-                'min_spend' => 5.00,
-                'max_discount' => 3.00,
-                'start_date' => '2026-01-01',
-                'end_date' => '2026-12-31',
-                'usage_limit' => 500,
-                'used_count' => 89,
-                'status' => 'Active',
-            ],
-            [
-                'id' => 4,
-                'code' => 'VIPBULK25',
-                'title' => 'Commercial Wing Bulk Discount',
-                'description' => 'Exclusive 25% discount for bulk commercial orders with 3+ machines.',
-                'discount_type' => 'percentage',
-                'discount_value' => 25,
-                'applies_to' => 'Commercial Wing',
-                'min_spend' => 50.00,
-                'max_discount' => 35.00,
-                'start_date' => '2026-09-01',
-                'end_date' => '2026-11-30',
-                'usage_limit' => 50,
-                'used_count' => 21,
-                'status' => 'Active',
-            ],
-            [
-                'id' => 5,
-                'code' => 'PRESSPRO15',
-                'title' => 'Steam Pressing Weekend Rush',
-                'description' => '15% off pressing & ironing units for delicate garments.',
-                'discount_type' => 'percentage',
-                'discount_value' => 15,
-                'applies_to' => 'Presser Units',
-                'min_spend' => 15.00,
-                'max_discount' => 10.00,
-                'start_date' => '2026-10-15',
-                'end_date' => '2026-10-25',
-                'usage_limit' => 75,
-                'used_count' => 0,
-                'status' => 'Scheduled',
-            ],
-            [
-                'id' => 6,
-                'code' => 'SUMMERDEAL',
-                'title' => 'Sanitized High-Heat Clearance',
-                'description' => '30% off high-temperature wash cycles and sanitized steam.',
-                'discount_type' => 'percentage',
-                'discount_value' => 30,
-                'applies_to' => 'All Machines',
-                'min_spend' => 30.00,
-                'max_discount' => 20.00,
-                'start_date' => '2026-08-01',
-                'end_date' => '2026-09-01',
-                'usage_limit' => 120,
-                'used_count' => 120,
-                'status' => 'Expired',
-            ],
-        ];
-    }
-
-    /**
-     * Compute Promotion KPIs.
-     */
-    public function getPromoStats(): array
-    {
-        $promos = $this->getAllPromotions();
-        $activeCount = count(array_filter($promos, fn($p) => ($p['status'] ?? '') === 'Active'));
-        $totalRedemptions = array_sum(array_column($promos, 'used_count'));
-
-        return [
-            'total_promotions' => count($promos),
-            'active_promotions' => $activeCount,
-            'total_savings' => '$1,280.50',
-            'total_redemptions' => $totalRedemptions,
-            'top_code' => 'WASHER20',
-        ];
-    }
-
-    /**
-     * Handle Promotions Index API / Direct View.
-     */
-    public function promotionsIndex(Request $request)
-    {
-        $promotions = $this->getAllPromotions();
-        $stats = $this->getPromoStats();
-
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'promotions' => $promotions,
-                'stats' => $stats,
+                'message' => 'Machines reset to official 12 units successfully!',
             ]);
         }
 
-        return redirect()->route('machines.index', ['#discountsPromotionsSection']);
-    }
-
-    /**
-     * Store a newly created Promotion.
-     */
-    public function storePromotion(Request $request)
-    {
-        $validated = $request->validate([
-            'code' => 'required|string|max:50',
-            'title' => 'required|string|max:150',
-            'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0.01',
-            'applies_to' => 'required|string|max:100',
-            'min_spend' => 'nullable|numeric|min:0',
-            'max_discount' => 'nullable|numeric|min:0',
-            'start_date' => 'nullable|string|max:50',
-            'end_date' => 'nullable|string|max:50',
-            'usage_limit' => 'nullable|integer|min:1',
-            'description' => 'nullable|string|max:500',
-            'status' => 'nullable|in:Active,Scheduled,Paused,Expired',
-        ]);
-
-        $promos = $this->getAllPromotions();
-        $newId = count($promos) > 0 ? (max(array_column($promos, 'id')) + 1) : 1;
-
-        $codeClean = strtoupper(trim($validated['code']));
-
-        $newPromo = [
-            'id' => $newId,
-            'code' => $codeClean,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? 'Promotion campaign for laundry machines and wash cycles.',
-            'discount_type' => $validated['discount_type'],
-            'discount_value' => (float) $validated['discount_value'],
-            'applies_to' => $validated['applies_to'],
-            'min_spend' => (float) ($validated['min_spend'] ?? 0),
-            'max_discount' => isset($validated['max_discount']) && $validated['max_discount'] > 0 ? (float) $validated['max_discount'] : null,
-            'start_date' => $validated['start_date'] ?: date('Y-m-d'),
-            'end_date' => $validated['end_date'] ?: date('Y-m-d', strtotime('+30 days')),
-            'usage_limit' => (int) ($validated['usage_limit'] ?? 100),
-            'used_count' => 0,
-            'status' => $validated['status'] ?? 'Active',
-        ];
-
-        array_unshift($promos, $newPromo);
-        session(['mock_promotions' => $promos]);
-
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('promotions')) {
-                \App\Models\Promotion::create($newPromo);
-            }
-        } catch (\Throwable $e) {}
-
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "Promotion code {$codeClean} registered successfully!",
-                'promotion' => $newPromo,
-                'stats' => $this->getPromoStats(),
-            ]);
-        }
-
-        return redirect()->route('machines.index')
-            ->with('success', "Promotion code {$codeClean} added successfully!");
-    }
-
-    /**
-     * Update an existing Promotion.
-     */
-    public function updatePromotion(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:150',
-            'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0.01',
-            'applies_to' => 'required|string|max:100',
-            'min_spend' => 'nullable|numeric|min:0',
-            'max_discount' => 'nullable|numeric|min:0',
-            'start_date' => 'nullable|string|max:50',
-            'end_date' => 'nullable|string|max:50',
-            'usage_limit' => 'nullable|integer|min:1',
-            'description' => 'nullable|string|max:500',
-            'status' => 'nullable|in:Active,Scheduled,Paused,Expired',
-        ]);
-
-        $promos = $this->getAllPromotions();
-        $updatedItem = null;
-
-        foreach ($promos as &$p) {
-            if ($p['id'] == $id) {
-                $p['title'] = $validated['title'];
-                $p['discount_type'] = $validated['discount_type'];
-                $p['discount_value'] = (float) $validated['discount_value'];
-                $p['applies_to'] = $validated['applies_to'];
-                $p['min_spend'] = (float) ($validated['min_spend'] ?? 0);
-                $p['max_discount'] = isset($validated['max_discount']) && $validated['max_discount'] > 0 ? (float) $validated['max_discount'] : null;
-                if (!empty($validated['start_date'])) $p['start_date'] = $validated['start_date'];
-                if (!empty($validated['end_date'])) $p['end_date'] = $validated['end_date'];
-                if (!empty($validated['usage_limit'])) $p['usage_limit'] = (int) $validated['usage_limit'];
-                if (!empty($validated['description'])) $p['description'] = $validated['description'];
-                if (!empty($validated['status'])) $p['status'] = $validated['status'];
-                $updatedItem = $p;
-                break;
-            }
-        }
-        unset($p);
-
-        session(['mock_promotions' => $promos]);
-
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('promotions')) {
-                \App\Models\Promotion::where('id', $id)->update(array_filter($validated));
-            }
-        } catch (\Throwable $e) {}
-
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "Promotion updated successfully!",
-                'promotion' => $updatedItem,
-                'stats' => $this->getPromoStats(),
-            ]);
-        }
-
-        return redirect()->route('machines.index')
-            ->with('success', "Promotion updated successfully!");
-    }
-
-    /**
-     * Delete / Deactivate a Promotion.
-     */
-    public function destroyPromotion(Request $request, $id)
-    {
-        $promos = $this->getAllPromotions();
-        $promos = array_values(array_filter($promos, fn($p) => $p['id'] != $id));
-        session(['mock_promotions' => $promos]);
-
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('promotions')) {
-                \App\Models\Promotion::where('id', $id)->delete();
-            }
-        } catch (\Throwable $e) {}
-
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => "Promotion removed successfully.",
-                'stats' => $this->getPromoStats(),
-            ]);
-        }
-
-        return redirect()->route('machines.index')
-            ->with('success', "Promotion deleted successfully.");
-    }
-
-    /**
-     * Toggle Promotion Active / Paused.
-     */
-    public function togglePromotion(Request $request, $id)
-    {
-        $promos = $this->getAllPromotions();
-        $newStatus = 'Active';
-
-        foreach ($promos as &$p) {
-            if ($p['id'] == $id) {
-                $p['status'] = ($p['status'] === 'Active') ? 'Paused' : 'Active';
-                $newStatus = $p['status'];
-                break;
-            }
-        }
-        unset($p);
-
-        session(['mock_promotions' => $promos]);
-
-        return response()->json([
-            'success' => true,
-            'new_status' => $newStatus,
-            'message' => "Promotion status updated to {$newStatus}.",
-            'stats' => $this->getPromoStats(),
-        ]);
-    }
-
-    /**
-     * Test and Apply Discount Calculation.
-     */
-    public function applyPromotion(Request $request)
-    {
-        $code = strtoupper(trim($request->input('code', '')));
-        $amount = (float) $request->input('amount', 0);
-
-        if (!$code) {
-            return response()->json(['success' => false, 'message' => 'Please enter a valid promotion code.'], 422);
-        }
-
-        $promos = $this->getAllPromotions();
-        $promo = collect($promos)->firstWhere('code', $code);
-
-        if (!$promo) {
-            return response()->json(['success' => false, 'message' => "Promo code '{$code}' not found."], 404);
-        }
-
-        if ($promo['status'] !== 'Active') {
-            return response()->json(['success' => false, 'message' => "Promotion '{$code}' is currently {$promo['status']}."], 400);
-        }
-
-        if ($promo['min_spend'] > 0 && $amount < $promo['min_spend']) {
-            return response()->json([
-                'success' => false,
-                'message' => "Minimum order amount of $" . number_format($promo['min_spend'], 2) . " required for code '{$code}'."
-            ], 400);
-        }
-
-        $discount = 0.00;
-        if ($promo['discount_type'] === 'percentage') {
-            $discount = round(($amount * $promo['discount_value']) / 100, 2);
-            if (!empty($promo['max_discount']) && $discount > $promo['max_discount']) {
-                $discount = (float) $promo['max_discount'];
-            }
-        } else {
-            $discount = (float) $promo['discount_value'];
-        }
-
-        $discount = min($discount, $amount);
-        $finalAmount = max(0, $amount - $discount);
-
-        return response()->json([
-            'success' => true,
-            'valid' => true,
-            'code' => $code,
-            'title' => $promo['title'],
-            'discount_type' => $promo['discount_type'],
-            'discount_value' => $promo['discount_value'],
-            'discount_amount' => $discount,
-            'original_amount' => $amount,
-            'final_amount' => $finalAmount,
-            'applies_to' => $promo['applies_to'],
-            'message' => "Promo code '{$code}' applied! You saved $" . number_format($discount, 2) . ".",
-        ]);
+        return redirect()->route('machines.index')->with('success', 'Machines reset to official 12 units successfully!');
     }
 }

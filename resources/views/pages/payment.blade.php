@@ -1,30 +1,56 @@
-<?php $__env->startSection('content'); ?>
-<div class="space-y-6 max-w-[1580px] mx-auto pb-12">
+@extends('layouts.navbar')
+
+@php
+    /** @var array $payments */
+    /** @var array $pagination */
+    /** @var array $availableOrders */
+    /** @var array $kpis */
+    /** @var array $statusChart */
+    /** @var array $methodBreakdown */
+    $payments = $payments ?? [];
+    $pagination = $pagination ?? [];
+    $availableOrders = $availableOrders ?? [];
+@endphp
+
+@section('content')
+<div class="space-y-6 w-full mx-auto pb-12">
 
     <!-- Flash Messages (Success & Error Alerts) -->
-    <?php if(session('success')): ?>
+    @if(session('success'))
         <div id="flash-success" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between shadow-2xs animate-in fade-in duration-200">
             <div class="flex items-center space-x-3">
-                <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
-                <span class="text-sm font-semibold"><?php echo e(session('success')); ?></span>
+                <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 shrink-0"></i>
+                <span class="text-sm font-semibold">{{ session('success') }}</span>
             </div>
             <button type="button" onclick="document.getElementById('flash-success').remove()" class="text-emerald-500 hover:text-emerald-700 p-1">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
         </div>
-    <?php endif; ?>
+    @endif
 
-    <?php if(session('error')): ?>
+    @if(session('error'))
         <div id="flash-error" class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center justify-between shadow-2xs animate-in fade-in duration-200">
             <div class="flex items-center space-x-3">
-                <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
-                <span class="text-sm font-semibold"><?php echo e(session('error')); ?></span>
+                <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 shrink-0"></i>
+                <span class="text-sm font-semibold">{{ session('error') }}</span>
             </div>
             <button type="button" onclick="document.getElementById('flash-error').remove()" class="text-rose-500 hover:text-rose-700 p-1">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
         </div>
-    <?php endif; ?>
+    @endif
+
+    @if(isset($errors) && $errors->any())
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 space-y-1">
+            <div class="flex items-center space-x-2 font-bold text-xs mb-1">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+                <span>Please correct the following errors:</span>
+            </div>
+            @foreach($errors->all() as $err)
+                <p class="text-xs font-semibold pl-6">• {{ $err }}</p>
+            @endforeach
+        </div>
+    @endif
 
     <!-- Top Action Bar: Record Payment Button (Aligned Right matching Screenshot 1) -->
     <div class="flex items-center justify-end pt-1">
@@ -43,7 +69,7 @@
         
         <!-- Card 1: Total Payments (Blue tint) -->
         <div class="bg-[#F0F7FF] border border-[#E0EDFD] rounded-2xl p-5 shadow-2xs flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-[#2563EB] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div class="w-12 h-12 rounded-xl bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-sm">
                 <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <rect x="2" y="5" width="20" height="14" rx="3"></rect>
                     <line x1="2" y1="10" x2="22" y2="10"></line>
@@ -51,9 +77,9 @@
             </div>
             <div>
                 <p class="text-xs text-gray-500 font-medium">Total Payments</p>
-                <h3 class="text-2xl font-bold text-gray-900 mt-0.5 tracking-tight"><?php echo e($kpis['total_payments'] ?? '$2,450.00'); ?></h3>
+                <h3 class="text-xl font-bold text-gray-900 mt-0.5 tracking-tight">{{ $kpis['total_payments'] ?? '$0.00' }}</h3>
                 <p class="text-xs font-semibold text-emerald-600 flex items-center mt-0.5">
-                    <span>&uarr; <?php echo e($kpis['total_payments_growth'] ?? '12% vs. last month'); ?></span>
+                    <span>&uarr; {{ $kpis['total_payments_growth'] ?? '0% vs. last month' }}</span>
                 </p>
             </div>
         </div>
@@ -65,9 +91,9 @@
             </div>
             <div>
                 <p class="text-xs text-gray-500 font-medium">Today's Revenue</p>
-                <h3 class="text-2xl font-bold text-gray-900 mt-0.5 tracking-tight"><?php echo e($kpis['todays_revenue'] ?? '$320.00'); ?></h3>
+                <h3 class="text-xl font-bold text-gray-900 mt-0.5 tracking-tight">{{ $kpis['todays_revenue'] ?? '$0.00' }}</h3>
                 <p class="text-xs font-semibold text-emerald-600 flex items-center mt-0.5">
-                    <span>&uarr; <?php echo e($kpis['todays_revenue_growth'] ?? '8% vs. yesterday'); ?></span>
+                    <span>&uarr; {{ $kpis['todays_revenue_growth'] ?? '0% vs. yesterday' }}</span>
                 </p>
             </div>
         </div>
@@ -81,9 +107,9 @@
             </div>
             <div>
                 <p class="text-xs text-gray-500 font-medium">Outstanding Balance</p>
-                <h3 class="text-2xl font-bold text-gray-900 mt-0.5 tracking-tight"><?php echo e($kpis['outstanding_balance'] ?? '$150.00'); ?></h3>
+                <h3 class="text-xl font-bold text-gray-900 mt-0.5 tracking-tight">{{ $kpis['outstanding_balance'] ?? '$0.00' }}</h3>
                 <p class="text-xs font-semibold text-rose-600 flex items-center mt-0.5">
-                    <span>&uarr; <?php echo e($kpis['outstanding_balance_growth'] ?? '5% vs. last month'); ?></span>
+                    <span>&uarr; {{ $kpis['outstanding_balance_growth'] ?? '0% vs. last month' }}</span>
                 </p>
             </div>
         </div>
@@ -97,9 +123,9 @@
             </div>
             <div>
                 <p class="text-xs text-gray-500 font-medium">Refunds</p>
-                <h3 class="text-2xl font-bold text-gray-900 mt-0.5 tracking-tight"><?php echo e($kpis['refunds'] ?? '$50.00'); ?></h3>
+                <h3 class="text-xl font-bold text-gray-900 mt-0.5 tracking-tight">{{ $kpis['refunds'] ?? '$0.00' }}</h3>
                 <p class="text-xs font-semibold text-emerald-600 flex items-center mt-0.5">
-                    <span>&uarr; <?php echo e($kpis['refunds_growth'] ?? '2% vs. last month'); ?></span>
+                    <span>&uarr; {{ $kpis['refunds_growth'] ?? '0% vs. last month' }}</span>
                 </p>
             </div>
         </div>
@@ -107,7 +133,7 @@
 
     <!-- 2. Search & Filter Bar (Matching Screenshot 1) -->
     <div class="bg-white rounded-2xl border border-gray-200/90 p-3.5 shadow-2xs">
-        <form method="GET" action="<?php echo e(route('payment.index')); ?>" id="paymentFilterForm" class="flex flex-col md:flex-row items-center gap-3">
+        <form method="GET" action="{{ route('payment.index') }}" id="paymentFilterForm" class="flex flex-col md:flex-row items-center gap-3">
             
             <!-- Search Input -->
             <div class="relative flex-1 w-full">
@@ -120,7 +146,7 @@
                 <input type="text" 
                        name="search" 
                        id="paymentSearchInput"
-                       value="<?php echo e($search ?? ''); ?>"
+                       value="{{ $search ?? '' }}"
                        placeholder="Search by order number, customer name, payment ID..." 
                        class="w-full bg-white text-gray-800 placeholder-gray-400 text-sm rounded-xl pl-10 pr-4 py-2 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
             </div>
@@ -130,10 +156,10 @@
                 <select name="status" 
                         id="statusFilterSelect"
                         class="w-full bg-white text-gray-700 text-sm rounded-xl px-3.5 py-2 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:1rem] bg-[right_0.8rem_center] bg-no-repeat pr-8">
-                    <option value="all" <?php echo e(($statusFilter ?? 'all') === 'all' ? 'selected' : ''); ?>>All Payment Status</option>
-                    <option value="COMPLETED" <?php echo e(($statusFilter ?? '') === 'COMPLETED' ? 'selected' : ''); ?>>Completed</option>
-                    <option value="PENDING" <?php echo e(($statusFilter ?? '') === 'PENDING' ? 'selected' : ''); ?>>Pending</option>
-                    <option value="REFUNDED" <?php echo e(($statusFilter ?? '') === 'REFUNDED' ? 'selected' : ''); ?>>Refunded</option>
+                    <option value="all" {{ ($statusFilter ?? 'all') === 'all' ? 'selected' : '' }}>All Payment Status</option>
+                    <option value="COMPLETED" {{ ($statusFilter ?? '') === 'COMPLETED' ? 'selected' : '' }}>Completed</option>
+                    <option value="PENDING" {{ ($statusFilter ?? '') === 'PENDING' ? 'selected' : '' }}>Pending</option>
+                    <option value="REFUNDED" {{ ($statusFilter ?? '') === 'REFUNDED' ? 'selected' : '' }}>Refunded</option>
                 </select>
             </div>
 
@@ -142,11 +168,11 @@
                 <select name="method" 
                         id="methodFilterSelect"
                         class="w-full bg-white text-gray-700 text-sm rounded-xl px-3.5 py-2 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:1rem] bg-[right_0.8rem_center] bg-no-repeat pr-8">
-                    <option value="all" <?php echo e(($methodFilter ?? 'all') === 'all' ? 'selected' : ''); ?>>All Payment Methods</option>
-                    <option value="Cash" <?php echo e(($methodFilter ?? '') === 'Cash' ? 'selected' : ''); ?>>Cash</option>
-                    <option value="Credit Card" <?php echo e(($methodFilter ?? '') === 'Credit Card' ? 'selected' : ''); ?>>Credit Card</option>
-                    <option value="Bank Transfer" <?php echo e(($methodFilter ?? '') === 'Bank Transfer' ? 'selected' : ''); ?>>Bank Transfer</option>
-                    <option value="Mobile Payment" <?php echo e(($methodFilter ?? '') === 'Mobile Payment' ? 'selected' : ''); ?>>Mobile Payment</option>
+                    <option value="all" {{ ($methodFilter ?? 'all') === 'all' ? 'selected' : '' }}>All Payment Methods</option>
+                    <option value="Cash" {{ ($methodFilter ?? '') === 'Cash' ? 'selected' : '' }}>Cash</option>
+                    <option value="Credit Card" {{ ($methodFilter ?? '') === 'Credit Card' ? 'selected' : '' }}>Credit Card</option>
+                    <option value="Bank Transfer" {{ ($methodFilter ?? '') === 'Bank Transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                    <option value="Mobile Payment" {{ ($methodFilter ?? '') === 'Mobile Payment' ? 'selected' : '' }}>Mobile Payment</option>
                 </select>
             </div>
 
@@ -161,7 +187,7 @@
                     <span>Search</span>
                 </button>
 
-                <a href="<?php echo e(route('payment.index')); ?>" 
+                <a href="{{ route('payment.index') }}" 
                    class="flex-1 md:flex-none border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-sm px-4 py-2 rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer">
                     <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -180,7 +206,7 @@
             <div class="flex items-center space-x-2.5">
                 <h3 class="text-base font-bold text-gray-900 tracking-tight">Payment List</h3>
                 <span class="bg-[#EFF6FF] text-[#2563EB] text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                    <?php echo e($pagination['total_items'] ?? count($payments)); ?> payments
+                    {{ $pagination['total_items'] ?? count($payments) }} payments
                 </span>
             </div>
             
@@ -195,7 +221,7 @@
                     </svg>
                 </button>
                 <!-- Print icon -->
-                <a href="<?php echo e(route('payment.export')); ?>" class="hover:text-gray-600 transition p-1" title="Export CSV / Print">
+                <a href="{{ route('payment.export') }}" class="hover:text-gray-600 transition p-1" title="Export CSV / Print">
                     <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
                         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
@@ -222,100 +248,95 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 text-sm">
-                    <?php $__empty_1 = true; $__currentLoopData = $payments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $payment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    @forelse($payments as $index => $payment)
+                    @php /** @var array $payment */ /** @var int $index */ @endphp
                     <tr class="hover:bg-blue-50/20 transition-colors group">
                         
                         <!-- Index -->
                         <td class="py-3.5 px-4 text-center text-xs text-gray-400 font-medium">
-                            <?php echo e(($pagination['from'] ?? 1) + $index); ?>
-
+                            {{ ($pagination['from'] ?? 1) + $index }}
                         </td>
 
                         <!-- Payment ID -->
                         <td class="py-3.5 px-4">
                             <button type="button" 
-                                    onclick="viewPaymentById('<?php echo e($payment['payment_id']); ?>')"
+                                    data-id="{{ $payment['payment_id'] }}"
+                                    onclick="viewPaymentById(this.dataset.id)"
                                     class="text-[#2563EB] font-bold hover:underline cursor-pointer">
-                                <?php echo e($payment['payment_id']); ?>
-
+                                {{ $payment['payment_id'] }}
                             </button>
                         </td>
 
                         <!-- Order Number -->
                         <td class="py-3.5 px-4 text-gray-600 font-medium text-xs">
-                            <?php echo e($payment['order_number']); ?>
-
+                            {{ $payment['order_number'] }}
                         </td>
 
                         <!-- Customer Name (with Initials Avatar) -->
                         <td class="py-3.5 px-4">
                             <div class="flex items-center space-x-2.5">
-                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold <?php echo e($payment['avatar_color'] ?? 'bg-blue-100 text-blue-700'); ?> flex-shrink-0">
-                                    <?php echo e($payment['customer_initials'] ?? 'CU'); ?>
-
+                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold {{ $payment['avatar_color'] ?? 'bg-blue-100 text-blue-700' }} flex-shrink-0">
+                                    {{ $payment['customer_initials'] ?? 'CU' }}
                                 </div>
                                 <span class="font-bold text-gray-900 text-xs tracking-tight">
-                                    <?php echo e($payment['customer_name']); ?>
-
+                                    {{ $payment['customer_name'] }}
                                 </span>
                             </div>
                         </td>
 
                         <!-- Amount -->
                         <td class="py-3.5 px-4 font-bold text-gray-900 text-xs">
-                            $<?php echo e(number_format($payment['amount'], 2)); ?>
-
+                            ${{ number_format($payment['amount'], 2) }}
                         </td>
 
                         <!-- Payment Method with Icon -->
                         <td class="py-3.5 px-4 text-xs font-medium text-gray-700">
                             <div class="flex items-center space-x-2">
-                                <?php if(stripos($payment['payment_method'], 'Cash') !== false): ?>
+                                @if(stripos($payment['payment_method'] ?? '', 'Cash') !== false)
                                     <svg class="w-4 h-4 text-emerald-600 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                         <rect x="2" y="6" width="20" height="12" rx="2"></rect>
                                         <circle cx="12" cy="12" r="2"></circle>
                                         <path d="M6 12h.01M18 12h.01"></path>
                                     </svg>
-                                <?php elseif(stripos($payment['payment_method'], 'Credit') !== false): ?>
+                                @elseif(stripos($payment['payment_method'] ?? '', 'Credit') !== false)
                                     <svg class="w-4 h-4 text-blue-600 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                         <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                                         <line x1="1" y1="10" x2="23" y2="10"></line>
                                     </svg>
-                                <?php elseif(stripos($payment['payment_method'], 'Mobile') !== false): ?>
+                                @elseif(stripos($payment['payment_method'] ?? '', 'Mobile') !== false)
                                     <svg class="w-4 h-4 text-amber-500 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                         <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
                                         <line x1="12" y1="18" x2="12.01" y2="18"></line>
                                     </svg>
-                                <?php else: ?>
+                                @else
                                     <svg class="w-4 h-4 text-purple-600 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                         <path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 2L2 7h20L12 2z"></path>
                                     </svg>
-                                <?php endif; ?>
-                                <span><?php echo e($payment['payment_method']); ?></span>
+                                @endif
+                                <span>{{ $payment['payment_method'] }}</span>
                             </div>
                         </td>
 
                         <!-- Payment Status Pill -->
                         <td class="py-3.5 px-4">
-                            <?php if(strtoupper($payment['status']) === 'COMPLETED'): ?>
+                            @if(strtoupper($payment['status'] ?? '') === 'COMPLETED')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#DCFCE7] text-[#15803D] uppercase tracking-wider">
                                     COMPLETED
                                 </span>
-                            <?php elseif(strtoupper($payment['status']) === 'PENDING'): ?>
+                            @elseif(strtoupper($payment['status'] ?? '') === 'PENDING')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF3C7] text-[#D97706] uppercase tracking-wider">
                                     PENDING
                                 </span>
-                            <?php else: ?>
+                            @else
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#F3E8FF] text-[#9333EA] uppercase tracking-wider">
                                     REFUNDED
                                 </span>
-                            <?php endif; ?>
+                            @endif
                         </td>
 
                         <!-- Payment Date -->
                         <td class="py-3.5 px-4 text-xs text-gray-400 font-mono">
-                            <?php echo e($payment['payment_date']); ?>
-
+                            {{ $payment['payment_date'] }}
                         </td>
 
                         <!-- Actions -->
@@ -324,7 +345,8 @@
                                 
                                 <!-- View Details Icon -->
                                 <button type="button" 
-                                        onclick="viewPaymentById('<?php echo e($payment['payment_id']); ?>')"
+                                        data-id="{{ $payment['payment_id'] }}"
+                                        onclick="viewPaymentById(this.dataset.id)"
                                         class="hover:text-blue-600 transition p-1 cursor-pointer" 
                                         title="View Details">
                                     <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -335,7 +357,8 @@
 
                                 <!-- Generate / Print Invoice Icon -->
                                 <button type="button" 
-                                        onclick="openInvoiceById('<?php echo e($payment['payment_id']); ?>')"
+                                        data-id="{{ $payment['payment_id'] }}"
+                                        onclick="openInvoiceById(this.dataset.id)"
                                         class="hover:text-emerald-600 transition p-1 cursor-pointer" 
                                         title="Generate Invoice / Print Receipt">
                                     <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -348,7 +371,8 @@
                                 <!-- Action Menu Dropdown Button -->
                                 <div class="relative inline-block text-left">
                                     <button type="button" 
-                                            onclick="toggleRowMenu('menu-<?php echo e($payment['id']); ?>', event)"
+                                            data-menu="menu-{{ $payment['id'] ?? $payment['payment_id'] }}"
+                                            onclick="toggleRowMenu(this.dataset.menu, event)"
                                             class="hover:text-gray-700 transition p-1 cursor-pointer" 
                                             title="More Actions">
                                         <svg class="w-4 h-4 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -359,35 +383,37 @@
                                     </button>
 
                                     <!-- Kebab Dropdown Content -->
-                                    <div id="menu-<?php echo e($payment['id']); ?>" 
+                                    <div id="menu-{{ $payment['id'] ?? $payment['payment_id'] }}" 
                                          class="hidden absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-30 text-left">
                                         <button type="button" 
-                                                onclick="viewPaymentById('<?php echo e($payment['payment_id']); ?>')"
+                                                data-id="{{ $payment['payment_id'] }}"
+                                                onclick="viewPaymentById(this.dataset.id)"
                                                 class="w-full px-3 py-1.5 text-xs text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center space-x-2">
                                             <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                             <span>View Details</span>
                                         </button>
                                         
                                         <button type="button" 
-                                                onclick="openInvoiceById('<?php echo e($payment['payment_id']); ?>')"
+                                                data-id="{{ $payment['payment_id'] }}"
+                                                onclick="openInvoiceById(this.dataset.id)"
                                                 class="w-full px-3 py-1.5 text-xs text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center space-x-2">
                                             <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                                             <span>Invoice / Receipt</span>
                                         </button>
 
-                                        <?php if(strtoupper($payment['status']) === 'COMPLETED'): ?>
-                                        <form method="POST" action="<?php echo e(route('payment.refund', $payment['payment_id'])); ?>" onsubmit="return confirm('Process refund for this payment?');">
-                                            <?php echo csrf_field(); ?>
+                                        @if(strtoupper($payment['status'] ?? '') === 'COMPLETED')
+                                        <form method="POST" action="{{ route('payment.refund', $payment['payment_id']) }}" onsubmit="return confirm('Process refund for this payment?');">
+                                            @csrf
                                             <button type="submit" class="w-full px-3 py-1.5 text-xs text-purple-700 hover:bg-purple-50 flex items-center space-x-2">
                                                 <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                                                 <span>Process Refund</span>
                                             </button>
                                         </form>
-                                        <?php endif; ?>
+                                        @endif
 
-                                        <form method="POST" action="<?php echo e(route('payment.destroy', $payment['payment_id'])); ?>" onsubmit="return confirm('Delete this payment transaction?');">
-                                            <?php echo csrf_field(); ?>
-                                            <?php echo method_field('DELETE'); ?>
+                                        <form method="POST" action="{{ route('payment.destroy', $payment['payment_id']) }}" onsubmit="return confirm('Delete this payment transaction?');">
+                                            @csrf
+                                            @method('DELETE')
                                             <button type="submit" class="w-full px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 flex items-center space-x-2 border-t border-gray-50 mt-1">
                                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                                 <span>Delete Record</span>
@@ -397,8 +423,7 @@
                                 </div>
                             </div>
                         </td>
-                    </tr>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    @empty
                     <tr>
                         <td colspan="9" class="py-12 text-center text-gray-400">
                             <div class="flex flex-col items-center justify-center space-y-2">
@@ -411,7 +436,7 @@
                             </div>
                         </td>
                     </tr>
-                    <?php endif; ?>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -419,47 +444,47 @@
         <!-- Table Pagination Footer (Matching Screenshot 1) -->
         <div class="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
             <div>
-                Showing <span class="font-bold text-gray-800"><?php echo e($pagination['from'] ?? 1); ?> - <?php echo e($pagination['to'] ?? count($payments)); ?></span> of <span class="font-bold text-gray-800"><?php echo e($pagination['total_items'] ?? count($payments)); ?></span> payments
+                Showing <span class="font-bold text-gray-800">{{ $pagination['from'] ?? 1 }} - {{ $pagination['to'] ?? count($payments) }}</span> of <span class="font-bold text-gray-800">{{ $pagination['total_items'] ?? count($payments) }}</span> payments
             </div>
 
             <div class="flex items-center space-x-1.5">
                 <!-- Previous Button -->
-                <?php if(($pagination['current_page'] ?? 1) > 1): ?>
-                    <a href="<?php echo e(route('payment.index', array_merge(request()->all(), ['page' => ($pagination['current_page'] - 1)]))); ?>" 
+                @if(($pagination['current_page'] ?? 1) > 1)
+                    <a href="{{ route('payment.index', array_merge(request()->all(), ['page' => ($pagination['current_page'] - 1)])) }}" 
                        class="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition cursor-pointer">
                         &lt;
                     </a>
-                <?php else: ?>
+                @else
                     <span class="w-7 h-7 rounded-lg border border-gray-100 flex items-center justify-center text-gray-300 cursor-not-allowed">
                         &lt;
                     </span>
-                <?php endif; ?>
+                @endif
 
                 <!-- Page 1 -->
-                <a href="<?php echo e(route('payment.index', array_merge(request()->all(), ['page' => 1]))); ?>" 
-                   class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs transition <?php echo e(($pagination['current_page'] ?? 1) == 1 ? 'bg-[#2563EB] text-white' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'); ?>">
+                <a href="{{ route('payment.index', array_merge(request()->all(), ['page' => 1])) }}" 
+                   class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs transition {{ ($pagination['current_page'] ?? 1) == 1 ? 'bg-[#2563EB] text-white' : 'border border-gray-200 text-gray-700 hover:bg-gray-50' }}">
                     1
                 </a>
 
                 <!-- Page 2 -->
-                <?php if(($pagination['total_pages'] ?? 1) >= 2): ?>
-                <a href="<?php echo e(route('payment.index', array_merge(request()->all(), ['page' => 2]))); ?>" 
-                   class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs transition <?php echo e(($pagination['current_page'] ?? 1) == 2 ? 'bg-[#2563EB] text-white' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'); ?>">
+                @if(($pagination['total_pages'] ?? 1) >= 2)
+                <a href="{{ route('payment.index', array_merge(request()->all(), ['page' => 2])) }}" 
+                   class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs transition {{ ($pagination['current_page'] ?? 1) == 2 ? 'bg-[#2563EB] text-white' : 'border border-gray-200 text-gray-700 hover:bg-gray-50' }}">
                     2
                 </a>
-                <?php endif; ?>
+                @endif
 
                 <!-- Next Button -->
-                <?php if(($pagination['current_page'] ?? 1) < ($pagination['total_pages'] ?? 1)): ?>
-                    <a href="<?php echo e(route('payment.index', array_merge(request()->all(), ['page' => ($pagination['current_page'] + 1)]))); ?>" 
+                @if(($pagination['current_page'] ?? 1) < ($pagination['total_pages'] ?? 1))
+                    <a href="{{ route('payment.index', array_merge(request()->all(), ['page' => ($pagination['current_page'] + 1)])) }}" 
                        class="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition cursor-pointer">
                         &gt;
                     </a>
-                <?php else: ?>
+                @else
                     <span class="w-7 h-7 rounded-lg border border-gray-100 flex items-center justify-center text-gray-300 cursor-not-allowed">
                         &gt;
                     </span>
-                <?php endif; ?>
+                @endif
             </div>
         </div>
     </div>
@@ -477,8 +502,7 @@
                         <p class="text-xs text-gray-400 font-medium mt-0.5">Gross settlement split across verified payment channels.</p>
                     </div>
                     <span class="bg-[#EFF6FF] text-[#2563EB] text-xs font-bold px-3 py-1 rounded-lg">
-                        Total: <?php echo e($kpis['total_payments'] ?? '$2,450.00'); ?>
-
+                        Total: {{ $kpis['total_payments'] ?? '$0.00' }}
                     </span>
                 </div>
 
@@ -497,16 +521,16 @@
                                 </div>
                                 <div>
                                     <h4 class="text-xs font-bold text-gray-900">Cash</h4>
-                                    <p class="text-[10px] text-gray-400">42 orders processed</p>
+                                    <p class="text-[10px] text-gray-400">{{ $methodBreakdown['cash']['orders_text'] ?? '0 orders processed' }}</p>
                                 </div>
                             </div>
-                            <span class="text-xs font-bold text-emerald-600">35%</span>
+                            <span class="text-xs font-bold text-emerald-600">{{ $methodBreakdown['cash']['percentage'] ?? 0 }}%</span>
                         </div>
                         <div class="mt-3 flex items-center justify-between">
-                            <span class="text-base font-extrabold text-gray-900">$860.00</span>
+                            <span class="text-base font-extrabold text-gray-900">{{ $methodBreakdown['cash']['amount'] ?? '$0.00' }}</span>
                         </div>
                         <div class="w-full bg-gray-200/60 rounded-full h-1.5 mt-2 overflow-hidden">
-                            <div class="bg-[#10B981] h-1.5 rounded-full" style="width: 35%;"></div>
+                            <div class="bg-[#10B981] h-1.5 rounded-full" style="<?php echo 'width: ' . ($methodBreakdown['cash']['percentage'] ?? 0) . '%;'; ?>"></div>
                         </div>
                     </div>
 
@@ -522,16 +546,16 @@
                                 </div>
                                 <div>
                                     <h4 class="text-xs font-bold text-gray-900">Credit Card</h4>
-                                    <p class="text-[10px] text-gray-400">28 orders processed</p>
+                                    <p class="text-[10px] text-gray-400">{{ $methodBreakdown['credit_card']['orders_text'] ?? '0 orders processed' }}</p>
                                 </div>
                             </div>
-                            <span class="text-xs font-bold text-blue-600">29%</span>
+                            <span class="text-xs font-bold text-blue-600">{{ $methodBreakdown['credit_card']['percentage'] ?? 0 }}%</span>
                         </div>
                         <div class="mt-3 flex items-center justify-between">
-                            <span class="text-base font-extrabold text-gray-900">$720.00</span>
+                            <span class="text-base font-extrabold text-gray-900">{{ $methodBreakdown['credit_card']['amount'] ?? '$0.00' }}</span>
                         </div>
                         <div class="w-full bg-gray-200/60 rounded-full h-1.5 mt-2 overflow-hidden">
-                            <div class="bg-[#2563EB] h-1.5 rounded-full" style="width: 29%;"></div>
+                            <div class="bg-[#2563EB] h-1.5 rounded-full" style="<?php echo 'width: ' . ($methodBreakdown['credit_card']['percentage'] ?? 0) . '%;'; ?>"></div>
                         </div>
                     </div>
 
@@ -546,16 +570,16 @@
                                 </div>
                                 <div>
                                     <h4 class="text-xs font-bold text-gray-900">Bank Transfer</h4>
-                                    <p class="text-[10px] text-gray-400">19 transactions</p>
+                                    <p class="text-[10px] text-gray-400">{{ $methodBreakdown['bank_transfer']['orders_text'] ?? '0 transactions' }}</p>
                                 </div>
                             </div>
-                            <span class="text-xs font-bold text-purple-600">21%</span>
+                            <span class="text-xs font-bold text-purple-600">{{ $methodBreakdown['bank_transfer']['percentage'] ?? 0 }}%</span>
                         </div>
                         <div class="mt-3 flex items-center justify-between">
-                            <span class="text-base font-extrabold text-gray-900">$520.00</span>
+                            <span class="text-base font-extrabold text-gray-900">{{ $methodBreakdown['bank_transfer']['amount'] ?? '$0.00' }}</span>
                         </div>
                         <div class="w-full bg-gray-200/60 rounded-full h-1.5 mt-2 overflow-hidden">
-                            <div class="bg-[#8B5CF6] h-1.5 rounded-full" style="width: 21%;"></div>
+                            <div class="bg-[#8B5CF6] h-1.5 rounded-full" style="<?php echo 'width: ' . ($methodBreakdown['bank_transfer']['percentage'] ?? 0) . '%;'; ?>"></div>
                         </div>
                     </div>
 
@@ -571,16 +595,16 @@
                                 </div>
                                 <div>
                                     <h4 class="text-xs font-bold text-gray-900">Mobile Payment</h4>
-                                    <p class="text-[10px] text-gray-400">15 transactions</p>
+                                    <p class="text-[10px] text-gray-400">{{ $methodBreakdown['mobile_payment']['orders_text'] ?? '0 transactions' }}</p>
                                 </div>
                             </div>
-                            <span class="text-xs font-bold text-amber-500">14%</span>
+                            <span class="text-xs font-bold text-amber-500">{{ $methodBreakdown['mobile_payment']['percentage'] ?? 0 }}%</span>
                         </div>
                         <div class="mt-3 flex items-center justify-between">
-                            <span class="text-base font-extrabold text-gray-900">$350.00</span>
+                            <span class="text-base font-extrabold text-gray-900">{{ $methodBreakdown['mobile_payment']['amount'] ?? '$0.00' }}</span>
                         </div>
                         <div class="w-full bg-gray-200/60 rounded-full h-1.5 mt-2 overflow-hidden">
-                            <div class="bg-[#F59E0B] h-1.5 rounded-full" style="width: 14%;"></div>
+                            <div class="bg-[#F59E0B] h-1.5 rounded-full" style="<?php echo 'width: ' . ($methodBreakdown['mobile_payment']['percentage'] ?? 0) . '%;'; ?>"></div>
                         </div>
                     </div>
                 </div>
@@ -614,11 +638,16 @@
 
                 <!-- Donut Chart Container with Center Text -->
                 <div class="relative w-48 h-48 mx-auto my-3 flex items-center justify-center">
-                    <canvas id="paymentStatusChart" class="w-full h-full"></canvas>
+                    <canvas id="paymentStatusChart" 
+                            data-completed="{{ (int)($statusChart['completed_count'] ?? 0) }}"
+                            data-pending="{{ (int)($statusChart['pending_count'] ?? 0) }}"
+                            data-refunded="{{ (int)($statusChart['refunded_count'] ?? 0) }}"
+                            data-total="{{ (int)($statusChart['total'] ?? 0) }}"
+                            class="w-full h-full"></canvas>
                     
                     <!-- Center Overlay Text -->
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span class="text-2xl font-extrabold text-gray-900 leading-tight">12</span>
+                        <span class="text-2xl font-extrabold text-gray-900 leading-tight">{{ $statusChart['total'] ?? 0 }}</span>
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">TOTAL INVOICES</span>
                     </div>
                 </div>
@@ -630,7 +659,7 @@
                             <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
                             <span class="text-gray-700 font-medium">Completed</span>
                         </div>
-                        <span class="font-bold text-gray-900">9 <span class="text-gray-400 font-normal">(75%)</span></span>
+                        <span class="font-bold text-gray-900">{{ $statusChart['completed_count'] ?? 0 }} <span class="text-gray-400 font-normal">({{ $statusChart['completed_pct'] ?? 0 }}%)</span></span>
                     </div>
 
                     <div class="flex items-center justify-between">
@@ -638,7 +667,7 @@
                             <span class="w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></span>
                             <span class="text-gray-700 font-medium">Pending</span>
                         </div>
-                        <span class="font-bold text-gray-900">1 <span class="text-gray-400 font-normal">(8.3%)</span></span>
+                        <span class="font-bold text-gray-900">{{ $statusChart['pending_count'] ?? 0 }} <span class="text-gray-400 font-normal">({{ $statusChart['pending_pct'] ?? 0 }}%)</span></span>
                     </div>
 
                     <div class="flex items-center justify-between">
@@ -646,7 +675,7 @@
                             <span class="w-2.5 h-2.5 rounded-full bg-[#8B5CF6]"></span>
                             <span class="text-gray-700 font-medium">Refunded</span>
                         </div>
-                        <span class="font-bold text-gray-900">1 <span class="text-gray-400 font-normal">(8.3%)</span></span>
+                        <span class="font-bold text-gray-900">{{ $statusChart['refunded_count'] ?? 0 }} <span class="text-gray-400 font-normal">({{ $statusChart['refunded_pct'] ?? 0 }}%)</span></span>
                     </div>
                 </div>
             </div>
@@ -667,7 +696,7 @@
 <!-- ======================================================== -->
 <!-- MODAL: ADD PAYMENT (Screenshot 2 Pixel-Perfect Replica) -->
 <!-- ======================================================== -->
-<div id="addPaymentModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs overflow-y-auto">
+<div id="addPaymentModal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4 backdrop-blur-xs overflow-y-auto">
     <div class="bg-white rounded-3xl w-full max-w-[480px] shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
         
         <!-- Modal Header -->
@@ -681,24 +710,34 @@
             </button>
         </div>
 
-        <form action="<?php echo e(route('payment.record')); ?>" method="POST" id="addPaymentForm" class="p-6 space-y-5">
-            <?php echo csrf_field(); ?>
+        <form action="{{ route('payment.record') }}" method="POST" id="addPaymentForm" class="p-6 space-y-5">
+            @csrf
 
             <!-- Quick Order Selector (Allows selecting existing order or entering custom) -->
             <div>
+                @php 
+                    $firstOrder = !empty($availableOrders) ? $availableOrders[0] : null;
+                    $initOrderNo = $firstOrder['order_number'] ?? '';
+                    $initCustomer = $firstOrder['customer_name'] ?? '';
+                    $initAmount = isset($firstOrder['total_amount']) ? number_format($firstOrder['total_amount'], 2, '.', '') : '0.00';
+                    $initDate = $firstOrder['order_date'] ?? date('Y-m-d');
+                @endphp
                 <label class="block text-xs font-semibold text-gray-700 mb-1.5">
                     Select Order <span class="text-gray-400 font-normal">(Auto-fills Order Information)</span>
                 </label>
                 <select id="modalOrderSelector" onchange="onOrderSelected(this.value)" class="w-full bg-white text-gray-800 text-sm rounded-xl px-3.5 py-2.5 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:1rem] bg-[right_0.8rem_center] bg-no-repeat pr-8">
-                    <?php $__currentLoopData = $availableOrders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ord): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($ord['order_number']); ?>" 
-                                data-customer="<?php echo e($ord['customer_name']); ?>"
-                                data-amount="<?php echo e(number_format($ord['total_amount'], 2, '.', '')); ?>"
-                                data-date="<?php echo e($ord['order_date']); ?>"
-                                <?php echo e($ord['order_number'] === 'ORD-0010' ? 'selected' : ''); ?>>
-                            <?php echo e($ord['order_number']); ?> - <?php echo e($ord['customer_name']); ?> ($<?php echo e(number_format($ord['total_amount'], 2)); ?>)
+                    @if(empty($availableOrders))
+                        <option value="" disabled selected>No orders available (enter manually)</option>
+                    @endif
+                    @foreach($availableOrders as $ord)
+                        <option value="{{ $ord['order_number'] }}" 
+                                data-customer="{{ $ord['customer_name'] }}"
+                                data-amount="{{ number_format($ord['total_amount'], 2, '.', '') }}"
+                                data-date="{{ $ord['order_date'] }}"
+                                {{ $loop->first ? 'selected' : '' }}>
+                            {{ $ord['order_number'] }} - {{ $ord['customer_name'] }} (${{ number_format($ord['total_amount'], 2) }})
                         </option>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    @endforeach
                 </select>
             </div>
 
@@ -708,21 +747,21 @@
                 <div class="bg-[#F0F7FF] border border-[#E0EDFD] rounded-2xl p-4 space-y-2.5 text-sm">
                     <div class="flex items-center justify-between">
                         <span class="text-gray-500">Order No.</span>
-                        <span id="displayOrderNo" class="font-bold text-gray-900">ORD-0010</span>
-                        <input type="hidden" name="order_number" id="inputOrderNo" value="ORD-0010">
+                        <span id="displayOrderNo" class="font-bold text-gray-900">{{ $initOrderNo ?: 'None' }}</span>
+                        <input type="hidden" name="order_number" id="inputOrderNo" value="{{ $initOrderNo }}">
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-gray-500">Customer</span>
-                        <span id="displayCustomer" class="font-bold text-gray-900">Va Sovan</span>
-                        <input type="hidden" name="customer_name" id="inputCustomerName" value="Va Sovan">
+                        <span id="displayCustomer" class="font-bold text-gray-900">{{ $initCustomer ?: 'None' }}</span>
+                        <input type="hidden" name="customer_name" id="inputCustomerName" value="{{ $initCustomer }}">
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-gray-500">Total Amount</span>
-                        <span id="displayTotalAmount" class="font-bold text-gray-900">$20.00</span>
+                        <span id="displayTotalAmount" class="font-bold text-gray-900">${{ $initAmount }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-gray-500">Order Date</span>
-                        <span id="displayOrderDate" class="font-bold text-gray-900">2025-09-09</span>
+                        <span id="displayOrderDate" class="font-bold text-gray-900">{{ $initDate }}</span>
                     </div>
                 </div>
             </div>
@@ -747,8 +786,7 @@
                                 id="inputPaymentMethod"
                                 required
                                 class="w-full bg-white text-gray-800 text-sm rounded-xl pl-10 pr-8 py-2.5 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[length:1rem] bg-[right_0.8rem_center] bg-no-repeat">
-                            <option value="" disabled selected>Select payment method</option>
-                            <option value="Cash">Cash</option>
+                            <option value="Cash" selected>Cash</option>
                             <option value="Credit Card">Credit Card</option>
                             <option value="Bank Transfer">Bank Transfer</option>
                             <option value="Mobile Payment">Mobile Payment</option>
@@ -766,7 +804,7 @@
                                step="0.01" 
                                name="amount" 
                                id="inputAmount"
-                               value="20.00" 
+                               value="{{ $initAmount }}" 
                                required 
                                placeholder="Enter amount" 
                                class="w-full bg-white text-gray-800 text-sm rounded-xl pl-4 pr-10 py-2.5 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
@@ -815,7 +853,7 @@
                         <input type="date" 
                                name="payment_date" 
                                id="inputPaymentDate"
-                               value="2025-09-09" 
+                               value="{{ date('Y-m-d') }}" 
                                required 
                                class="w-full bg-white text-gray-800 text-sm rounded-xl pl-10 pr-4 py-2.5 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
                     </div>
@@ -877,7 +915,7 @@
 <!-- ======================================================== -->
 <!-- MODAL: VIEW PAYMENT DETAILS -->
 <!-- ======================================================== -->
-<div id="viewPaymentModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+<div id="viewPaymentModal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4 backdrop-blur-xs">
     <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
         <div class="p-6 pb-4 flex items-center justify-between border-b border-gray-100">
@@ -951,7 +989,7 @@
 <!-- ======================================================== -->
 <!-- MODAL: GENERATE INVOICE / RECEIPT -->
 <!-- ======================================================== -->
-<div id="invoiceModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs overflow-y-auto">
+<div id="invoiceModal" class="hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4 backdrop-blur-xs overflow-y-auto">
     <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
         
         <div class="p-6 pb-4 flex items-center justify-between border-b border-gray-100">
@@ -1075,7 +1113,8 @@
 
         const customer = selectedOpt.getAttribute('data-customer') || 'Customer';
         const amount = selectedOpt.getAttribute('data-amount') || '0.00';
-        const date = selectedOpt.getAttribute('data-date') || '<?php echo e(date('Y-m-d')); ?>';
+        const todayStr = new Date().toISOString().split('T')[0];
+        const date = selectedOpt.getAttribute('data-date') || todayStr;
 
         document.getElementById('displayOrderNo').textContent = orderNo;
         document.getElementById('inputOrderNo').value = orderNo;
@@ -1087,25 +1126,29 @@
         document.getElementById('inputAmount').value = parseFloat(amount).toFixed(2);
 
         document.getElementById('displayOrderDate').textContent = date;
-        document.getElementById('inputPaymentDate').value = date;
+        document.getElementById('inputPaymentDate').value = todayStr;
     }
 
     // Modal Control: Add Payment
     function openAddPaymentModal() {
         const modal = document.getElementById('addPaymentModal');
         modal.classList.remove('hidden');
+        modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
 
-        // Select ORD-0010 by default matching Screenshot 2
         const selector = document.getElementById('modalOrderSelector');
-        if (selector) {
-            selector.value = 'ORD-0010';
-            onOrderSelected('ORD-0010');
+        if (selector && selector.options.length > 0) {
+            if (!selector.value || selector.selectedIndex < 0) {
+                selector.selectedIndex = 0;
+            }
+            onOrderSelected(selector.value);
         }
     }
 
     function closeAddPaymentModal() {
-        document.getElementById('addPaymentModal').classList.add('hidden');
+        const modal = document.getElementById('addPaymentModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
         document.body.style.overflow = '';
     }
 
@@ -1130,9 +1173,16 @@
         const allMenus = document.querySelectorAll('[id^="menu-"]');
         allMenus.forEach(m => m.classList.add('hidden'));
     });
+</script>
 
+<script type="application/json" id="paymentsJsonData">
+{!! json_encode($payments ?? []) !!}
+</script>
+
+<script>
     // Cache payments list for quick ID lookup
-    const allPaymentsList = <?php echo json_encode($payments, 15, 512) ?>;
+    const paymentsJsonEl = document.getElementById('paymentsJsonData');
+    const allPaymentsList = paymentsJsonEl ? JSON.parse(paymentsJsonEl.textContent || '[]') : [];
 
     function viewPaymentById(paymentId) {
         let payment = (Array.isArray(allPaymentsList) ? allPaymentsList : Object.values(allPaymentsList)).find(p => p.payment_id == paymentId);
@@ -1205,12 +1255,16 @@
             openInvoiceModal(payment);
         };
 
-        document.getElementById('viewPaymentModal').classList.remove('hidden');
+        const viewModal = document.getElementById('viewPaymentModal');
+        viewModal.classList.remove('hidden');
+        viewModal.classList.add('flex');
         document.body.style.overflow = 'hidden';
     }
 
     function closeViewPaymentModal() {
-        document.getElementById('viewPaymentModal').classList.add('hidden');
+        const viewModal = document.getElementById('viewPaymentModal');
+        viewModal.classList.add('hidden');
+        viewModal.classList.remove('flex');
         document.body.style.overflow = '';
     }
 
@@ -1247,12 +1301,16 @@
             badge.className = 'inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full uppercase bg-purple-100 text-purple-700';
         }
 
-        document.getElementById('invoiceModal').classList.remove('hidden');
+        const invModal = document.getElementById('invoiceModal');
+        invModal.classList.remove('hidden');
+        invModal.classList.add('flex');
         document.body.style.overflow = 'hidden';
     }
 
     function closeInvoiceModal() {
-        document.getElementById('invoiceModal').classList.add('hidden');
+        const invModal = document.getElementById('invoiceModal');
+        invModal.classList.add('hidden');
+        invModal.classList.remove('flex');
         document.body.style.overflow = '';
     }
 
@@ -1281,18 +1339,25 @@
         printWindow.document.close();
     }
 
-    // Chart.js Donut Chart for Payment Status (Screenshot 1 Match)
+    // Chart.js Donut Chart for Payment Status (Dynamic Database Match)
     function initPaymentStatusChart() {
         const canvas = document.getElementById('paymentStatusChart');
         if (!canvas) return;
 
-        // Colors matching Screenshot 1: Emerald Green (Completed 75%), Amber (Pending 8.3%), Purple (Refunded 8.3%)
+        const completedCount = parseInt(canvas.dataset.completed || '0', 10);
+        const pendingCount = parseInt(canvas.dataset.pending || '0', 10);
+        const refundedCount = parseInt(canvas.dataset.refunded || '0', 10);
+        const totalCount = parseInt(canvas.dataset.total || '0', 10);
+
+        const chartData = (totalCount > 0) ? [completedCount, pendingCount, refundedCount] : [0, 0, 0];
+
+        // Colors matching: Emerald Green (Completed), Amber (Pending), Purple (Refunded)
         new Chart(canvas, {
             type: 'doughnut',
             data: {
                 labels: ['Completed', 'Pending', 'Refunded'],
                 datasets: [{
-                    data: [9, 1, 1],
+                    data: chartData,
                     backgroundColor: [
                         '#10B981', // Emerald
                         '#F59E0B', // Amber
@@ -1314,7 +1379,7 @@
                         callbacks: {
                             label: function(context) {
                                 const val = context.parsed;
-                                const total = 11;
+                                const total = totalCount > 0 ? totalCount : 1;
                                 const pct = Math.round((val / total) * 100);
                                 return ` ${context.label}: ${val} (${pct}%)`;
                             }
@@ -1325,6 +1390,4 @@
         });
     }
 </script>
-<?php $__env->stopSection(); ?>
-
-<?php echo $__env->make('layouts.navbar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/Laundry_Managerment_System/laundry_system/resources/views/pages/payment.blade.php ENDPATH**/ ?>
+@endsection

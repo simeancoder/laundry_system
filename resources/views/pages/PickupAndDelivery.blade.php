@@ -2,68 +2,8 @@
 
 @section('title', 'Pickup & Delivery Management - Laundry 6 Plus')
 
-@section('header')
-<header class="bg-white px-6 sm:px-8 py-3.5 sm:py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] rounded-b-2xl sm:rounded-b-3xl flex items-center justify-between z-30 sticky top-0 border-b border-gray-100">
-    <!-- Left: Hamburger & Page Title/Subtitle -->
-    <div class="flex items-center space-x-3 sm:space-x-4">
-        <!-- Hamburger Button -->
-        <button type="button" onclick="toggleSidebar()" class="p-1.5 -ml-1 text-gray-800 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition focus:outline-none cursor-pointer" title="Toggle Navigation Menu" aria-label="Toggle navigation menu">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </button>
-
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight leading-tight">Pickup & Delivery Management</h1>
-            <p class="text-[12px] sm:text-[13px] text-gray-400 font-medium leading-none mt-1">Schedule pickups and deliveries, assign delivery staff, and track status.</p>
-        </div>
-    </div>
-
-    <!-- Right: Notification Bell & Role Switcher User Profile (Matching Dashboard Header) -->
-    <div class="flex items-center space-x-3 sm:space-x-5">
-        <!-- Blue Notification Bell with Solid Dot -->
-        <a href="{{ route('notifications.index') }}" class="relative p-2 text-blue-600 hover:bg-blue-50 rounded-full transition focus:outline-none" title="Notifications">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path>
-            </svg>
-            <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#2563EB] rounded-full ring-2 ring-white"></span>
-        </a>
-
-        <!-- User Role Switcher Dropdown Trigger -->
-        <div class="relative" id="role-switcher-container">
-            <button id="role-menu-button" type="button" onclick="toggleRoleMenu()" aria-haspopup="menu" aria-expanded="false" class="flex items-center space-x-2.5 pl-2 pr-2.5 py-1.5 rounded-full hover:bg-gray-100 transition focus:outline-none cursor-pointer group">
-                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200 group-hover:border-blue-400 transition-colors">
-                    <i class="fa-solid fa-circle-user text-2xl text-[#2563EB]"></i>
-                </div>
-                <span class="text-sm sm:text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Admin</span>
-                <i id="role-chevron" class="fa-solid fa-chevron-down text-[11px] text-gray-500 transition-transform duration-200"></i>
-            </button>
-
-            <!-- Dropdown Menu -->
-            <div id="role-menu" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 transform origin-top-right transition-all duration-150">
-                <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Role</p>
-                        <p class="text-sm font-bold text-gray-800">Admin User</p>
-                    </div>
-                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700">Manager</span>
-                </div>
-                <div class="px-2 py-1">
-                    <a href="{{ route('logout') }}" class="flex items-center space-x-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition font-medium">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        <span>Log Out</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</header>
-@endsection
-
 @section('content')
-<div class="space-y-6 max-w-[1580px] mx-auto pb-12 pt-4">
+<div class="space-y-6 w-full mx-auto pb-12 pt-4">
 
     <!-- Top Action Row: Create Pickup / Delivery Button -->
     <div class="flex items-center justify-end">
@@ -81,7 +21,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <!-- Card 1: Total Pickups -->
         <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center flex-shrink-0">
+            <div class="w-12 h-12 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center shrink-0">
                 <!-- Delivery Van Icon -->
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M19 7h-3V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1a3 3 0 0 0 6 0h4a3 3 0 0 0 6 0h1a2 2 0 0 0 2-2v-5l-5-4zM7 19a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm11 0a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm1-8h-3V8.5l3.5 2.5z"/>
@@ -90,7 +30,7 @@
             <div>
                 <p class="text-xs font-medium text-gray-500">Total Pickups</p>
                 <div class="flex items-baseline space-x-2 mt-0.5">
-                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $stats['total_pickups'] ?? 12 }}</h3>
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight">{{ $stats['total_pickups'] ?? 12 }}</h3>
                     <span class="text-xs font-semibold text-[#16A34A] flex items-center">
                         <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
@@ -103,7 +43,7 @@
 
         <!-- Card 2: Total Deliveries -->
         <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-2xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center flex-shrink-0">
+            <div class="w-12 h-12 rounded-2xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0">
                 <!-- Green Delivery Van Icon -->
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M19 7h-3V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1a3 3 0 0 0 6 0h4a3 3 0 0 0 6 0h1a2 2 0 0 0 2-2v-5l-5-4zM7 19a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm11 0a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm1-8h-3V8.5l3.5 2.5z"/>
@@ -112,7 +52,7 @@
             <div>
                 <p class="text-xs font-medium text-gray-500">Total Deliveries</p>
                 <div class="flex items-baseline space-x-2 mt-0.5">
-                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $stats['total_deliveries'] ?? 15 }}</h3>
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight">{{ $stats['total_deliveries'] ?? 15 }}</h3>
                     <span class="text-xs font-semibold text-[#16A34A] flex items-center">
                         <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
@@ -125,7 +65,7 @@
 
         <!-- Card 3: In Progress -->
         <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
+            <div class="w-12 h-12 rounded-2xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shrink-0">
                 <!-- Clock Icon -->
                 <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
                     <circle cx="12" cy="12" r="9"></circle>
@@ -135,7 +75,7 @@
             <div>
                 <p class="text-xs font-medium text-gray-500">In Progress</p>
                 <div class="flex items-baseline space-x-2 mt-0.5">
-                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $stats['in_progress'] ?? 5 }}</h3>
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight">{{ $stats['in_progress'] ?? 5 }}</h3>
                     <span class="text-xs font-semibold text-[#16A34A] flex items-center">
                         <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
@@ -148,7 +88,7 @@
 
         <!-- Card 4: Completed -->
         <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-2xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center flex-shrink-0">
+            <div class="w-12 h-12 rounded-2xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
                 <!-- Checkmark in circle -->
                 <svg class="w-6 h-6 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -157,7 +97,7 @@
             <div>
                 <p class="text-xs font-medium text-gray-500">Completed</p>
                 <div class="flex items-baseline space-x-2 mt-0.5">
-                    <h3 class="text-2xl font-bold text-gray-900 leading-tight">{{ $stats['completed'] ?? 20 }}</h3>
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight">{{ $stats['completed'] ?? 20 }}</h3>
                     <span class="text-xs font-semibold text-[#16A34A] flex items-center">
                         <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
@@ -232,7 +172,7 @@
             </div>
 
             <!-- Status Dropdown Filter -->
-            <div class="w-full sm:w-auto min-w-[150px]">
+            <div class="w-full sm:w-auto min-w-38">
                 <select name="status" 
                         onchange="this.form.submit()" 
                         class="w-full text-xs sm:text-sm bg-gray-50/70 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer">
@@ -246,7 +186,7 @@
             </div>
 
             <!-- Date Dropdown Filter -->
-            <div class="w-full sm:w-auto min-w-[130px]">
+            <div class="w-full sm:w-auto min-w-33">
                 <select name="date" 
                         onchange="this.form.submit()" 
                         class="w-full text-xs sm:text-sm bg-gray-50/70 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer">
@@ -440,7 +380,7 @@
 <!-- Matching the right-hand panel in the screenshot exactly -->
 <div id="drawerOverlay" class="hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity duration-300" onclick="closeTaskDrawer()"></div>
 
-<div id="taskDrawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-[480px] bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-gray-200">
+<div id="taskDrawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-120 bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-gray-200">
     
     <!-- Drawer Header -->
     <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">

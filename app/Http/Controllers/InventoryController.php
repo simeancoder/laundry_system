@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Inventory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class InventoryController extends Controller
 {
     /**
-     * Complete 25 Inventory Items Dataset matching "Showing 1 to 6 of 25 items" in screenshot.
+     * Official 6 baseline inventory items matching the screenshot.
      */
     private function getDefaultInventory(): array
     {
         return [
-            // Page 1 (Matching screenshot exactly)
             [
                 'id' => 1,
                 'name' => 'Detergent',
@@ -20,9 +22,11 @@ class InventoryController extends Controller
                 'stock' => 50,
                 'unit' => 'L',
                 'status' => 'In Stock',
-                'min_threshold' => 20,
+                'min_stock' => 20,
                 'notes' => 'Commercial grade liquid laundry detergent for heavy soiled wash cycles.',
-                'last_restocked' => '18 Sep 2026',
+                'supplier' => 'EcoChem Supplies Co.',
+                'unit_price' => 12.50,
+                'last_restocked' => '2026-10-01',
             ],
             [
                 'id' => 2,
@@ -31,9 +35,11 @@ class InventoryController extends Controller
                 'stock' => 40,
                 'unit' => 'L',
                 'status' => 'In Stock',
-                'min_threshold' => 15,
+                'min_stock' => 15,
                 'notes' => 'Floral scented fabric conditioner for delicate and everyday fabrics.',
-                'last_restocked' => '17 Sep 2026',
+                'supplier' => 'SilkTouch Chemical Ltd',
+                'unit_price' => 10.00,
+                'last_restocked' => '2026-10-02',
             ],
             [
                 'id' => 3,
@@ -42,20 +48,24 @@ class InventoryController extends Controller
                 'stock' => 10,
                 'unit' => 'L',
                 'status' => 'Low Stock',
-                'min_threshold' => 15,
+                'min_stock' => 15,
                 'notes' => 'Color-safe chlorine bleach for stain removal on white linens.',
-                'last_restocked' => '10 Sep 2026',
+                'supplier' => 'CleanMaster Ind.',
+                'unit_price' => 8.00,
+                'last_restocked' => '2026-09-28',
             ],
             [
                 'id' => 4,
                 'name' => 'Packing Bags',
-                'category' => 'Packing',
+                'category' => 'Packaging',
                 'stock' => 100,
                 'unit' => 'Pcs',
                 'status' => 'In Stock',
-                'min_threshold' => 30,
+                'min_stock' => 30,
                 'notes' => 'Heavy-duty polythene laundry carry bags with sealed base.',
-                'last_restocked' => '20 Sep 2026',
+                'supplier' => 'Khmer Pack Solutions',
+                'unit_price' => 0.25,
+                'last_restocked' => '2026-10-03',
             ],
             [
                 'id' => 5,
@@ -64,9 +74,11 @@ class InventoryController extends Controller
                 'stock' => 200,
                 'unit' => 'Pcs',
                 'status' => 'In Stock',
-                'min_threshold' => 50,
+                'min_stock' => 50,
                 'notes' => 'Heavy gauge galvanized wire & plastic finished garment hangers.',
-                'last_restocked' => '19 Sep 2026',
+                'supplier' => 'Universal Hanger Ltd',
+                'unit_price' => 0.15,
+                'last_restocked' => '2026-10-02',
             ],
             [
                 'id' => 6,
@@ -75,512 +87,469 @@ class InventoryController extends Controller
                 'stock' => 15,
                 'unit' => 'L',
                 'status' => 'Low Stock',
-                'min_threshold' => 20,
+                'min_stock' => 20,
                 'notes' => 'Enzyme-based grease and tannin chemical spotting reagents.',
-                'last_restocked' => '12 Sep 2026',
-            ],
-
-            // Page 2
-            [
-                'id' => 7,
-                'name' => 'Stain Remover Pro',
-                'category' => 'Cleaning',
-                'stock' => 25,
-                'unit' => 'L',
-                'status' => 'In Stock',
-                'min_threshold' => 10,
-                'notes' => 'Targeted pre-wash formulation for collar and cuff grime.',
-                'last_restocked' => '14 Sep 2026',
-            ],
-            [
-                'id' => 8,
-                'name' => 'Fabric Conditioner',
-                'category' => 'Cleaning',
-                'stock' => 35,
-                'unit' => 'L',
-                'status' => 'In Stock',
-                'min_threshold' => 10,
-                'notes' => 'Hypoallergenic anti-static finishing conditioner.',
-                'last_restocked' => '15 Sep 2026',
-            ],
-            [
-                'id' => 9,
-                'name' => 'Garment Poly Rolls',
-                'category' => 'Packing',
-                'stock' => 80,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 20,
-                'notes' => 'Transparent dry clean cover rolls for suit hanging.',
-                'last_restocked' => '16 Sep 2026',
-            ],
-            [
-                'id' => 10,
-                'name' => 'Laundry ID Tags',
-                'category' => 'Accessories',
-                'stock' => 500,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 100,
-                'notes' => 'Waterproof barcode order identification tags.',
-                'last_restocked' => '18 Sep 2026',
-            ],
-            [
-                'id' => 11,
-                'name' => 'Ironing Starch Spray',
-                'category' => 'Chemicals',
-                'stock' => 8,
-                'unit' => 'L',
-                'status' => 'Low Stock',
-                'min_threshold' => 15,
-                'notes' => 'Crisp finish fabric sizing and ironing starch agent.',
-                'last_restocked' => '08 Sep 2026',
-            ],
-            [
-                'id' => 12,
-                'name' => 'Collar Supports',
-                'category' => 'Accessories',
-                'stock' => 300,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 80,
-                'notes' => 'Plastic collar butterfly strips for folded dress shirts.',
-                'last_restocked' => '19 Sep 2026',
-            ],
-
-            // Page 3
-            [
-                'id' => 13,
-                'name' => 'Lint Rollers & Refills',
-                'category' => 'Accessories',
-                'stock' => 45,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 15,
-                'notes' => 'Adhesive lint collection rolls for woolens and suits.',
-                'last_restocked' => '11 Sep 2026',
-            ],
-            [
-                'id' => 14,
-                'name' => 'Descaling Chemical',
-                'category' => 'Chemicals',
-                'stock' => 5,
-                'unit' => 'L',
-                'status' => 'Low Stock',
-                'min_threshold' => 10,
-                'notes' => 'Commercial boiler and steam iron descaling acid solution.',
-                'last_restocked' => '05 Sep 2026',
-            ],
-            [
-                'id' => 15,
-                'name' => 'Biodegradable Laundry Bags',
-                'category' => 'Packing',
-                'stock' => 85,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 25,
-                'notes' => 'Eco-friendly biodegradable hotel laundry sacks.',
-                'last_restocked' => '15 Sep 2026',
-            ],
-            [
-                'id' => 16,
-                'name' => 'Scent Boosters Granules',
-                'category' => 'Cleaning',
-                'stock' => 22,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 10,
-                'notes' => 'Slow-release freshness booster beads.',
-                'last_restocked' => '13 Sep 2026',
-            ],
-            [
-                'id' => 17,
-                'name' => 'Washing Mesh Bags',
-                'category' => 'Accessories',
-                'stock' => 60,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 20,
-                'notes' => 'Zippered mesh bags for delicate lingerie and silks.',
-                'last_restocked' => '14 Sep 2026',
-            ],
-            [
-                'id' => 18,
-                'name' => 'Spotting Chemical Solvent',
-                'category' => 'Chemicals',
-                'stock' => 6,
-                'unit' => 'L',
-                'status' => 'Low Stock',
-                'min_threshold' => 12,
-                'notes' => 'Target solvent for ink, lipstick, and oily spot removal.',
-                'last_restocked' => '06 Sep 2026',
-            ],
-
-            // Page 4
-            [
-                'id' => 19,
-                'name' => 'Safety Pins (Brass)',
-                'category' => 'Accessories',
-                'stock' => 1000,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 200,
-                'notes' => 'Rust-proof brass tagging safety pins.',
-                'last_restocked' => '10 Sep 2026',
-            ],
-            [
-                'id' => 20,
-                'name' => 'Dry Cleaning Hydrocarbon Solvent',
-                'category' => 'Chemicals',
-                'stock' => 30,
-                'unit' => 'L',
-                'status' => 'In Stock',
-                'min_threshold' => 15,
-                'notes' => 'Odorless high-purity dry cleaning solvent drum.',
-                'last_restocked' => '17 Sep 2026',
-            ],
-            [
-                'id' => 21,
-                'name' => 'Plastic Trouser Clips',
-                'category' => 'Accessories',
-                'stock' => 400,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 100,
-                'notes' => 'Non-marking plastic suspension clips for slacks and skirts.',
-                'last_restocked' => '16 Sep 2026',
-            ],
-            [
-                'id' => 22,
-                'name' => 'Heat Seal Label Rolls',
-                'category' => 'Packing',
-                'stock' => 12,
-                'unit' => 'Pcs',
-                'status' => 'Low Stock',
-                'min_threshold' => 15,
-                'notes' => 'Thermal adhesive garment tag label ribbons.',
-                'last_restocked' => '07 Sep 2026',
-            ],
-            [
-                'id' => 23,
-                'name' => 'Oxygen Bleach Powder',
-                'category' => 'Cleaning',
-                'stock' => 18,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 10,
-                'notes' => 'Sodium percarbonate color-safe active oxygen compound.',
-                'last_restocked' => '14 Sep 2026',
-            ],
-            [
-                'id' => 24,
-                'name' => 'Leather & Suede Conditioner',
-                'category' => 'Chemicals',
-                'stock' => 4,
-                'unit' => 'L',
-                'status' => 'Low Stock',
-                'min_threshold' => 8,
-                'notes' => 'Natural oil nourishing cream for leather jackets and shoes.',
-                'last_restocked' => '04 Sep 2026',
-            ],
-
-            // Page 5
-            [
-                'id' => 25,
-                'name' => 'Thermal Receipt Paper Rolls',
-                'category' => 'Accessories',
-                'stock' => 50,
-                'unit' => 'Pcs',
-                'status' => 'In Stock',
-                'min_threshold' => 20,
-                'notes' => '80mm BPA-free POS register thermal receipt paper rolls.',
-                'last_restocked' => '18 Sep 2026',
+                'supplier' => 'ProWash Chemicals Global',
+                'unit_price' => 22.00,
+                'last_restocked' => '2026-09-25',
             ],
         ];
     }
 
     /**
-     * Get active inventory list (session merged with defaults).
+     * Retrieve active inventory items with fallback strategy.
      */
-    private function getInventoryItems(): array
+    public function getInventoryData()
     {
-        $sessionItems = session('inventory_items');
-        if (is_array($sessionItems) && count($sessionItems) > 0) {
-            return $sessionItems;
+        $jsonFile = storage_path('app/inventory.json');
+        $defaults = collect($this->getDefaultInventory())->map(function ($item) {
+            return (object)$item;
+        });
+
+        // 1. If database table exists and has rows, load from DB
+        try {
+            if (Schema::hasTable('inventories') && Inventory::count() > 0) {
+                return Inventory::all()->map(function ($item) {
+                    return (object)$item->toArray();
+                });
+            }
+        } catch (\Throwable $e) {}
+
+        // 2. Load from storage/app/inventory.json
+        if (file_exists($jsonFile) && !request()->has('reset')) {
+            try {
+                $content = file_get_contents($jsonFile);
+                $decoded = json_decode($content, true);
+                if (is_array($decoded) && count($decoded) > 0) {
+                    $coll = collect($decoded)->map(function ($item) {
+                        return is_array($item) ? (object)$item : $item;
+                    });
+                    if ($coll->contains('name', 'Detergent')) {
+                        session(['laundry_inventory_items' => $coll->toArray()]);
+                        return $coll;
+                    }
+                }
+            } catch (\Throwable $e) {}
         }
 
-        $default = $this->getDefaultInventory();
-        session(['inventory_items' => $default]);
-        return $default;
+        // 3. Load from Session
+        if (session()->has('laundry_inventory_items') && !request()->has('reset')) {
+            $sess = session('laundry_inventory_items');
+            $coll = collect($sess)->map(function ($item) {
+                return is_array($item) ? (object)$item : $item;
+            });
+            if ($coll->contains('name', 'Detergent')) {
+                $this->saveInventoryStorage($coll);
+                return $coll;
+            }
+        }
+
+        // 4. Default Seed
+        $this->saveInventoryStorage($defaults);
+        session(['laundry_inventory_items' => $defaults->toArray()]);
+        return $defaults;
     }
 
     /**
-     * Save inventory items to session.
+     * Save inventory collection to disk and session.
      */
-    private function saveInventoryItems(array $items): void
+    protected function saveInventoryStorage($collection)
     {
-        session(['inventory_items' => array_values($items)]);
+        try {
+            $jsonFile = storage_path('app/inventory.json');
+            $dir = dirname($jsonFile);
+            if (!file_exists($dir)) {
+                mkdir($dir, 0777, true);
+            }
+            file_put_contents($jsonFile, json_encode($collection->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        } catch (\Throwable $e) {}
     }
 
     /**
-     * Display the Inventory Management page.
+     * Compute item status from stock and min_stock.
+     */
+    protected function determineStatus($stock, $minStock = 15): string
+    {
+        $stock = (int)$stock;
+        $minStock = (int)$minStock;
+        if ($stock <= 0) {
+            return 'Out of Stock';
+        }
+        if ($stock <= $minStock) {
+            return 'Low Stock';
+        }
+        return 'In Stock';
+    }
+
+    /**
+     * Display inventory dashboard list.
      */
     public function index(Request $request)
     {
-        $search = $request->get('search');
-        $categoryFilter = $request->get('category', 'all');
-        $statusFilter = $request->get('status', 'all');
-        $page = (int) $request->get('page', 1);
-        $perPage = 6; // Exactly 6 items per page matching "Showing 1 to 6 of 25 items"
+        $search = $request->input('search');
+        $categoryFilter = $request->input('category', 'all');
+        $statusFilter = $request->input('status', 'all');
 
-        $allItems = collect($this->getInventoryItems());
+        $all = $this->getInventoryData();
 
-        // 1. Filter by Category
-        if (!empty($categoryFilter) && $categoryFilter !== 'all') {
-            $allItems = $allItems->filter(function ($item) use ($categoryFilter) {
-                return strcasecmp($item['category'], $categoryFilter) === 0;
-            });
-        }
+        // Calculate card stats
+        $totalItems = $all->count();
+        $inStockCount = $all->filter(function ($item) {
+            return ($item->status ?? '') === 'In Stock';
+        })->count();
+        $lowStockCount = $all->filter(function ($item) {
+            return in_array($item->status ?? '', ['Low Stock', 'Out of Stock']);
+        })->count();
 
-        // 2. Filter by Status
-        if (!empty($statusFilter) && $statusFilter !== 'all') {
-            $allItems = $allItems->filter(function ($item) use ($statusFilter) {
-                return strcasecmp($item['status'], $statusFilter) === 0;
-            });
-        }
+        $stats = [
+            'total' => $totalItems,
+            'in_stock' => $inStockCount,
+            'low_stock' => $lowStockCount,
+        ];
 
-        // 3. Search Filter
-        if (!empty($search)) {
-            $searchLower = strtolower(trim($search));
-            $allItems = $allItems->filter(function ($item) use ($searchLower) {
-                return str_contains(strtolower($item['name']), $searchLower)
-                    || str_contains(strtolower($item['category']), $searchLower)
-                    || str_contains(strtolower($item['unit']), $searchLower)
-                    || str_contains(strtolower($item['status']), $searchLower);
-            });
-        }
+        // Filter items
+        $filtered = $all->filter(function ($item) use ($search, $categoryFilter, $statusFilter) {
+            if ($search) {
+                $s = strtolower(trim($search));
+                $nameMatch = str_contains(strtolower($item->name ?? ''), $s);
+                $catMatch = str_contains(strtolower($item->category ?? ''), $s);
+                $unitMatch = str_contains(strtolower($item->unit ?? ''), $s);
+                $statusMatch = str_contains(strtolower($item->status ?? ''), $s);
+                if (!$nameMatch && !$catMatch && !$unitMatch && !$statusMatch) {
+                    return false;
+                }
+            }
 
-        $totalFiltered = $allItems->count();
-        $totalPages = max(1, (int) ceil($totalFiltered / $perPage));
-        $currentPage = min(max(1, $page), $totalPages);
-        $offset = ($currentPage - 1) * $perPage;
+            if ($categoryFilter && $categoryFilter !== 'all' && $categoryFilter !== 'All Categories') {
+                if (strtolower($item->category ?? '') !== strtolower($categoryFilter)) {
+                    return false;
+                }
+            }
 
-        $pagedItems = $allItems->slice($offset, $perPage)->values();
-        $from = $totalFiltered > 0 ? $offset + 1 : 0;
-        $to = min($offset + $perPage, $totalFiltered);
+            if ($statusFilter && $statusFilter !== 'all' && $statusFilter !== 'All Status') {
+                if (strtolower($item->status ?? '') !== strtolower($statusFilter)) {
+                    return false;
+                }
+            }
 
-        // Get unique categories and statuses for dropdown filters
-        $allInventory = $this->getInventoryItems();
-        $categories = collect($allInventory)->pluck('category')->unique()->values()->all();
+            return true;
+        })->values();
+
+        // Default categories and statuses for dropdown filters
+        $categories = ['Cleaning', 'Packaging', 'Accessories', 'Chemicals'];
         $statuses = ['In Stock', 'Low Stock', 'Out of Stock'];
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'data' => $pagedItems,
-                'pagination' => [
-                    'current_page' => $currentPage,
-                    'last_page' => $totalPages,
-                    'per_page' => $perPage,
-                    'total' => $totalFiltered,
-                    'from' => $from,
-                    'to' => $to,
-                ],
-            ]);
-        }
+        $viewName = view()->exists('pages.inventory') ? 'pages.inventory' : 'inventory';
 
-        return view('pages.inventory', [
-            'items' => $pagedItems,
-            'allItems' => $allInventory,
+        return view($viewName, [
+            'items' => $filtered,
+            'stats' => $stats,
             'categories' => $categories,
             'statuses' => $statuses,
             'search' => $search,
             'categoryFilter' => $categoryFilter,
             'statusFilter' => $statusFilter,
-            'currentPage' => $currentPage,
-            'totalPages' => $totalPages,
-            'from' => $from,
-            'to' => $to,
-            'totalFiltered' => $totalFiltered,
-            'totalItems' => count($allInventory),
         ]);
     }
 
     /**
-     * Store a new inventory item.
+     * Show single inventory item details.
+     */
+    public function show($id, $optionalId = null)
+    {
+        $request = request();
+        if ($id instanceof Request) {
+            $request = $id;
+            $id = $optionalId ?? $request->route('id') ?? $request->route('inventory');
+        }
+
+        $id = is_object($id) ? ($id->id ?? 1) : $id;
+        $all = $this->getInventoryData();
+        $item = $all->firstWhere('id', (int)$id);
+
+        return response()->json([
+            'success' => (bool)$item,
+            'item' => $item
+        ]);
+    }
+
+    /**
+     * Add Laundry Supplies / Create new item.
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:150',
-            'category' => 'required|string|max:100',
-            'stock' => 'required|numeric|min:0',
-            'unit' => 'required|string|max:20',
-            'status' => 'required|string|max:50',
-            'min_threshold' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string|max:500',
+        $name = $request->input('name') ?? $request->input('item_name');
+        $stock = $request->input('stock') ?? $request->input('quantity', 0);
+        $request->merge([
+            'name' => $name,
+            'stock' => $stock
         ]);
 
-        $items = $this->getInventoryItems();
-        $newId = count($items) > 0 ? max(array_column($items, 'id')) + 1 : 1;
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|max:100',
+            'stock' => 'required|numeric|min:0',
+            'unit' => 'required|string|max:50',
+            'min_stock' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+            'supplier' => 'nullable|string|max:255',
+            'unit_price' => 'nullable|numeric|min:0',
+        ]);
 
-        $newItem = [
-            'id' => $newId,
-            'name' => trim($validated['name']),
-            'category' => trim($validated['category']),
-            'stock' => (int) $validated['stock'],
-            'unit' => trim($validated['unit']),
-            'status' => trim($validated['status']),
-            'min_threshold' => (int) ($validated['min_threshold'] ?? 10),
-            'notes' => $validated['notes'] ?? '',
-            'last_restocked' => date('d M Y'),
+        $stock = (int)$request->input('stock', 0);
+        $minStock = (int)$request->input('min_stock', 15);
+        $status = $this->determineStatus($stock, $minStock);
+
+        $all = $this->getInventoryData();
+        $nextId = ($all->max('id') ?? 6) + 1;
+
+        $newItem = (object)[
+            'id' => $nextId,
+            'name' => trim($request->name),
+            'category' => trim($request->category),
+            'stock' => $stock,
+            'unit' => trim($request->unit),
+            'status' => $status,
+            'min_stock' => $minStock,
+            'notes' => $request->notes ?? '',
+            'supplier' => $request->supplier ?? 'Standard Supplier',
+            'unit_price' => (float)($request->unit_price ?? 0.00),
+            'last_restocked' => date('Y-m-d'),
         ];
 
-        // Add to beginning of inventory
-        array_unshift($items, $newItem);
-        $this->saveInventoryItems($items);
+        // Database save
+        try {
+            if (Schema::hasTable('inventories')) {
+                Inventory::create((array)$newItem);
+            }
+        } catch (\Throwable $e) {}
+
+        $all->push($newItem);
+        $this->saveInventoryStorage($all);
+        session(['laundry_inventory_items' => $all->toArray()]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Item '{$newItem['name']}' added successfully!",
-                'data' => $newItem,
+                'message' => 'Supplies added successfully!',
+                'item' => $newItem
             ]);
         }
 
-        return redirect()->back()->with('success', "Item '{$newItem['name']}' added successfully!");
+        return redirect()->back()->with('success', 'Supplies item "' . $request->name . '" added successfully!');
     }
 
     /**
-     * Update an existing inventory item.
+     * Update Inventory Item.
      */
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:150',
+        $id = is_object($id) ? ($id->id ?? 1) : $id;
+
+        $request->validate([
+            'name' => 'required|string|max:255',
             'category' => 'required|string|max:100',
             'stock' => 'required|numeric|min:0',
-            'unit' => 'required|string|max:20',
-            'status' => 'required|string|max:50',
-            'min_threshold' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string|max:500',
+            'unit' => 'required|string|max:50',
+            'min_stock' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
+            'supplier' => 'nullable|string|max:255',
+            'unit_price' => 'nullable|numeric|min:0',
         ]);
 
-        $items = $this->getInventoryItems();
-        $updated = false;
+        $stock = (int)$request->input('stock', 0);
+        $minStock = (int)$request->input('min_stock', 15);
+        $status = $this->determineStatus($stock, $minStock);
 
-        foreach ($items as &$item) {
-            if ($item['id'] == $id) {
-                $item['name'] = trim($validated['name']);
-                $item['category'] = trim($validated['category']);
-                $item['stock'] = (int) $validated['stock'];
-                $item['unit'] = trim($validated['unit']);
-                $item['status'] = trim($validated['status']);
-                if (isset($validated['min_threshold'])) {
-                    $item['min_threshold'] = (int) $validated['min_threshold'];
+        // Database update
+        try {
+            if (Schema::hasTable('inventories')) {
+                $dbItem = Inventory::find($id);
+                if ($dbItem) {
+                    $dbItem->update([
+                        'name' => $request->name,
+                        'category' => $request->category,
+                        'stock' => $stock,
+                        'unit' => $request->unit,
+                        'status' => $status,
+                        'min_stock' => $minStock,
+                        'notes' => $request->notes,
+                        'supplier' => $request->supplier,
+                        'unit_price' => (float)($request->unit_price ?? $dbItem->unit_price),
+                    ]);
                 }
-                if (isset($validated['notes'])) {
-                    $item['notes'] = $validated['notes'];
-                }
-                $updated = true;
-                break;
             }
-        }
+        } catch (\Throwable $e) {}
 
-        if ($updated) {
-            $this->saveInventoryItems($items);
-        }
+        $all = $this->getInventoryData()->map(function ($item) use ($id, $request, $stock, $minStock, $status) {
+            if ($item->id == $id) {
+                $item->name = $request->name;
+                $item->category = $request->category;
+                $item->stock = $stock;
+                $item->unit = $request->unit;
+                $item->status = $status;
+                $item->min_stock = $minStock;
+                $item->notes = $request->notes ?? $item->notes ?? '';
+                if ($request->has('supplier')) {
+                    $item->supplier = $request->supplier;
+                }
+                if ($request->has('unit_price')) {
+                    $item->unit_price = (float)$request->unit_price;
+                }
+            }
+            return $item;
+        });
+
+        $this->saveInventoryStorage($all);
+        session(['laundry_inventory_items' => $all->toArray()]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Item #{$id} updated successfully!",
+                'message' => 'Inventory updated successfully!'
             ]);
         }
 
-        return redirect()->back()->with('success', "Item updated successfully!");
+        return redirect()->back()->with('success', 'Item "' . $request->name . '" updated successfully!');
     }
 
     /**
-     * Delete an inventory item.
+     * Stock In function: Increases quantity and updates status.
+     */
+    public function stockIn(Request $request, $id)
+    {
+        $id = is_object($id) ? ($id->id ?? 1) : $id;
+        $qty = abs((int)$request->input('quantity', 10));
+
+        $updatedItem = null;
+
+        // DB update
+        try {
+            if (Schema::hasTable('inventories')) {
+                $dbItem = Inventory::find($id);
+                if ($dbItem) {
+                    $dbItem->stock += $qty;
+                    $dbItem->last_restocked = date('Y-m-d');
+                    $dbItem->updateStatusBasedOnStock();
+                    $updatedItem = $dbItem;
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        $all = $this->getInventoryData()->map(function ($item) use ($id, $qty, &$updatedItem) {
+            if ($item->id == $id) {
+                $item->stock += $qty;
+                $item->last_restocked = date('Y-m-d');
+                $item->status = $this->determineStatus($item->stock, $item->min_stock ?? 15);
+                $updatedItem = $item;
+            }
+            return $item;
+        });
+
+        $this->saveInventoryStorage($all);
+        session(['laundry_inventory_items' => $all->toArray()]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Stock in of +{$qty} successfully recorded!",
+                'item' => $updatedItem
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Stock in of +{$qty} recorded successfully!");
+    }
+
+    /**
+     * Stock Out function: Deducts quantity and triggers low stock alert if needed.
+     */
+    public function stockOut(Request $request, $id)
+    {
+        $id = is_object($id) ? ($id->id ?? 1) : $id;
+        $qty = abs((int)$request->input('quantity', 5));
+
+        $updatedItem = null;
+
+        // DB update
+        try {
+            if (Schema::hasTable('inventories')) {
+                $dbItem = Inventory::find($id);
+                if ($dbItem) {
+                    $dbItem->stock = max(0, $dbItem->stock - $qty);
+                    $dbItem->updateStatusBasedOnStock();
+                    $updatedItem = $dbItem;
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        $all = $this->getInventoryData()->map(function ($item) use ($id, $qty, &$updatedItem) {
+            if ($item->id == $id) {
+                $item->stock = max(0, $item->stock - $qty);
+                $item->status = $this->determineStatus($item->stock, $item->min_stock ?? 15);
+                $updatedItem = $item;
+            }
+            return $item;
+        });
+
+        $this->saveInventoryStorage($all);
+        session(['laundry_inventory_items' => $all->toArray()]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Stock out of -{$qty} recorded!",
+                'item' => $updatedItem
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Stock out of -{$qty} recorded successfully!");
+    }
+
+    /**
+     * Delete Inventory Item.
      */
     public function destroy(Request $request, $id)
     {
-        $items = $this->getInventoryItems();
-        $filtered = array_filter($items, function ($item) use ($id) {
-            return $item['id'] != $id;
-        });
+        $id = is_object($id) ? ($id->id ?? 1) : $id;
 
-        $this->saveInventoryItems($filtered);
+        try {
+            if (Schema::hasTable('inventories')) {
+                $dbItem = Inventory::find($id);
+                if ($dbItem) {
+                    $dbItem->delete();
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        $all = $this->getInventoryData()->reject(function ($item) use ($id) {
+            return $item->id == $id;
+        })->values();
+
+        $this->saveInventoryStorage($all);
+        session(['laundry_inventory_items' => $all->toArray()]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Item #{$id} deleted successfully!",
-                'id' => $id,
+                'message' => 'Inventory item deleted successfully!'
             ]);
         }
 
-        return redirect()->back()->with('success', "Item removed successfully!");
+        return redirect()->back()->with('success', 'Inventory item removed successfully!');
     }
 
     /**
-     * Reset inventory dataset to initial default (25 items).
+     * Reset to default 6 items.
      */
     public function reset(Request $request)
     {
-        session()->forget('inventory_items');
-        $default = $this->getDefaultInventory();
-        session(['inventory_items' => $default]);
+        $defaults = collect($this->getDefaultInventory())->map(function ($item) {
+            return (object)$item;
+        });
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Inventory refreshed to default state.',
-            ]);
-        }
+        $this->saveInventoryStorage($defaults);
+        session(['laundry_inventory_items' => $defaults->toArray()]);
 
-        return redirect()->route('inventory.index')->with('success', 'Inventory data refreshed successfully!');
-    }
-
-    /**
-     * Export inventory report to CSV / Excel format.
-     */
-    public function export($format = 'csv')
-    {
-        $items = $this->getInventoryItems();
-        $filename = 'inventory_report_' . date('Y_m_d_His') . '.csv';
-
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        $callback = function () use ($items) {
-            $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
-            fputcsv($file, ['ID', 'Item Name', 'Category', 'Stock Level', 'Unit', 'Status', 'Min Threshold', 'Last Restocked', 'Notes']);
-
-            foreach ($items as $item) {
-                fputcsv($file, [
-                    $item['id'],
-                    $item['name'],
-                    $item['category'],
-                    $item['stock'],
-                    $item['unit'],
-                    $item['status'],
-                    $item['min_threshold'] ?? 10,
-                    $item['last_restocked'] ?? '',
-                    $item['notes'] ?? '',
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return redirect()->back()->with('success', 'Inventory reset to default 6 items.');
     }
 }

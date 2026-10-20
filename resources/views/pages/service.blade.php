@@ -2,105 +2,6 @@
 
 @section('title', 'Laundry Service Management - Laundry 6 Plus')
 
-@section('header')
-<header class="bg-white px-6 sm:px-8 py-3.5 sm:py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] rounded-b-2xl sm:rounded-b-3xl flex items-center justify-between z-30 sticky top-0 border-b border-gray-100">
-    <!-- Left: Hamburger & Page Title/Subtitle -->
-    <div class="flex items-center space-x-3 sm:space-x-4">
-        <!-- Hamburger Button -->
-        <button type="button" onclick="toggleSidebar()" class="p-1.5 -ml-1 text-gray-800 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition focus:outline-none cursor-pointer" title="Toggle Navigation Menu" aria-label="Toggle navigation menu">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </button>
-
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight leading-tight">Laundry Service Management</h1>
-            <p class="text-[12px] sm:text-[13px] text-gray-400 font-medium leading-none mt-1">Manage laundry service,prices and service details.</p>
-        </div>
-    </div>
-
-    <!-- Right: Notification Bell & Role Switcher User Profile -->
-    <div class="flex items-center space-x-3 sm:space-x-5">
-        <!-- Blue Notification Bell with Solid Dot -->
-        <a href="{{ route('notifications.index') }}" class="relative p-2 text-blue-600 hover:bg-blue-50 rounded-full transition focus:outline-none" title="Notifications">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path>
-            </svg>
-            <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#2563EB] rounded-full ring-2 ring-white"></span>
-        </a>
-
-        <!-- User Role Switcher Dropdown Trigger -->
-        <div class="relative" id="role-switcher-container">
-            <button id="role-menu-button" type="button" onclick="toggleRoleMenu()" aria-haspopup="menu" aria-expanded="false" aria-controls="role-menu" class="flex items-center space-x-2.5 pl-2 pr-2.5 py-1.5 rounded-full hover:bg-gray-100 transition focus:outline-none cursor-pointer group">
-                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200 group-hover:border-blue-400 transition-colors">
-                    <i class="fa-solid fa-circle-user text-2xl text-[#2563EB]"></i>
-                </div>
-                <span class="text-sm sm:text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{{ $activeRole ?? session('active_role', 'Admin') }}</span>
-                <i id="role-chevron" class="fa-solid fa-chevron-down text-[11px] text-gray-500 transition-transform duration-200"></i>
-            </button>
-
-            <!-- Dropdown Menu -->
-            <div id="role-menu" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 transform origin-top-right transition-all duration-150" role="menu" aria-labelledby="role-menu-button" tabindex="-1">
-                <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Role</p>
-                        <p class="text-sm font-bold text-gray-800">{{ Auth::check() ? Auth::user()->name : 'Admin User' }}</p>
-                    </div>
-                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700">
-                        {{ $isDemoMode ?? false ? 'Demo Mode' : 'Role-Based' }}
-                    </span>
-                </div>
-
-                <div class="py-1">
-                    @foreach($availableRoles ?? [
-                        'Admin' => ['name' => 'Administrator', 'badge_bg' => 'bg-blue-100', 'badge_text' => 'text-blue-700', 'description' => 'Full System Access'],
-                        'Staff' => ['name' => 'Laundry Staff', 'badge_bg' => 'bg-emerald-100', 'badge_text' => 'text-emerald-700', 'description' => 'Operations & Washing'],
-                        'Delivery' => ['name' => 'Delivery Driver', 'badge_bg' => 'bg-purple-100', 'badge_text' => 'text-purple-700', 'description' => 'Logistics & Dispatch'],
-                        'Receptionist' => ['name' => 'Receptionist', 'badge_bg' => 'bg-amber-100', 'badge_text' => 'text-amber-700', 'description' => 'Front Desk & Orders']
-                    ] as $roleKey => $roleInfo)
-                        @php
-                            $isActive = (($activeRole ?? session('active_role', 'Admin')) === $roleKey);
-                        @endphp
-                        <a href="{{ route('dashboard.switch-role', $roleKey) }}" 
-                           class="role-menu-item flex items-center justify-between px-4 py-3 transition hover:bg-blue-50/60 {{ $isActive ? 'bg-blue-50/90 text-blue-700 font-semibold border-l-4 border-blue-600' : 'text-gray-700' }}">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ $roleInfo['badge_bg'] }} {{ $roleInfo['badge_text'] }}">
-                                    @if($roleKey === 'Admin')
-                                        <i class="fa-solid fa-shield-halved text-sm"></i>
-                                    @elseif($roleKey === 'Staff')
-                                        <i class="fa-solid fa-user-group text-sm"></i>
-                                    @elseif($roleKey === 'Delivery')
-                                        <i class="fa-solid fa-truck-fast text-sm"></i>
-                                    @elseif($roleKey === 'Receptionist')
-                                        <i class="fa-solid fa-bell-concierge text-sm"></i>
-                                    @else
-                                        <i class="fa-solid fa-user text-sm"></i>
-                                    @endif
-                                </div>
-                                <div class="text-left">
-                                    <div class="text-sm font-semibold leading-tight">{{ $roleInfo['name'] }}</div>
-                                    <div class="text-[11px] text-gray-400 font-normal leading-tight mt-0.5">{{ $roleInfo['description'] }}</div>
-                                </div>
-                            </div>
-                            @if($isActive)
-                                <i class="fa-solid fa-check text-blue-600 text-sm"></i>
-                            @endif
-                        </a>
-                    @endforeach
-                </div>
-                <div class="border-t border-gray-100 my-1"></div>
-                <button type="button" onclick="openLogoutModal()" class="w-full flex items-center space-x-3 px-4 py-2.5 text-rose-600 hover:bg-rose-50 transition text-sm font-semibold cursor-pointer">
-                    <i class="fa-solid fa-arrow-right-from-bracket text-sm text-rose-500"></i>
-                    <span>Logout</span>
-                </button>
-            </div>
-        </div>
-    </div>
-</header>
-@endsection
-
 @section('content')
 @php
     // Service types configuration matching screenshot styling and SVG icons
@@ -212,7 +113,7 @@
     };
 @endphp
 
-<div class="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+<div class="w-full mx-auto space-y-6">
 
     <!-- Flash Notifications -->
     @if(session('success'))
@@ -254,7 +155,8 @@
                     $isSelected = ($selectedType === $key) || (empty($selectedType) && $key === 'Wash Only' && !request()->has('type') && !request()->has('search'));
                 @endphp
                 <button type="button"
-                        onclick="filterByType('{{ $key }}')"
+                        data-type="{{ $key }}"
+                        onclick="handleFilterTypeClick(this)"
                         class="p-4 sm:p-5 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center space-y-2 text-center cursor-pointer min-h-[96px] {{ $isSelected ? $cfg['active_bg'] : $cfg['bg_light'] . ' ' . $cfg['border'] . ' ' . $cfg['text'] . ' hover:shadow-sm hover:scale-[1.01]' }}">
                     <div class="flex items-center justify-center">
                         {!! $cfg['icon_svg'] !!}
@@ -271,7 +173,8 @@
                     $isSelected = ($selectedType === $key);
                 @endphp
                 <button type="button"
-                        onclick="filterByType('{{ $key }}')"
+                        data-type="{{ $key }}"
+                        onclick="handleFilterTypeClick(this)"
                         class="p-4 sm:p-5 rounded-2xl border transition-all duration-200 flex flex-col items-center justify-center space-y-2 text-center cursor-pointer min-h-[96px] {{ $isSelected ? $cfg['active_bg'] : $cfg['bg_light'] . ' ' . $cfg['border'] . ' ' . $cfg['text'] . ' hover:shadow-sm hover:scale-[1.01]' }}">
                     <div class="flex items-center justify-center">
                         {!! $cfg['icon_svg'] !!}
@@ -427,7 +330,9 @@
 
                                     <!-- Red Trash Delete Button (trush can delete) -->
                                     <button type="button" 
-                                            onclick="openDeleteServiceModal({{ $service->id ?? ($service->service_id ?? 0) }}, '{{ addslashes($service->name ?? ($service->service_name ?? 'Service')) }}')"
+                                            data-id="{{ $service->id ?? ($service->service_id ?? 0) }}"
+                                            data-name="{{ $service->name ?? ($service->service_name ?? 'Service') }}"
+                                            onclick="openDeleteServiceModal(this.getAttribute('data-id'), this.getAttribute('data-name'))"
                                             class="w-8 h-8 rounded-lg bg-rose-500 hover:bg-rose-600 text-white inline-flex items-center justify-center transition shadow-sm cursor-pointer"
                                             title="Delete Service">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
@@ -510,7 +415,8 @@
                 <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
                     @foreach($typeConfigs as $key => $cfg)
                         <button type="button"
-                                onclick="selectModalType('{{ $key }}')"
+                                data-type="{{ $key }}"
+                                onclick="handleSelectModalTypeClick(this)"
                                 id="modal-type-btn-{{ Str::slug($key) }}"
                                 class="modal-type-btn p-3 rounded-2xl border transition-all duration-150 flex flex-col items-center justify-center space-y-1.5 text-center cursor-pointer min-h-[82px] {{ $key === 'Wash Only' ? 'border-2 border-blue-500 bg-blue-50/50 ' . $cfg['text'] : $cfg['bg_light'] . ' ' . $cfg['border'] . ' ' . $cfg['text'] . ' hover:border-gray-300' }}">
                             <div class="flex items-center justify-center scale-90">
@@ -692,6 +598,16 @@
 <script>
     // Configuration dictionary for type configs
     const TYPE_CONFIGS = JSON.parse(document.getElementById('type-configs-data').textContent || '{}');
+
+    function handleFilterTypeClick(el) {
+        const type = el.getAttribute('data-type');
+        if (type) filterByType(type);
+    }
+
+    function handleSelectModalTypeClick(el) {
+        const type = el.getAttribute('data-type');
+        if (type) selectModalType(type);
+    }
 
     // Filter table by clicking category cards at the top
     function filterByType(type) {

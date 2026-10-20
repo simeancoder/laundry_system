@@ -4,199 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Order;
+use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class PaymentController extends Controller
 {
     /**
-     * Get initial default 12 payment transactions matching UI screenshot.
+     * Get initial default payment transactions (empty for pure DB).
      */
     private function getDefaultPayments(): array
     {
-        return [
-            [
-                'id' => 1,
-                'payment_id' => 'PAY-001',
-                'order_number' => 'ORD-0001',
-                'customer_name' => 'Sokha Dara',
-                'customer_initials' => 'SD',
-                'avatar_color' => 'bg-blue-100 text-blue-700',
-                'amount' => 12.50,
-                'payment_method' => 'Cash',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-15 10:24 AM',
-                'raw_date' => '2025-09-15 10:24:00',
-                'reference_no' => 'TRX-94821',
-                'notes' => 'Paid in full with cash on pickup',
-            ],
-            [
-                'id' => 2,
-                'payment_id' => 'PAY-002',
-                'order_number' => 'ORD-0002',
-                'customer_name' => 'Chan Sreyneath',
-                'customer_initials' => 'CS',
-                'avatar_color' => 'bg-purple-100 text-purple-700',
-                'amount' => 18.00,
-                'payment_method' => 'Credit Card',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-14 03:12 PM',
-                'raw_date' => '2025-09-14 15:12:00',
-                'reference_no' => 'TRX-94822',
-                'notes' => 'Visa ending in 4289',
-            ],
-            [
-                'id' => 3,
-                'payment_id' => 'PAY-003',
-                'order_number' => 'ORD-0003',
-                'customer_name' => 'Heng Channa',
-                'customer_initials' => 'HC',
-                'avatar_color' => 'bg-teal-100 text-teal-700',
-                'amount' => 16.00,
-                'payment_method' => 'Mobile Payment',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-14 11:45 AM',
-                'raw_date' => '2025-09-14 11:45:00',
-                'reference_no' => 'TRX-94823',
-                'notes' => 'ABA PAY mobile KHQR transaction',
-            ],
-            [
-                'id' => 4,
-                'payment_id' => 'PAY-004',
-                'order_number' => 'ORD-0004',
-                'customer_name' => 'Kim Sovannary',
-                'customer_initials' => 'KS',
-                'avatar_color' => 'bg-indigo-100 text-indigo-700',
-                'amount' => 22.50,
-                'payment_method' => 'Bank Transfer',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-13 04:20 PM',
-                'raw_date' => '2025-09-13 16:20:00',
-                'reference_no' => 'TRX-94824',
-                'notes' => 'Direct Wing Bank transfer',
-            ],
-            [
-                'id' => 5,
-                'payment_id' => 'PAY-005',
-                'order_number' => 'ORD-0005',
-                'customer_name' => 'Neang Pheaktra',
-                'customer_initials' => 'NP',
-                'avatar_color' => 'bg-amber-100 text-amber-700',
-                'amount' => 14.00,
-                'payment_method' => 'Cash',
-                'status' => 'PENDING',
-                'payment_date' => '2025-09-13 09:15 AM',
-                'raw_date' => '2025-09-13 09:15:00',
-                'reference_no' => 'TRX-94825',
-                'notes' => 'Cash payment expected on home delivery',
-            ],
-            [
-                'id' => 6,
-                'payment_id' => 'PAY-006',
-                'order_number' => 'ORD-0006',
-                'customer_name' => 'Lim Vannak',
-                'customer_initials' => 'LV',
-                'avatar_color' => 'bg-sky-100 text-sky-700',
-                'amount' => 30.00,
-                'payment_method' => 'Credit Card',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-12 02:30 PM',
-                'raw_date' => '2025-09-12 14:30:00',
-                'reference_no' => 'TRX-94826',
-                'notes' => 'Mastercard authorization #55214',
-            ],
-            [
-                'id' => 7,
-                'payment_id' => 'PAY-007',
-                'order_number' => 'ORD-0007',
-                'customer_name' => 'Thon Sreynich',
-                'customer_initials' => 'TS',
-                'avatar_color' => 'bg-fuchsia-100 text-fuchsia-700',
-                'amount' => 17.50,
-                'payment_method' => 'Mobile Payment',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-12 10:05 AM',
-                'raw_date' => '2025-09-12 10:05:00',
-                'reference_no' => 'TRX-94827',
-                'notes' => 'Bakong KHQR payment verified',
-            ],
-            [
-                'id' => 8,
-                'payment_id' => 'PAY-008',
-                'order_number' => 'ORD-0008',
-                'customer_name' => 'Pich Sothy',
-                'customer_initials' => 'PS',
-                'avatar_color' => 'bg-pink-100 text-pink-700',
-                'amount' => 25.00,
-                'payment_method' => 'Cash',
-                'status' => 'REFUNDED',
-                'payment_date' => '2025-09-11 05:40 PM',
-                'raw_date' => '2025-09-11 17:40:00',
-                'reference_no' => 'TRX-94828',
-                'notes' => 'Customer requested refund due to duplicate charge',
-            ],
-            [
-                'id' => 9,
-                'payment_id' => 'PAY-009',
-                'order_number' => 'ORD-0009',
-                'customer_name' => 'Chea Ratanak',
-                'customer_initials' => 'CR',
-                'avatar_color' => 'bg-emerald-100 text-emerald-700',
-                'amount' => 12.00,
-                'payment_method' => 'Bank Transfer',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-10 01:20 PM',
-                'raw_date' => '2025-09-10 13:20:00',
-                'reference_no' => 'TRX-94829',
-                'notes' => 'Canadia Bank swift transfer ref 7721',
-            ],
-            [
-                'id' => 10,
-                'payment_id' => 'PAY-010',
-                'order_number' => 'ORD-010',
-                'customer_name' => 'Va Sovan',
-                'customer_initials' => 'VS',
-                'avatar_color' => 'bg-slate-200 text-slate-700',
-                'amount' => 20.00,
-                'payment_method' => 'Mobile Payment',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-09 11:35 AM',
-                'raw_date' => '2025-09-09 11:35:00',
-                'reference_no' => 'TRX-94830',
-                'notes' => 'TrueMoney Mobile transfer successful',
-            ],
-            [
-                'id' => 11,
-                'payment_id' => 'PAY-011',
-                'order_number' => 'ORD-0011',
-                'customer_name' => 'Em Meng',
-                'customer_initials' => 'EM',
-                'avatar_color' => 'bg-cyan-100 text-cyan-700',
-                'amount' => 35.00,
-                'payment_method' => 'Credit Card',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-08 04:15 PM',
-                'raw_date' => '2025-09-08 16:15:00',
-                'reference_no' => 'TRX-94831',
-                'notes' => 'Visa ending in 8841',
-            ],
-            [
-                'id' => 12,
-                'payment_id' => 'PAY-012',
-                'order_number' => 'ORD-0012',
-                'customer_name' => 'Keo Nisay',
-                'customer_initials' => 'KN',
-                'avatar_color' => 'bg-violet-100 text-violet-700',
-                'amount' => 28.00,
-                'payment_method' => 'Bank Transfer',
-                'status' => 'COMPLETED',
-                'payment_date' => '2025-09-07 09:30 AM',
-                'raw_date' => '2025-09-07 09:30:00',
-                'reference_no' => 'TRX-94832',
-                'notes' => 'ACLEDA Unity transfer',
-            ],
-        ];
+        return [];
     }
 
     /**
@@ -217,82 +39,121 @@ class PaymentController extends Controller
                 })->toArray();
             }
         } catch (\Throwable $e) {
-            // Fallback to default orders
+            // Fallback
         }
 
-        return [
-            ['order_number' => 'ORD-0010', 'customer_name' => 'Va Sovan', 'total_amount' => 20.00, 'order_date' => '2025-09-09'],
-            ['order_number' => 'ORD-0001', 'customer_name' => 'Sokha Dara', 'total_amount' => 12.50, 'order_date' => '2025-09-15'],
-            ['order_number' => 'ORD-0002', 'customer_name' => 'Chan Sreyneath', 'total_amount' => 18.00, 'order_date' => '2025-09-14'],
-            ['order_number' => 'ORD-0003', 'customer_name' => 'Heng Channa', 'total_amount' => 16.00, 'order_date' => '2025-09-14'],
-            ['order_number' => 'ORD-0004', 'customer_name' => 'Kim Sovannary', 'total_amount' => 22.50, 'order_date' => '2025-09-13'],
-            ['order_number' => 'ORD-0005', 'customer_name' => 'Neang Pheaktra', 'total_amount' => 14.00, 'order_date' => '2025-09-13'],
-            ['order_number' => 'ORD-0006', 'customer_name' => 'Lim Vannak', 'total_amount' => 30.00, 'order_date' => '2025-09-12'],
-            ['order_number' => 'ORD-0007', 'customer_name' => 'Thon Sreynich', 'total_amount' => 17.50, 'order_date' => '2025-09-12'],
-            ['order_number' => 'ORD-0008', 'customer_name' => 'Pich Sothy', 'total_amount' => 25.00, 'order_date' => '2025-09-11'],
-            ['order_number' => 'ORD-0009', 'customer_name' => 'Chea Ratanak', 'total_amount' => 12.00, 'order_date' => '2025-09-10'],
-            ['order_number' => 'ORD-0011', 'customer_name' => 'Em Meng', 'total_amount' => 35.00, 'order_date' => '2025-09-08'],
-            ['order_number' => 'ORD-0012', 'customer_name' => 'Keo Nisay', 'total_amount' => 28.00, 'order_date' => '2025-09-07'],
-        ];
+        return [];
     }
 
     /**
-     * Retrieve current payments list (Database primary with Session fallback).
+     * Resolve the amount column name from available columns.
+     */
+    private function resolveAmountColumn(array $columns): ?string
+    {
+        foreach (['amount', 'total_amount', 'paid_amount', 'amount_paid', 'payment_amount', 'total_price', 'price', 'total', 'paid'] as $col) {
+            if (in_array($col, $columns)) {
+                return $col;
+            }
+        }
+        foreach ($columns as $col) {
+            $lower = strtolower($col);
+            if (str_contains($lower, 'amount') || str_contains($lower, 'price') || str_contains($lower, 'total') || str_contains($lower, 'paid')) {
+                return $col;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Retrieve current payments list from Database.
      */
     private function getAllPayments(): array
     {
         try {
-            $dbPayments = Payment::orderBy('id', 'desc')->get();
-            if ($dbPayments->count() > 0) {
-                return $dbPayments->map(function ($p) {
+            session()->forget('payment_transactions');
+            if (Schema::hasTable('payments')) {
+                $columns = Schema::getColumnListing('payments');
+                $amtCol = $this->resolveAmountColumn($columns);
+                $pk = in_array('payment_id', $columns) ? 'payment_id' : (in_array('id', $columns) ? 'id' : ($columns[0] ?? null));
+                $query = Payment::query();
+                if ($pk) {
+                    $query->orderBy($pk, 'desc');
+                }
+                $dbPayments = $query->get();
+                return $dbPayments->map(function ($p) use ($amtCol) {
+                    $amt = 0;
+                    if ($amtCol && isset($p->{$amtCol})) {
+                        $amt = (float) $p->{$amtCol};
+                    } elseif (!empty($p->order_id)) {
+                        try {
+                            $ord = Order::find($p->order_id);
+                            if ($ord && isset($ord->total_price)) {
+                                $amt = (float) $ord->total_price;
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+
+                    $orderNo = $p->order_number ?? null;
+                    $customerName = $p->customer_name ?? null;
+
+                    if (!$orderNo && !empty($p->order_id)) {
+                        $orderNo = 'ORD-' . str_pad($p->order_id, 4, '0', STR_PAD_LEFT);
+                    }
+                    if (!$customerName && !empty($p->order_id)) {
+                        try {
+                            $ord = Order::find($p->order_id);
+                            if ($ord) {
+                                $customerName = $ord->customer_name;
+                                if (!$orderNo && !empty($ord->order_number)) {
+                                    $orderNo = $ord->order_number;
+                                }
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+                    if (!$customerName && !empty($p->customer_id)) {
+                        try {
+                            $cust = Customer::find($p->customer_id);
+                            if ($cust) {
+                                $customerName = $cust->name;
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+                    if (!$customerName) {
+                        $customerName = 'General Customer';
+                    }
+                    if (!$orderNo) {
+                        $orderNo = '-';
+                    }
+
+                    $idVal = $p->payment_id ?? ($p->id ?? 1);
+                    $displayPaymentId = is_numeric($idVal) ? ('PAY-' . str_pad($idVal, 3, '0', STR_PAD_LEFT)) : (string) $idVal;
+
+                    $stRaw = $p->status ?? ($p->payment_status ?? 'COMPLETED');
+                    $stUpper = strtoupper((string) $stRaw);
+                    $displayStatus = ($stUpper === 'PAID') ? 'COMPLETED' : $stUpper;
+
                     return [
-                        'id' => $p->id,
-                        'payment_id' => $p->payment_id,
-                        'order_number' => $p->order_number,
-                        'customer_name' => $p->customer_name,
-                        'customer_initials' => $p->customer_initials ?: $this->makeInitials($p->customer_name),
-                        'avatar_color' => $p->avatar_color ?: 'bg-blue-100 text-blue-700',
-                        'amount' => (float) $p->amount,
-                        'payment_method' => $p->payment_method,
-                        'status' => strtoupper($p->status),
+                        'id' => $idVal,
+                        'payment_id' => $displayPaymentId,
+                        'order_number' => $orderNo,
+                        'customer_name' => $customerName,
+                        'customer_initials' => $p->customer_initials ?: $this->makeInitials($customerName),
+                        'avatar_color' => $p->avatar_color ?: $this->pickAvatarColor($customerName),
+                        'amount' => (float) $amt,
+                        'payment_method' => $p->payment_method ?? ($p->method ?? 'Cash'),
+                        'status' => $displayStatus,
                         'payment_date' => $p->payment_date ? date('Y-m-d h:i A', strtotime($p->payment_date)) : date('Y-m-d h:i A'),
                         'raw_date' => $p->payment_date,
-                        'reference_no' => $p->reference_no ?: 'TRX-' . rand(10000, 99999),
-                        'notes' => $p->notes,
+                        'reference_no' => $p->reference_number ?? ($p->reference_no ?? ($p->transaction_id ?? ('TRX-' . rand(10000, 99999)))),
+                        'notes' => $p->notes ?? ($p->note ?? null),
                     ];
                 })->toArray();
             }
         } catch (\Throwable $e) {
-            // DB not reachable, fall through to session
+            Log::error('Error loading payments: ' . $e->getMessage());
         }
 
-        $sessionPayments = session('payment_transactions');
-        if (is_array($sessionPayments) && count($sessionPayments) > 0) {
-            $normalized = [];
-            foreach ($sessionPayments as $p) {
-                $amtRaw = $p['amount'] ?? 0;
-                if (is_string($amtRaw)) {
-                    $amtRaw = preg_replace('/[^0-9.]/', '', $amtRaw);
-                }
-                $p['amount'] = (float) $amtRaw;
-                $p['payment_id'] = $p['payment_id'] ?? ($p['transaction_id'] ?? 'PAY-001');
-                $p['order_number'] = $p['order_number'] ?? 'ORD-0001';
-                $p['customer_name'] = $p['customer_name'] ?? ($p['customer'] ?? 'Customer');
-                $p['customer_initials'] = $p['customer_initials'] ?? $this->makeInitials($p['customer_name']);
-                $p['avatar_color'] = $p['avatar_color'] ?? $this->pickAvatarColor($p['customer_name']);
-                $p['payment_method'] = $p['payment_method'] ?? ($p['method'] ?? 'Cash');
-                $p['status'] = strtoupper($p['status'] ?? 'COMPLETED');
-                $p['payment_date'] = $p['payment_date'] ?? ($p['date'] ?? date('Y-m-d h:i A'));
-                $p['reference_no'] = $p['reference_no'] ?? ($p['transaction_id'] ?? 'TRX-' . rand(10000, 99999));
-                $p['notes'] = $p['notes'] ?? '';
-                $normalized[] = $p;
-            }
-            return $normalized;
-        }
-
-        $default = $this->getDefaultPayments();
-        session(['payment_transactions' => $default]);
-        return $default;
+        return [];
     }
 
     /**
@@ -335,100 +196,140 @@ class PaymentController extends Controller
         $allPayments = $this->getAllPayments();
         $availableOrders = $this->getAvailableOrders();
 
-        // 1. KPI Calculations (Matching screenshot baseline: Total $2,450.00, Today $320.00, Outstanding $150.00, Refunds $50.00)
+        // 1. Dynamic KPI Calculations from real Database Payments
         $completedSum = 0;
         $refundedSum = 0;
         $pendingCount = 0;
         $completedCount = 0;
         $refundedCount = 0;
-        $currentSum = 0;
+        $todayRevenueSum = 0;
+        $todayStr = date('Y-m-d');
+
+        // Totals for Payment Method Breakdown
+        $cashSum = 0; $cashCount = 0;
+        $cardSum = 0; $cardCount = 0;
+        $bankSum = 0; $bankCount = 0;
+        $mobileSum = 0; $mobileCount = 0;
 
         foreach ($allPayments as $p) {
-            $st = strtoupper($p['status'] ?? 'COMPLETED');
             $amtRaw = $p['amount'] ?? 0;
             if (is_string($amtRaw)) {
                 $amtRaw = preg_replace('/[^0-9.]/', '', $amtRaw);
             }
             $amt = (float) $amtRaw;
-            $currentSum += $amt;
+            $st = strtoupper($p['status'] ?? 'COMPLETED');
+
+            $pDate = !empty($p['raw_date']) ? date('Y-m-d', strtotime($p['raw_date'])) : (!empty($p['payment_date']) ? date('Y-m-d', strtotime($p['payment_date'])) : '');
 
             if ($st === 'COMPLETED') {
                 $completedSum += $amt;
                 $completedCount++;
+                if ($pDate === $todayStr) {
+                    $todayRevenueSum += $amt;
+                }
             } elseif ($st === 'REFUNDED') {
                 $refundedSum += $amt;
                 $refundedCount++;
             } elseif ($st === 'PENDING') {
                 $pendingCount++;
             }
+
+            // Method breakdown calculation
+            if ($st !== 'REFUNDED') {
+                $method = strtolower($p['payment_method'] ?? '');
+                if (str_contains($method, 'cash')) {
+                    $cashSum += $amt;
+                    $cashCount++;
+                } elseif (str_contains($method, 'credit') || str_contains($method, 'card')) {
+                    $cardSum += $amt;
+                    $cardCount++;
+                } elseif (str_contains($method, 'bank') || str_contains($method, 'transfer')) {
+                    $bankSum += $amt;
+                    $bankCount++;
+                } elseif (str_contains($method, 'mobile') || str_contains($method, 'qr') || str_contains($method, 'aba')) {
+                    $mobileSum += $amt;
+                    $mobileCount++;
+                } else {
+                    $cashSum += $amt;
+                    $cashCount++;
+                }
+            }
         }
 
-        // We anchor the metrics nicely to match Screenshot 1 ($2,450.00 total payments)
-        $totalPaymentsAmount = 2450.00;
-        // If extra user payments are recorded, adjust total accordingly
-        $defaultSum = 242.50; // sum of initial 12 records
-        if ($currentSum > $defaultSum) {
-            $totalPaymentsAmount += ($currentSum - $defaultSum);
+        // Outstanding balance calculated dynamically from real orders vs completed payments
+        $outstandingBalance = 0.00;
+        try {
+            if (Schema::hasTable('orders')) {
+                $totalOrderSales = (float) Order::whereNotIn('status', ['Cancelled', 'cancelled'])->sum('total_price');
+                $outstandingBalance = max(0.00, $totalOrderSales - $completedSum);
+            }
+        } catch (\Throwable $e) {
+            $outstandingBalance = 0.00;
         }
 
         $kpis = [
-            'total_payments' => '$' . number_format($totalPaymentsAmount, 2),
-            'total_payments_growth' => '+12% vs. last month',
-            'todays_revenue' => '$320.00',
-            'todays_revenue_growth' => '+8% vs. yesterday',
-            'outstanding_balance' => '$150.00',
-            'outstanding_balance_growth' => '+5% vs. last month',
-            'refunds' => '$' . number_format(50.00 + ($refundedCount > 1 ? ($refundedCount - 1) * 25 : 0), 2),
-            'refunds_growth' => '+2% vs. last month',
+            'total_payments' => '$' . number_format($completedSum, 2),
+            'total_payments_growth' => '+0% vs. last month',
+            'todays_revenue' => '$' . number_format($todayRevenueSum, 2),
+            'todays_revenue_growth' => '+0% vs. yesterday',
+            'outstanding_balance' => '$' . number_format($outstandingBalance, 2),
+            'outstanding_balance_growth' => '+0% vs. last month',
+            'refunds' => '$' . number_format($refundedSum, 2),
+            'refunds_growth' => '+0% vs. last month',
         ];
 
-        // 2. Payment Method Breakdown (Matching Screenshot 1)
-        // Cash: $860 (35%), Credit Card: $720 (29%), Bank Transfer: $520 (21%), Mobile Payment: $350 (14%)
+        // 2. Payment Method Breakdown (Dynamically from real database data)
+        $methodTotalSum = $cashSum + $cardSum + $bankSum + $mobileSum;
+        $cashPct = $methodTotalSum > 0 ? round(($cashSum / $methodTotalSum) * 100) : 0;
+        $cardPct = $methodTotalSum > 0 ? round(($cardSum / $methodTotalSum) * 100) : 0;
+        $bankPct = $methodTotalSum > 0 ? round(($bankSum / $methodTotalSum) * 100) : 0;
+        $mobilePct = $methodTotalSum > 0 ? round(($mobileSum / $methodTotalSum) * 100) : 0;
+
         $methodBreakdown = [
             'cash' => [
                 'name' => 'Cash',
-                'amount' => '$860.00',
-                'percentage' => 35,
-                'orders_text' => '42 orders processed',
+                'amount' => '$' . number_format($cashSum, 2),
+                'percentage' => $cashPct,
+                'orders_text' => "{$cashCount} orders processed",
                 'icon' => 'banknotes',
                 'color' => 'emerald',
             ],
             'credit_card' => [
                 'name' => 'Credit Card',
-                'amount' => '$720.00',
-                'percentage' => 29,
-                'orders_text' => '28 orders processed',
+                'amount' => '$' . number_format($cardSum, 2),
+                'percentage' => $cardPct,
+                'orders_text' => "{$cardCount} orders processed",
                 'icon' => 'credit-card',
                 'color' => 'blue',
             ],
             'bank_transfer' => [
                 'name' => 'Bank Transfer',
-                'amount' => '$520.00',
-                'percentage' => 21,
-                'orders_text' => '19 transactions',
+                'amount' => '$' . number_format($bankSum, 2),
+                'percentage' => $bankPct,
+                'orders_text' => "{$bankCount} transactions",
                 'icon' => 'building-library',
                 'color' => 'purple',
             ],
             'mobile_payment' => [
                 'name' => 'Mobile Payment',
-                'amount' => '$350.00',
-                'percentage' => 14,
-                'orders_text' => '15 transactions',
+                'amount' => '$' . number_format($mobileSum, 2),
+                'percentage' => $mobilePct,
+                'orders_text' => "{$mobileCount} transactions",
                 'icon' => 'device-phone-mobile',
                 'color' => 'amber',
             ],
         ];
 
-        // 3. Payment Status Donut Chart Data (Matching Screenshot 1: Total 12, Completed 9 (75%), Pending 1 (8.3%), Refunded 1 (8.3%))
+        // 3. Payment Status Donut Chart Data (Dynamically from real database data)
         $totalInvoices = count($allPayments);
         $statusChart = [
             'total' => $totalInvoices,
             'completed_count' => $completedCount,
-            'completed_pct' => $totalInvoices > 0 ? round(($completedCount / $totalInvoices) * 100, 1) : 75.0,
+            'completed_pct' => $totalInvoices > 0 ? round(($completedCount / $totalInvoices) * 100, 1) : 0,
             'pending_count' => $pendingCount,
-            'pending_pct' => $totalInvoices > 0 ? round(($pendingCount / $totalInvoices) * 100, 1) : 8.3,
+            'pending_pct' => $totalInvoices > 0 ? round(($pendingCount / $totalInvoices) * 100, 1) : 0,
             'refunded_count' => $refundedCount,
-            'refunded_pct' => $totalInvoices > 0 ? round(($refundedCount / $totalInvoices) * 100, 1) : 8.3,
+            'refunded_pct' => $totalInvoices > 0 ? round(($refundedCount / $totalInvoices) * 100, 1) : 0,
         ];
 
         // 4. Filtering & Search
@@ -513,27 +414,34 @@ class PaymentController extends Controller
      */
     public function recordPayment(Request $request)
     {
+        if (!$request->filled('payment_date')) {
+            $request->merge(['payment_date' => date('Y-m-d')]);
+        }
+        if (!$request->filled('status')) {
+            $request->merge(['status' => 'COMPLETED']);
+        }
+
         $validated = $request->validate([
             'order_number' => 'required|string|max:50',
             'customer_name' => 'required|string|max:150',
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|string|max:50',
-            'status' => 'required|string|in:COMPLETED,PENDING,REFUNDED,Completed,Pending,Refunded',
-            'payment_date' => 'required|string',
+            'status' => 'nullable|string',
+            'payment_date' => 'nullable|string',
             'reference_no' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:500',
         ]);
 
         $statusUpper = strtoupper($validated['status']);
-        $allPayments = $this->getAllPayments();
-
-        // Calculate next ID
         $maxId = 0;
-        foreach ($allPayments as $p) {
-            if (isset($p['id']) && $p['id'] > $maxId) {
-                $maxId = $p['id'];
+        try {
+            if (Schema::hasTable('payments')) {
+                $maxId = (int) Payment::max('id');
             }
+        } catch (\Throwable $e) {
+            $maxId = 0;
         }
+
         $newId = $maxId + 1;
         $paymentCode = 'PAY-' . str_pad($newId, 3, '0', STR_PAD_LEFT);
 
@@ -543,50 +451,130 @@ class PaymentController extends Controller
         $refNo = !empty($validated['reference_no']) ? trim($validated['reference_no']) : 'TRX-' . rand(10000, 99999);
         $dateFormatted = date('Y-m-d h:i A', strtotime($validated['payment_date']));
 
-        $newPaymentData = [
-            'id' => $newId,
-            'payment_id' => $paymentCode,
-            'order_number' => trim($validated['order_number']),
-            'customer_name' => trim($validated['customer_name']),
-            'customer_initials' => $initials,
-            'avatar_color' => $avatarColor,
-            'amount' => (float) $validated['amount'],
-            'payment_method' => trim($validated['payment_method']),
-            'status' => $statusUpper,
-            'payment_date' => $dateFormatted,
-            'raw_date' => $validated['payment_date'],
-            'reference_no' => $refNo,
-            'notes' => $validated['notes'] ?? '',
-        ];
-
-        // Save to Database if accessible
+        $payment = null;
         try {
-            Payment::create([
-                'payment_id' => $paymentCode,
-                'order_number' => $newPaymentData['order_number'],
-                'customer_name' => $newPaymentData['customer_name'],
-                'customer_initials' => $initials,
-                'avatar_color' => $avatarColor,
-                'amount' => $newPaymentData['amount'],
-                'payment_method' => $newPaymentData['payment_method'],
-                'status' => $statusUpper,
-                'payment_date' => date('Y-m-d H:i:s', strtotime($validated['payment_date'])),
-                'reference_no' => $refNo,
-                'notes' => $validated['notes'] ?? null,
-            ]);
+            $columns = Schema::hasTable('payments') ? Schema::getColumnListing('payments') : [];
+            $amtCol = $this->resolveAmountColumn($columns);
+
+            $insertData = [];
+            if (in_array('payment_code', $columns)) $insertData['payment_code'] = $paymentCode;
+            if (in_array('payment_no', $columns)) $insertData['payment_no'] = $paymentCode;
+
+            // Order lookup
+            $orderNo = trim($validated['order_number'] ?? '');
+            $ord = null;
+            if (!empty($orderNo)) {
+                $ord = Order::where('order_number', $orderNo)->orWhere('id', preg_replace('/\D/', '', $orderNo))->first();
+            }
+            if (!$ord) {
+                $ord = Order::orderBy('id', 'desc')->first();
+            }
+
+            if (in_array('order_number', $columns)) {
+                $insertData['order_number'] = $orderNo ?: ($ord ? $ord->order_number : 'ORD-0001');
+            }
+            if (in_array('order_id', $columns)) {
+                $insertData['order_id'] = $ord ? $ord->id : 1;
+            }
+
+            // Customer
+            $customerName = trim($validated['customer_name'] ?? '');
+            if (empty($customerName) && $ord) {
+                $customerName = $ord->customer_name;
+            }
+            if (empty($customerName)) {
+                $customerName = 'General Customer';
+            }
+
+            if (in_array('customer_name', $columns)) {
+                $insertData['customer_name'] = $customerName;
+            }
+            if (in_array('customer_id', $columns)) {
+                $insertData['customer_id'] = ($ord && $ord->customer_id) ? $ord->customer_id : 1;
+            }
+
+            if (in_array('customer_initials', $columns)) $insertData['customer_initials'] = $initials;
+            if (in_array('avatar_color', $columns)) $insertData['avatar_color'] = $avatarColor;
+
+            // Payment method
+            if (in_array('payment_method', $columns)) {
+                $insertData['payment_method'] = trim($validated['payment_method']);
+            } elseif (in_array('method', $columns)) {
+                $insertData['method'] = trim($validated['payment_method']);
+            }
+
+            // Status
+            if (in_array('status', $columns)) {
+                $insertData['status'] = $statusUpper;
+            }
+            if (in_array('payment_status', $columns)) {
+                $insertData['payment_status'] = match ($statusUpper) {
+                    'COMPLETED', 'PAID' => 'Paid',
+                    'PENDING' => 'Pending',
+                    'REFUNDED' => 'Refunded',
+                    'PARTIALLY PAID', 'PARTIAL' => 'Partially Paid',
+                    'FAILED' => 'Failed',
+                    default => 'Paid',
+                };
+            }
+
+            // Date
+            if (in_array('payment_date', $columns)) {
+                $insertData['payment_date'] = date('Y-m-d H:i:s', strtotime($validated['payment_date']));
+            }
+
+            // Reference
+            if (in_array('reference_no', $columns)) {
+                $insertData['reference_no'] = $refNo;
+            } elseif (in_array('reference_number', $columns)) {
+                $insertData['reference_number'] = $refNo;
+            } elseif (in_array('transaction_id', $columns)) {
+                $insertData['transaction_id'] = $refNo;
+            }
+
+            // Received By staff / admin
+            if (in_array('received_by', $columns)) {
+                /** @var \App\Models\User|null $authUser */
+                $authUser = Auth::user() ?? $request->user();
+                $insertData['received_by'] = $authUser ? ($authUser->user_id ?? ($authUser->id ?? Auth::id())) : Auth::id();
+            }
+
+            // Notes
+            if (in_array('notes', $columns)) {
+                $insertData['notes'] = $validated['notes'] ?? null;
+            } elseif (in_array('note', $columns)) {
+                $insertData['note'] = $validated['notes'] ?? null;
+            }
+
+            // Timestamps: only include if they really exist in the database table
+            if (in_array('created_at', $columns)) {
+                $insertData['created_at'] = now();
+            }
+            if (in_array('updated_at', $columns)) {
+                $insertData['updated_at'] = now();
+            }
+
+            // Set amount on correct column ONLY if column exists in payments table
+            if ($amtCol && in_array($amtCol, $columns)) {
+                $insertData[$amtCol] = (float) $validated['amount'];
+            }
+
+            $payment = Payment::create($insertData);
         } catch (\Throwable $e) {
-            Log::info('Payment saved to session fallback: ' . $e->getMessage());
+            Log::error('Error recording payment to database: ' . $e->getMessage());
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Database error: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Database error: ' . $e->getMessage());
         }
 
-        // Always save to Session
-        array_unshift($allPayments, $newPaymentData);
-        session(['payment_transactions' => array_values($allPayments)]);
+        session()->forget('payment_transactions');
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Payment {$paymentCode} of \${$newPaymentData['amount']} recorded successfully!",
-                'payment' => $newPaymentData,
+                'message' => "Payment {$paymentCode} of \${$validated['amount']} recorded successfully!",
+                'payment' => $payment,
             ]);
         }
 
@@ -594,29 +582,46 @@ class PaymentController extends Controller
     }
 
     /**
+     * Helper to find a payment safely by payment_id or id.
+     *
+     * @param int|string $id
+     * @return Payment|null
+     */
+    private function findPayment($id)
+    {
+        try {
+            $columns = Schema::hasTable('payments') ? Schema::getColumnListing('payments') : [];
+            $query = Payment::query();
+            $query->where('payment_id', $id);
+            if (in_array('id', $columns)) {
+                $query->orWhere('id', $id);
+            }
+            return $query->first();
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
      * Process Refund for a payment.
+     *
+     * @param Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function refund(Request $request, $id)
     {
-        $allPayments = $this->getAllPayments();
-        $found = false;
+        session()->forget('payment_transactions');
+        $payment = $this->findPayment($id);
 
-        foreach ($allPayments as &$p) {
-            if ($p['payment_id'] == $id || $p['id'] == $id) {
-                $p['status'] = 'REFUNDED';
-                $found = true;
-                break;
-            }
-        }
-        unset($p);
-
-        if ($found) {
-            session(['payment_transactions' => array_values($allPayments)]);
-
-            try {
-                Payment::where('payment_id', $id)->orWhere('id', $id)->update(['status' => 'REFUNDED']);
-            } catch (\Throwable $e) {
-                // Ignore DB error
+        if ($payment) {
+            $columns = Schema::hasTable('payments') ? Schema::getColumnListing('payments') : [];
+            $updateData = [];
+            if (in_array('status', $columns)) $updateData['status'] = 'REFUNDED';
+            if (in_array('payment_status', $columns)) $updateData['payment_status'] = 'Refunded';
+            if (in_array('updated_at', $columns)) $updateData['updated_at'] = now();
+            if (!empty($updateData)) {
+                $payment->update($updateData);
             }
 
             if ($request->ajax() || $request->wantsJson()) {
@@ -638,14 +643,46 @@ class PaymentController extends Controller
 
     /**
      * Show single payment details.
+     *
+     * @param int|string|\Illuminate\Http\Request $id
+     * @param int|string|null $optionalId
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show($id, $optionalId = null)
     {
-        $allPayments = $this->getAllPayments();
-        foreach ($allPayments as $p) {
-            if ($p['payment_id'] == $id || $p['id'] == $id) {
-                return response()->json(['success' => true, 'payment' => $p]);
+        if ($id instanceof \Illuminate\Http\Request) {
+            $id = $optionalId ?? $id->route('id') ?? $id->route('payment');
+        }
+
+        $payment = $this->findPayment($id);
+        if ($payment) {
+            $amt = $payment->amount ?? $payment->total_amount ?? $payment->paid_amount ?? 0;
+            if (!$amt && !empty($payment->order_id)) {
+                $ord = Order::find($payment->order_id);
+                if ($ord) $amt = $ord->total_price ?? 0;
             }
+
+            $idVal = $payment->payment_id ?? ($payment->id ?? 1);
+            $displayPaymentId = is_numeric($idVal) ? ('PAY-' . str_pad($idVal, 3, '0', STR_PAD_LEFT)) : (string) $idVal;
+
+            return response()->json([
+                'success' => true,
+                'payment' => [
+                    'id' => $idVal,
+                    'payment_id' => $displayPaymentId,
+                    'order_number' => $payment->order_number ?? ($payment->order_id ? 'ORD-' . str_pad($payment->order_id, 4, '0', STR_PAD_LEFT) : '-'),
+                    'customer_name' => $payment->customer_name ?? 'Customer',
+                    'customer_initials' => $payment->customer_initials ?: $this->makeInitials($payment->customer_name ?? 'Customer'),
+                    'avatar_color' => $payment->avatar_color ?: 'bg-blue-100 text-blue-700',
+                    'amount' => (float) $amt,
+                    'payment_method' => $payment->payment_method ?? ($payment->method ?? 'Cash'),
+                    'status' => strtoupper($payment->status ?? ($payment->payment_status ?? 'COMPLETED')),
+                    'payment_date' => $payment->payment_date ? date('Y-m-d h:i A', strtotime($payment->payment_date)) : date('Y-m-d h:i A'),
+                    'raw_date' => $payment->payment_date,
+                    'reference_no' => $payment->reference_no ?? ($payment->transaction_id ?? 'N/A'),
+                    'notes' => $payment->notes ?? ($payment->note ?? ''),
+                ],
+            ]);
         }
 
         return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
@@ -657,34 +694,55 @@ class PaymentController extends Controller
     public function generateInvoice(Request $request)
     {
         $paymentId = $request->input('payment_id');
-        $allPayments = $this->getAllPayments();
-
-        $target = null;
+        $payment = null;
         if ($paymentId) {
-            foreach ($allPayments as $p) {
-                if ($p['payment_id'] == $paymentId || $p['id'] == $paymentId) {
-                    $target = $p;
-                    break;
-                }
+            $payment = $this->findPayment($paymentId);
+        }
+        if (!$payment) {
+            $columns = Schema::hasTable('payments') ? Schema::getColumnListing('payments') : [];
+            $pk = in_array('payment_id', $columns) ? 'payment_id' : (in_array('id', $columns) ? 'id' : ($columns[0] ?? null));
+            $query = Payment::query();
+            if ($pk) {
+                $query->orderBy($pk, 'desc');
             }
+            $payment = $query->first();
         }
 
-        if (!$target && count($allPayments) > 0) {
-            $target = $allPayments[0];
-        }
+        if ($payment) {
+            $amt = $payment->amount ?? $payment->total_amount ?? $payment->paid_amount ?? 0;
+            if (!$amt && !empty($payment->order_id)) {
+                $ord = Order::find($payment->order_id);
+                if ($ord) $amt = $ord->total_price ?? 0;
+            }
+            $idVal = $payment->payment_id ?? ($payment->id ?? 1);
+            $displayPaymentId = is_numeric($idVal) ? ('PAY-' . str_pad($idVal, 3, '0', STR_PAD_LEFT)) : (string) $idVal;
 
-        $invoiceData = [
-            'invoice_number' => 'INV-' . str_pad($target['id'] ?? 1, 5, '0', STR_PAD_LEFT),
-            'payment_id' => $target['payment_id'] ?? 'PAY-001',
-            'order_number' => $target['order_number'] ?? 'ORD-0001',
-            'customer_name' => $target['customer_name'] ?? 'Sokha Dara',
-            'amount' => (float) ($target['amount'] ?? 12.50),
-            'payment_method' => $target['payment_method'] ?? 'Cash',
-            'status' => $target['status'] ?? 'COMPLETED',
-            'payment_date' => $target['payment_date'] ?? date('Y-m-d h:i A'),
-            'reference_no' => $target['reference_no'] ?? 'TRX-94821',
-            'notes' => $target['notes'] ?? 'Standard laundry service payment',
-        ];
+            $invoiceData = [
+                'invoice_number' => 'INV-' . str_pad($idVal, 5, '0', STR_PAD_LEFT),
+                'payment_id' => $displayPaymentId,
+                'order_number' => $payment->order_number ?? ($payment->order_id ? 'ORD-' . str_pad($payment->order_id, 4, '0', STR_PAD_LEFT) : '-'),
+                'customer_name' => $payment->customer_name ?? 'General Customer',
+                'amount' => (float) $amt,
+                'payment_method' => $payment->payment_method ?? ($payment->method ?? 'Cash'),
+                'status' => strtoupper($payment->status ?? ($payment->payment_status ?? 'COMPLETED')),
+                'payment_date' => $payment->payment_date ? date('Y-m-d h:i A', strtotime($payment->payment_date)) : date('Y-m-d h:i A'),
+                'reference_no' => $payment->reference_no ?? ($payment->transaction_id ?? ('TRX-' . rand(10000, 99999))),
+                'notes' => $payment->notes ?? ($payment->note ?: 'Standard laundry service payment'),
+            ];
+        } else {
+            $invoiceData = [
+                'invoice_number' => 'INV-00001',
+                'payment_id' => 'PAY-001',
+                'order_number' => 'ORD-0001',
+                'customer_name' => 'General Customer',
+                'amount' => 0.00,
+                'payment_method' => 'Cash',
+                'status' => 'COMPLETED',
+                'payment_date' => date('Y-m-d h:i A'),
+                'reference_no' => 'TRX-' . rand(10000, 99999),
+                'notes' => 'No payment record found',
+            ];
+        }
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -698,20 +756,24 @@ class PaymentController extends Controller
 
     /**
      * Delete payment.
+     *
+     * @param Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, $id)
     {
-        $allPayments = $this->getAllPayments();
-        $filtered = array_values(array_filter($allPayments, function ($p) use ($id) {
-            return $p['payment_id'] != $id && $p['id'] != $id;
-        }));
-
-        session(['payment_transactions' => $filtered]);
+        session()->forget('payment_transactions');
 
         try {
-            Payment::where('payment_id', $id)->orWhere('id', $id)->delete();
+            $columns = Schema::hasTable('payments') ? Schema::getColumnListing('payments') : [];
+            $query = Payment::where('payment_id', $id);
+            if (in_array('id', $columns)) {
+                $query->orWhere('id', $id);
+            }
+            $query->delete();
         } catch (\Throwable $e) {
-            // Ignore
+            Log::error('Error deleting payment: ' . $e->getMessage());
         }
 
         if ($request->ajax() || $request->wantsJson()) {

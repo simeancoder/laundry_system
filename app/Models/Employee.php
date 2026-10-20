@@ -15,7 +15,16 @@ class Employee extends Model
         'email',
         'role',
         'phone',
+        'address',
+        'password',
         'status',
+        'work_schedule',
+        'job_role_details',
         'avatar',
+        'attendance_status',
+    ];
+
+    protected $hidden = [
+        'password',
     ];
 }

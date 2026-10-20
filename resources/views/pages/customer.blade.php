@@ -1,93 +1,9 @@
 @extends('layouts.navbar')
 
-@section('title', 'Customer Management - Laundry 6 Plus')
-
-@section('header')
-<header class="bg-white px-6 sm:px-8 py-3.5 sm:py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] rounded-b-2xl sm:rounded-b-3xl flex items-center justify-between z-30 sticky top-0 border-b border-gray-100">
-    <!-- Left: Hamburger & Page Title/Subtitle -->
-    <div class="flex items-center space-x-3 sm:space-x-4">
-        <!-- Hamburger Button -->
-        <button type="button" onclick="toggleSidebar()" class="p-1.5 -ml-1 text-gray-800 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition focus:outline-none" title="Toggle Navigation Menu" aria-label="Toggle navigation menu">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </button>
-
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight leading-tight">Customer Management</h1>
-            <p class="text-[12px] sm:text-[13px] text-gray-400 font-medium leading-none mt-1">Manage your customers easily and efficiently.</p>
-        </div>
-    </div>
-
-    <!-- Right: Notification Bell & Role Switcher User Profile -->
-    <div class="flex items-center space-x-3 sm:space-x-5">
-        <!-- Blue Notification Bell with Solid Dot -->
-        <a href="{{ route('notifications.index') }}" class="relative p-2 text-blue-600 hover:bg-blue-50 rounded-full transition focus:outline-none" title="Notifications">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path>
-            </svg>
-            <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#2563EB] rounded-full ring-2 ring-white"></span>
-        </a>
-
-        <!-- User Role Switcher Dropdown Trigger -->
-        <div class="relative" id="role-switcher-container">
-            <button id="role-menu-button" type="button" onclick="toggleRoleMenu()" aria-haspopup="menu" aria-expanded="false" aria-controls="role-menu" class="flex items-center space-x-2.5 pl-2 pr-2.5 py-1.5 rounded-full hover:bg-gray-100 transition focus:outline-none cursor-pointer group">
-                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200 group-hover:border-blue-400 transition-colors">
-                    <i class="fa-solid fa-circle-user text-2xl text-[#2563EB]"></i>
-                </div>
-                <span class="text-sm sm:text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{{ $activeRole ?? 'Admin' }}</span>
-                <i id="role-chevron" class="fa-solid fa-chevron-down text-[11px] text-gray-500 transition-transform duration-200"></i>
-            </button>
-
-            <!-- Dropdown Menu -->
-            <div id="role-menu" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 transform origin-top-right transition-all duration-150" role="menu" aria-labelledby="role-menu-button" tabindex="-1">
-                <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Role</p>
-                        <p class="text-sm font-bold text-gray-800">{{ Auth::user()->name ?? 'Admin User' }}</p>
-                    </div>
-                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700">
-                        {{ $isDemoMode ?? false ? 'Demo Mode' : 'Role-Based' }}
-                    </span>
-                </div>
-
-                <div class="py-1">
-                    @foreach($availableRoles ?? ['Admin' => ['name' => 'Administrator', 'badge_bg' => 'bg-blue-100', 'badge_text' => 'text-blue-700', 'description' => 'Full System Access']] as $roleKey => $roleInfo)
-                        @php
-                            $isActive = (($activeRole ?? 'Admin') === $roleKey);
-                        @endphp
-                        <a href="{{ route('dashboard.switch-role', $roleKey) }}" 
-                           class="role-menu-item flex items-center justify-between px-4 py-3 transition hover:bg-blue-50/60 {{ $isActive ? 'bg-blue-50/90 text-blue-700 font-semibold border-l-4 border-blue-600' : 'text-gray-700' }}">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ $roleInfo['badge_bg'] }} {{ $roleInfo['badge_text'] }}">
-                                    <i class="fa-solid fa-shield-halved text-sm"></i>
-                                </div>
-                                <div class="text-left">
-                                    <div class="text-sm font-semibold leading-tight">{{ $roleInfo['name'] }}</div>
-                                    <div class="text-[11px] text-gray-400 font-normal leading-tight mt-0.5">{{ $roleInfo['description'] }}</div>
-                                </div>
-                            </div>
-                            @if($isActive)
-                                <i class="fa-solid fa-check text-blue-600 text-sm"></i>
-                            @endif
-                        </a>
-                    @endforeach
-                </div>
-                <div class="border-t border-gray-100 my-1"></div>
-                <button type="button" onclick="openLogoutModal()" class="w-full flex items-center space-x-3 px-4 py-2.5 text-rose-600 hover:bg-rose-50 transition text-sm font-semibold cursor-pointer">
-                    <i class="fa-solid fa-arrow-right-from-bracket text-sm text-rose-500"></i>
-                    <span>Logout</span>
-                </button>
-            </div>
-        </div>
-    </div>
-</header>
-@endsection
+@section('title', 'Customer')
 
 @section('content')
-<div class="max-w-[1700px] mx-auto space-y-6">
+<div class="w-full mx-auto space-y-6">
 
     <!-- Flash Notifications -->
     @if(session('success'))
@@ -114,7 +30,7 @@
         <!-- Search & Filter Form (Left side) -->
         <form method="GET" action="{{ route('customers.index') }}" id="searchForm" class="flex flex-wrap items-center gap-3 flex-1 max-w-3xl">
             <!-- Search Input Box with Icon -->
-            <div class="relative flex-1 min-w-[280px]">
+            <div class="relative flex-1 min-w-0" style="min-width: 280px;">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <i class="fa-solid fa-magnifying-glass text-sm"></i>
                 </div>
@@ -160,7 +76,7 @@
         <!-- Register Customer Button (Right side) -->
         <button type="button" 
                 onclick="openRegisterModal()" 
-                class="bg-[#2563EB] hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition flex items-center justify-center space-x-2 text-sm flex-shrink-0 cursor-pointer">
+                class="bg-[#2563EB] hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition flex items-center justify-center space-x-2 text-sm shrink-0 cursor-pointer">
             <i class="fa-solid fa-plus text-xs"></i>
             <span>Register Customer</span>
         </button>
@@ -228,7 +144,7 @@
                             <td class="py-4 px-3 text-gray-500 text-xs sm:text-sm">{{ $item->email }}</td>
                             
                             <!-- Address -->
-                            <td class="py-4 px-3 text-gray-600 text-xs sm:text-sm max-w-[200px] truncate" title="{{ $item->address }}">
+                            <td class="py-4 px-3 text-gray-600 text-xs sm:text-sm max-w-50 truncate" title="{{ $item->address }}">
                                 {{ $item->address }}
                             </td>
                             
@@ -242,7 +158,9 @@
                                 <div class="flex items-center justify-center space-x-1.5">
                                     <!-- Blue Eye (View Customer Profile Modal) -->
                                     <button type="button" 
-                                            onclick="openCustomerProfileModal({{ json_encode($item) }}, {{ json_encode($custOrders) }})" 
+                                            data-customer="{{ base64_encode(json_encode($item)) }}"
+                                            data-orders="{{ base64_encode(json_encode($custOrders)) }}"
+                                            onclick="handleCustomerProfileClick(this)" 
                                             class="w-8 h-8 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white flex items-center justify-center transition shadow-sm cursor-pointer"
                                             title="View Customer Profile">
                                         <i class="fa-solid fa-eye text-xs"></i>
@@ -250,7 +168,8 @@
 
                                     <!-- Green Pencil (Edit Customer) -->
                                     <button type="button" 
-                                            onclick="openEditModal({{ json_encode($item) }})" 
+                                            data-customer="{{ base64_encode(json_encode($item)) }}"
+                                            onclick="handleCustomerEditClick(this)" 
                                             class="w-8 h-8 rounded-lg bg-[#10B981] hover:bg-emerald-600 text-white flex items-center justify-center transition shadow-sm cursor-pointer"
                                             title="Edit Customer">
                                         <i class="fa-solid fa-pen text-xs"></i>
@@ -258,7 +177,10 @@
 
                                     <!-- Red Trash (Delete Customer) -->
                                     <button type="button" 
-                                            onclick="openDeleteModal({{ $item->id }}, '{{ addslashes($item->name) }}', '{{ $item->customer_id }}')" 
+                                            data-id="{{ $item->id }}"
+                                            data-name="{{ $item->name }}"
+                                            data-code="{{ $item->customer_id }}"
+                                            onclick="handleCustomerDeleteClick(this)" 
                                             class="w-8 h-8 rounded-lg bg-[#EF4444] hover:bg-rose-600 text-white flex items-center justify-center transition shadow-sm cursor-pointer"
                                             title="Delete Customer">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
@@ -361,7 +283,7 @@
         <!-- Profile Summary (Avatar, Name, Badges, Phone, Email) -->
         <div class="flex items-center space-x-4 mt-5">
             <!-- Avatar Circle -->
-            <div class="w-16 h-16 rounded-full bg-[#E0F2FE] border-2 border-white ring-2 ring-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600 shadow-sm relative overflow-hidden">
+            <div class="w-16 h-16 rounded-full bg-[#E0F2FE] border-2 border-white ring-2 ring-blue-100 flex items-center justify-center shrink-0 text-blue-600 shadow-sm relative overflow-hidden">
                 <img id="modalAvatarImg" 
                      src="https://api.dicebear.com/7.x/bottts/svg?seed=User&backgroundColor=b6e3f4" 
                      alt="Avatar" 
@@ -435,7 +357,7 @@
                         <i class="fa-regular fa-envelope text-gray-400 w-4"></i>
                         <span>Email</span>
                     </div>
-                    <span id="modalCustomerEmail" class="font-semibold text-gray-800 truncate max-w-[200px]">sokha@example.com</span>
+                    <span id="modalCustomerEmail" class="font-semibold text-gray-800 truncate max-w-50">sokha@example.com</span>
                 </div>
 
                 <!-- Address -->
@@ -444,7 +366,7 @@
                         <i class="fa-solid fa-location-dot text-gray-400 w-4"></i>
                         <span>Address</span>
                     </div>
-                    <span id="modalCustomerAddress" class="font-semibold text-gray-800 text-right truncate max-w-[200px]">Svay Dongkum, Siem Reap</span>
+                    <span id="modalCustomerAddress" class="font-semibold text-gray-800 text-right truncate max-w-50">Svay Dongkum, Siem Reap</span>
                 </div>
 
                 <!-- Registration Date -->
@@ -470,7 +392,7 @@
             </div>
 
             <!-- Order Cards Container -->
-            <div id="modalOrdersContainer" class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+            <div id="modalOrdersContainer" class="space-y-2.5 max-h-55 overflow-y-auto pr-1">
                 <!-- Populated dynamically via JS -->
             </div>
         </div>
@@ -740,7 +662,7 @@
             </button>
         </div>
 
-        <div class="mt-4 max-h-[400px] overflow-y-auto">
+        <div class="mt-4 max-h-100overflow-y-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="text-gray-400 font-semibold border-b border-gray-100">
@@ -830,6 +752,35 @@
     function closeCustomerProfileModal() {
         const modal = document.getElementById('customerProfileModal');
         if (modal) modal.classList.add('hidden');
+    }
+
+    function handleCustomerProfileClick(btn) {
+        try {
+            const rawCust = btn.getAttribute('data-customer');
+            const rawOrders = btn.getAttribute('data-orders');
+            const cust = rawCust ? JSON.parse(atob(rawCust)) : null;
+            const orders = rawOrders ? JSON.parse(atob(rawOrders)) : [];
+            if (cust) openCustomerProfileModal(cust, orders);
+        } catch (e) {
+            console.error('Error opening customer profile:', e);
+        }
+    }
+
+    function handleCustomerEditClick(btn) {
+        try {
+            const rawCust = btn.getAttribute('data-customer');
+            const cust = rawCust ? JSON.parse(atob(rawCust)) : null;
+            if (cust) openEditModal(cust);
+        } catch (e) {
+            console.error('Error editing customer:', e);
+        }
+    }
+
+    function handleCustomerDeleteClick(btn) {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        const code = btn.getAttribute('data-code');
+        openDeleteModal(id, name, code);
     }
 
     function editCustomerFromProfile() {

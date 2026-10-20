@@ -129,4 +129,63 @@ class User extends Authenticatable
     {
         return $this->attributes['user_id'] ?? ($this->attributes['id'] ?? null);
     }
+
+    // getCurrentRole
+    public function getCurrentRole()
+    {
+
+        // 1. ករណី User ប្តូរ Role តាម Switcher នៅលើ Navbar
+        if (session()->has('active_role')) {
+            return strtolower(session('active_role'));
+        }
+        // 2. Map លេខ role_id ទាំង ៤ ទៅតាមឈ្មោះ Role
+        $roleMap = [
+            1 => 'admin',
+            2 => 'staff',
+            3 => 'delivery',
+            4 => 'receptionist',
+        ];
+        if (isset($roleMap[$this->role_id])) {
+            return $roleMap[$this->role_id];
+        }
+        // 3. ករណី role_id ក្នុង database ផ្ទុកជា Text ស្រាប់ (ឧ. 'admin', 'staff')
+        if (!empty($this->role_id)) {
+            return strtolower((string) $this->role_id);
+        }
+        return 'admin';
+    }
+
+    // Admin
+    public function isAdmin()
+    {
+        return $this->getCurrentRole() === 'admin';
+    }
+
+    // Recieptionist
+    public function isRecieptionist()
+    {
+        return $this->getCurrentRole() === 'recieptionist';
+    }
+
+    // Staff
+    public function isStaff()
+    {
+        return $this->getCurrentRole() === 'staff';
+    }
+
+    // Delivery
+    public function isDelivery()
+    {
+        return $this->getCurrentRole() === 'delivery';
+    }
+
+    public function hasRole($roleName)
+    {
+        $current = strtolower($this->getCurrentRole());
+        $target = strtolower($roleName);
+        // ការពារករណីសរសេរច្រឡំ receptionist / recieptionist
+        if ($target === 'recieptionist') $target = 'receptionist';
+        if ($current === 'recieptionist') $current = 'receptionist';
+        return $current === $target;
+    }
 }

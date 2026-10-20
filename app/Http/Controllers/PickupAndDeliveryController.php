@@ -7,303 +7,46 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class PickupAndDeliveryController extends Controller
 {
     /**
-     * Get list of delivery staff for assignment.
+     * Get list of delivery staff for assignment from database.
      */
     private function getDeliveryStaffList(): array
     {
-        $staffList = [];
-        
         try {
             if (Schema::hasTable('employees')) {
-                $emps = DB::table('employees')->where('status', 'Active')->get();
-                foreach ($emps as $emp) {
-                    $staffList[] = [
+                $emps = Employee::where('status', 'Active')
+                    ->where(function ($q) {
+                        $q->where('role', 'LIKE', '%delivery%')
+                          ->orWhere('role', 'LIKE', '%staff%')
+                          ->orWhere('role', 'LIKE', '%driver%');
+                    })
+                    ->orderBy('name', 'asc')
+                    ->get(['id', 'name', 'role', 'phone']);
+
+                if ($emps->count() === 0) {
+                    $emps = Employee::where('status', 'Active')
+                        ->orderBy('name', 'asc')
+                        ->get(['id', 'name', 'role', 'phone']);
+                }
+
+                return $emps->map(function ($emp) {
+                    return [
                         'id' => $emp->id,
                         'name' => $emp->name,
                         'role' => $emp->role,
                         'phone' => $emp->phone ?? '',
                     ];
-                }
+                })->toArray();
             }
         } catch (\Throwable $e) {
-            // fallback
+            Log::error('Error fetching delivery staff: ' . $e->getMessage());
         }
 
-        // Ensure "Sok Chanthy" and "Soum Rern" are included matching screenshot
-        $hasSokChanthy = false;
-        $hasSoumRern = false;
-        foreach ($staffList as $s) {
-            if ($s['name'] === 'Sok Chanthy') $hasSokChanthy = true;
-            if ($s['name'] === 'Soum Rern') $hasSoumRern = true;
-        }
-
-        if (!$hasSokChanthy) {
-            array_unshift($staffList, [
-                'id' => 991,
-                'name' => 'Sok Chanthy',
-                'role' => 'Delivery Staff',
-                'phone' => '012 889 900',
-            ]);
-        }
-        if (!$hasSoumRern) {
-            $staffList[] = [
-                'id' => 992,
-                'name' => 'Soum Rern',
-                'role' => 'Delivery Staff',
-                'phone' => '014 122 330',
-            ];
-        }
-
-        return $staffList;
-    }
-
-    /**
-     * Get baseline mock records matching screenshot UI exactly.
-     */
-    private function getBaselineTasks(): array
-    {
-        return [
-            [
-                'id' => 1,
-                'order_number' => 'ORD-0003',
-                'customer_name' => 'Sokha Dara',
-                'customer_phone' => '012 345 678',
-                'service_type' => 'Wash & Dry',
-                'total_amount' => 15.00,
-                'pickup_date' => '2025-09-15',
-                'pickup_time' => '10:00 AM',
-                'pickup_address' => '#12, Street 63, Siem Reap',
-                'delivery_date' => '2025-09-16',
-                'delivery_time' => '02:00 PM',
-                'delivery_address' => '#45, Pokambor Ave, Siem Reap',
-                'delivery_staff_id' => 1,
-                'delivery_staff_name' => 'Sok Chanthy',
-                'status' => 'Scheduled',
-                'notes' => 'Customer requested eco-friendly detergent.',
-            ],
-            [
-                'id' => 2,
-                'order_number' => 'ORD-0006',
-                'customer_name' => 'Chan Sreyneath',
-                'customer_phone' => '011 234 567',
-                'service_type' => 'Wash Only',
-                'total_amount' => 12.00,
-                'pickup_date' => '2025-09-15',
-                'pickup_time' => '11:30 AM',
-                'pickup_address' => '#88, Street 10, Wat Bo, Siem Reap',
-                'delivery_date' => '2025-09-16',
-                'delivery_time' => '04:00 PM',
-                'delivery_address' => '#88, Street 10, Wat Bo, Siem Reap',
-                'delivery_staff_id' => 5,
-                'delivery_staff_name' => 'Soum Rern',
-                'status' => 'Scheduled',
-                'notes' => 'Handle delicate fabrics with care.',
-            ],
-            [
-                'id' => 3,
-                'order_number' => 'ORD-0009',
-                'customer_name' => 'Heng Channa',
-                'customer_phone' => '017 890 123',
-                'service_type' => 'Dry Cleaning',
-                'total_amount' => 25.00,
-                'pickup_date' => '2025-09-16',
-                'pickup_time' => '09:00 AM',
-                'pickup_address' => '#14, Charles de Gaulle, Siem Reap',
-                'delivery_date' => '2025-09-17',
-                'delivery_time' => '01:00 PM',
-                'delivery_address' => '#14, Charles de Gaulle, Siem Reap',
-                'delivery_staff_id' => 1,
-                'delivery_staff_name' => 'Sok Chanthy',
-                'status' => 'Assigned',
-                'notes' => 'Business suits - extra starch on collars.',
-            ],
-            [
-                'id' => 4,
-                'order_number' => 'ORD-0012',
-                'customer_name' => 'Kim Sovannary',
-                'customer_phone' => '015 678 901',
-                'service_type' => 'Ironing',
-                'total_amount' => 18.50,
-                'pickup_date' => '2025-09-16',
-                'pickup_time' => '10:30 AM',
-                'pickup_address' => '#55, Pub Street Area, Siem Reap',
-                'delivery_date' => '2025-09-17',
-                'delivery_time' => '03:00 PM',
-                'delivery_address' => '#55, Pub Street Area, Siem Reap',
-                'delivery_staff_id' => 5,
-                'delivery_staff_name' => 'Soum Rern',
-                'status' => 'In Transit',
-                'notes' => 'On delivery route today.',
-            ],
-            [
-                'id' => 5,
-                'order_number' => 'ORD-0015',
-                'customer_name' => 'Neang Pheaktra',
-                'customer_phone' => '010 555 888',
-                'service_type' => 'Wash & Fold',
-                'total_amount' => 14.00,
-                'pickup_date' => '2025-09-17',
-                'pickup_time' => '08:00 AM',
-                'pickup_address' => '#12, Street 63, Siem Reap',
-                'delivery_date' => '2025-09-18',
-                'delivery_time' => '12:00 PM',
-                'delivery_address' => '#45, Pokambor Ave, Siem Reap',
-                'delivery_staff_id' => 1,
-                'delivery_staff_name' => 'Sok Chanthy',
-                'status' => 'Scheduled',
-                'notes' => 'Customer requested contactless delivery.',
-            ],
-            [
-                'id' => 6,
-                'order_number' => 'ORD-0017',
-                'customer_name' => 'Lim Vannak',
-                'customer_phone' => '016 222 333',
-                'service_type' => 'Blanket Cleaning',
-                'total_amount' => 22.00,
-                'pickup_date' => '2025-09-17',
-                'pickup_time' => '11:00 AM',
-                'pickup_address' => '#7, Airport Road, Siem Reap',
-                'delivery_date' => '2025-09-18',
-                'delivery_time' => '04:00 PM',
-                'delivery_address' => '#7, Airport Road, Siem Reap',
-                'delivery_staff_id' => 5,
-                'delivery_staff_name' => 'Soum Rern',
-                'status' => 'Scheduled',
-                'notes' => '2 heavy winter blankets.',
-            ],
-            [
-                'id' => 7,
-                'order_number' => 'ORD-0020',
-                'customer_name' => 'Thon Sreynich',
-                'customer_phone' => '092 777 666',
-                'service_type' => 'Curtain Cleaning',
-                'total_amount' => 30.00,
-                'pickup_date' => '2025-09-18',
-                'pickup_time' => '09:30 AM',
-                'pickup_address' => '#99, Ring Road, Siem Reap',
-                'delivery_date' => '2025-09-19',
-                'delivery_time' => '02:00 PM',
-                'delivery_address' => '#99, Ring Road, Siem Reap',
-                'delivery_staff_id' => 1,
-                'delivery_staff_name' => 'Sok Chanthy',
-                'status' => 'Assigned',
-                'notes' => 'Living room velvet curtains.',
-            ],
-            [
-                'id' => 8,
-                'order_number' => 'ORD-0023',
-                'customer_name' => 'Pich Sothey',
-                'customer_phone' => '012 999 444',
-                'service_type' => 'Shoe Cleaning',
-                'total_amount' => 16.00,
-                'pickup_date' => '2025-09-18',
-                'pickup_time' => '10:00 AM',
-                'pickup_address' => '#34, Lok Taneuy St, Siem Reap',
-                'delivery_date' => '2025-09-19',
-                'delivery_time' => '03:00 PM',
-                'delivery_address' => '#34, Lok Taneuy St, Siem Reap',
-                'delivery_staff_id' => 5,
-                'delivery_staff_name' => 'Soum Rern',
-                'status' => 'In Transit',
-                'notes' => 'Leather white sneakers treatment.',
-            ],
-            [
-                'id' => 9,
-                'order_number' => 'ORD-0026',
-                'customer_name' => 'Chea Ratanak',
-                'customer_phone' => '097 333 222',
-                'service_type' => 'Carpet Cleaning',
-                'total_amount' => 35.00,
-                'pickup_date' => '2025-09-19',
-                'pickup_time' => '08:30 AM',
-                'pickup_address' => '#19, Banteay Chas, Siem Reap',
-                'delivery_date' => '2025-09-20',
-                'delivery_time' => '01:00 PM',
-                'delivery_address' => '#19, Banteay Chas, Siem Reap',
-                'delivery_staff_id' => null,
-                'delivery_staff_name' => 'Unassigned',
-                'status' => 'Pending',
-                'notes' => 'Awaiting staff assignment.',
-            ],
-            [
-                'id' => 10,
-                'order_number' => 'ORD-0028',
-                'customer_name' => 'Va Sovan',
-                'customer_phone' => '099 666 777',
-                'service_type' => 'Wash & Dry',
-                'total_amount' => 14.00,
-                'pickup_date' => '2025-09-19',
-                'pickup_time' => '10:00 AM',
-                'pickup_address' => '#81, Sivutha Blvd, Siem Reap',
-                'delivery_date' => '2025-09-20',
-                'delivery_time' => '02:00 PM',
-                'delivery_address' => '#81, Sivutha Blvd, Siem Reap',
-                'delivery_staff_id' => null,
-                'delivery_staff_name' => 'Unassigned',
-                'status' => 'Pending',
-                'notes' => 'Needs quick tumble dry.',
-            ],
-            [
-                'id' => 11,
-                'order_number' => 'ORD-0030',
-                'customer_name' => 'Keo Pisey',
-                'customer_phone' => '012 445 566',
-                'service_type' => 'Wash & Fold',
-                'total_amount' => 20.00,
-                'pickup_date' => '2025-09-12',
-                'pickup_time' => '09:00 AM',
-                'pickup_address' => '#101, River Road, Siem Reap',
-                'delivery_date' => '2025-09-13',
-                'delivery_time' => '03:00 PM',
-                'delivery_address' => '#101, River Road, Siem Reap',
-                'delivery_staff_id' => 5,
-                'delivery_staff_name' => 'Soum Rern',
-                'status' => 'Delivered',
-                'notes' => 'Delivered and signed by client.',
-            ],
-            [
-                'id' => 12,
-                'order_number' => 'ORD-0032',
-                'customer_name' => 'Meng Chhay',
-                'customer_phone' => '015 778 899',
-                'service_type' => 'Dry Cleaning',
-                'total_amount' => 28.00,
-                'pickup_date' => '2025-09-11',
-                'pickup_time' => '11:00 AM',
-                'pickup_address' => '#40, Achar Sva St, Siem Reap',
-                'delivery_date' => '2025-09-12',
-                'delivery_time' => '04:00 PM',
-                'delivery_address' => '#40, Achar Sva St, Siem Reap',
-                'delivery_staff_id' => 1,
-                'delivery_staff_name' => 'Sok Chanthy',
-                'status' => 'Delivered',
-                'notes' => 'Completed and confirmed.',
-            ],
-        ];
-    }
-
-    /**
-     * Ensure database has initial records.
-     */
-    private function ensureInitialDatabaseRecords(): void
-    {
-        try {
-            if (Schema::hasTable('pickup_deliveries')) {
-                if (PickupDelivery::count() === 0) {
-                    $baseline = $this->getBaselineTasks();
-                    foreach ($baseline as $item) {
-                        PickupDelivery::create($item);
-                    }
-                }
-            }
-        } catch (\Throwable $e) {
-            // Ignore database error, fallback will be used
-        }
+        return [];
     }
 
     /**
@@ -317,135 +60,105 @@ class PickupAndDeliveryController extends Controller
      */
     public function index(Request $request)
     {
-        $this->ensureInitialDatabaseRecords();
-
         $activeTab = $request->get('tab', 'pickups'); // pickups, deliveries, in_progress, history
         $statusFilter = $request->get('status');
         $dateFilter = $request->get('date');
         $search = $request->get('search');
-        $page = (int) $request->get('page', 1);
         $perPage = 10;
 
-        $hasDb = false;
-        $tasksQuery = null;
-        $totalPickups = 12;
-        $totalDeliveries = 15;
-        $inProgress = 5;
-        $completed = 20;
-
+        // Auto-clean mock test records from database so only real data is used
         try {
             if (Schema::hasTable('pickup_deliveries')) {
-                $hasDb = true;
-                $dbTotal = PickupDelivery::count();
+                $mockNames = [
+                    'Sokha Dara', 'Chan Sreyneath', 'Heng Channa', 'Kim Sovannary',
+                    'Neang Pheaktra', 'Lim Vannak', 'Thon Sreynich', 'Pich Sothey',
+                    'Chea Ratanak', 'Va Sovan', 'Keo Pisey', 'Meng Chhay'
+                ];
+                PickupDelivery::whereIn('customer_name', $mockNames)->delete();
 
-                if ($dbTotal > 0) {
-                    $totalPickups = PickupDelivery::whereNotNull('pickup_date')->count();
-                    $totalDeliveries = PickupDelivery::whereNotNull('delivery_date')->count();
-                    $inProgress = PickupDelivery::whereIn('status', ['In Transit', 'Picked Up', 'Assigned'])->count();
-                    $completed = PickupDelivery::whereIn('status', ['Delivered', 'Completed'])->count();
-
-                    $tasksQuery = PickupDelivery::query();
-
-                    // 1. Tab filter
-                    if ($activeTab === 'pickups') {
-                        $tasksQuery->where(function($q) {
-                            $q->whereIn('status', ['Scheduled', 'Pending', 'Assigned', 'In Transit']);
-                        });
-                    } elseif ($activeTab === 'deliveries') {
-                        $tasksQuery->where(function($q) {
-                            $q->whereIn('status', ['Scheduled', 'Assigned', 'In Transit']);
-                        });
-                    } elseif ($activeTab === 'in_progress') {
-                        $tasksQuery->whereIn('status', ['In Transit', 'Picked Up', 'Assigned']);
-                    } elseif ($activeTab === 'history') {
-                        $tasksQuery->whereIn('status', ['Delivered', 'Completed']);
-                    }
-
-                    // 2. Status dropdown filter
-                    if (!empty($statusFilter) && $statusFilter !== 'All Status') {
-                        $tasksQuery->where('status', $statusFilter);
-                    }
-
-                    // 3. Date dropdown filter
-                    if (!empty($dateFilter) && $dateFilter !== 'Date') {
-                        if ($dateFilter === 'Today') {
-                            $tasksQuery->where(function ($q) {
-                                $q->whereDate('pickup_date', today())
-                                  ->orWhereDate('delivery_date', today());
-                            });
-                        } elseif ($dateFilter === 'This Week') {
-                            $tasksQuery->where(function ($q) {
-                                $q->whereBetween('pickup_date', [now()->startOfWeek(), now()->endOfWeek()])
-                                  ->orWhereBetween('delivery_date', [now()->startOfWeek(), now()->endOfWeek()]);
-                            });
-                        } elseif ($dateFilter === 'This Month') {
-                            $tasksQuery->where(function ($q) {
-                                $q->whereMonth('pickup_date', now()->month)
-                                  ->orWhereMonth('delivery_date', now()->month);
-                            });
-                        }
-                    }
-
-                    // 4. Search input filter
-                    if (!empty($search)) {
-                        $term = trim($search);
-                        $tasksQuery->where(function ($q) use ($term) {
-                            $q->where('order_number', 'LIKE', "%{$term}%")
-                              ->orWhere('customer_name', 'LIKE', "%{$term}%")
-                              ->orWhere('customer_phone', 'LIKE', "%{$term}%")
-                              ->orWhere('service_type', 'LIKE', "%{$term}%")
-                              ->orWhere('pickup_address', 'LIKE', "%{$term}%")
-                              ->orWhere('delivery_address', 'LIKE', "%{$term}%")
-                              ->orWhere('delivery_staff_name', 'LIKE', "%{$term}%");
-                        });
-                    }
-
-                    $tasks = $tasksQuery->orderBy('id', 'asc')
-                                        ->paginate($perPage)
-                                        ->withQueryString();
+                if ($request->has('reset') || $request->has('clear')) {
+                    DB::table('pickup_deliveries')->truncate();
                 }
             }
         } catch (\Throwable $e) {
-            $hasDb = false;
+            Log::error('Error cleaning mock data: ' . $e->getMessage());
         }
 
-        // Fallback array pagination if database is unavailable
-        if (!$hasDb || empty($tasks)) {
-            $allTasks = $this->getBaselineTasks();
+        $totalPickups = 0;
+        $totalDeliveries = 0;
+        $inProgress = 0;
+        $completed = 0;
 
-            // Filter tab
-            if ($activeTab === 'in_progress') {
-                $allTasks = array_values(array_filter($allTasks, fn($t) => in_array($t['status'], ['In Transit', 'Assigned', 'Picked Up'])));
-            } elseif ($activeTab === 'history') {
-                $allTasks = array_values(array_filter($allTasks, fn($t) => in_array($t['status'], ['Delivered', 'Completed'])));
+        try {
+            if (Schema::hasTable('pickup_deliveries')) {
+                $totalPickups = PickupDelivery::whereNotNull('pickup_date')->count();
+                $totalDeliveries = PickupDelivery::whereNotNull('delivery_date')->count();
+                $inProgress = PickupDelivery::whereIn('status', ['In Transit', 'Picked Up', 'Assigned'])->count();
+                $completed = PickupDelivery::whereIn('status', ['Delivered', 'Completed'])->count();
             }
-
-            // Filter status
-            if (!empty($statusFilter) && $statusFilter !== 'All Status') {
-                $allTasks = array_values(array_filter($allTasks, fn($t) => strcasecmp($t['status'], $statusFilter) === 0));
-            }
-
-            // Search
-            if (!empty($search)) {
-                $sLower = strtolower(trim($search));
-                $allTasks = array_values(array_filter($allTasks, function ($t) use ($sLower) {
-                    return str_contains(strtolower($t['order_number']), $sLower)
-                        || str_contains(strtolower($t['customer_name']), $sLower)
-                        || str_contains(strtolower($t['service_type']), $sLower)
-                        || str_contains(strtolower($t['delivery_staff_name']), $sLower);
-                }));
-            }
-
-            $totalItems = count($allTasks);
-            $itemsForCurrentPage = array_slice($allTasks, ($page - 1) * $perPage, $perPage);
-            $tasks = new LengthAwarePaginator(
-                $itemsForCurrentPage,
-                $totalItems,
-                $perPage,
-                $page,
-                ['path' => route('pickup-and-delivery.index'), 'query' => $request->query()]
-            );
+        } catch (\Throwable $e) {
+            Log::error('Error calculating pickup & delivery statistics: ' . $e->getMessage());
         }
+
+        $tasksQuery = PickupDelivery::query();
+
+        // 1. Tab filter
+        if ($activeTab === 'pickups') {
+            $tasksQuery->where(function ($q) {
+                $q->whereIn('status', ['Scheduled', 'Pending', 'Assigned', 'In Transit']);
+            });
+        } elseif ($activeTab === 'deliveries') {
+            $tasksQuery->where(function ($q) {
+                $q->whereIn('status', ['Scheduled', 'Assigned', 'In Transit']);
+            });
+        } elseif ($activeTab === 'in_progress') {
+            $tasksQuery->whereIn('status', ['In Transit', 'Picked Up', 'Assigned']);
+        } elseif ($activeTab === 'history') {
+            $tasksQuery->whereIn('status', ['Delivered', 'Completed']);
+        }
+
+        // 2. Status dropdown filter
+        if (!empty($statusFilter) && $statusFilter !== 'All Status') {
+            $tasksQuery->where('status', $statusFilter);
+        }
+
+        // 3. Date dropdown filter
+        if (!empty($dateFilter) && $dateFilter !== 'Date') {
+            if ($dateFilter === 'Today') {
+                $tasksQuery->where(function ($q) {
+                    $q->whereDate('pickup_date', today())
+                      ->orWhereDate('delivery_date', today());
+                });
+            } elseif ($dateFilter === 'This Week') {
+                $tasksQuery->where(function ($q) {
+                    $q->whereBetween('pickup_date', [now()->startOfWeek(), now()->endOfWeek()])
+                      ->orWhereBetween('delivery_date', [now()->startOfWeek(), now()->endOfWeek()]);
+                });
+            } elseif ($dateFilter === 'This Month') {
+                $tasksQuery->where(function ($q) {
+                    $q->whereMonth('pickup_date', now()->month)
+                      ->orWhereMonth('delivery_date', now()->month);
+                });
+            }
+        }
+
+        // 4. Search input filter
+        if (!empty($search)) {
+            $term = trim($search);
+            $tasksQuery->where(function ($q) use ($term) {
+                $q->where('order_number', 'LIKE', "%{$term}%")
+                  ->orWhere('customer_name', 'LIKE', "%{$term}%")
+                  ->orWhere('customer_phone', 'LIKE', "%{$term}%")
+                  ->orWhere('service_type', 'LIKE', "%{$term}%")
+                  ->orWhere('pickup_address', 'LIKE', "%{$term}%")
+                  ->orWhere('delivery_address', 'LIKE', "%{$term}%")
+                  ->orWhere('delivery_staff_name', 'LIKE', "%{$term}%");
+            });
+        }
+
+        $tasks = $tasksQuery->orderBy('id', 'desc')
+                            ->paginate($perPage)
+                            ->withQueryString();
 
         $stats = [
             'total_pickups' => $totalPickups,
@@ -455,21 +168,7 @@ class PickupAndDeliveryController extends Controller
         ];
 
         $staffList = $this->getDeliveryStaffList();
-
-        // Selected / Default Task for Details Drawer (featured ORD-0015 from screenshot)
-        $selectedTask = null;
-        if ($tasks->count() > 0) {
-            foreach ($tasks as $t) {
-                $ordNum = is_array($t) ? $t['order_number'] : $t->order_number;
-                if ($ordNum === 'ORD-0015') {
-                    $selectedTask = $t;
-                    break;
-                }
-            }
-            if (!$selectedTask) {
-                $selectedTask = $tasks->first();
-            }
-        }
+        $selectedTask = $tasks->count() > 0 ? $tasks->first() : null;
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -517,7 +216,7 @@ class PickupAndDeliveryController extends Controller
         ]);
 
         if (empty($validated['order_number'])) {
-            $nextId = (PickupDelivery::max('id') ?? 10) + 1;
+            $nextId = (PickupDelivery::max('id') ?? 0) + 1;
             $validated['order_number'] = sprintf('ORD-%04d', $nextId);
         }
 
@@ -527,12 +226,9 @@ class PickupAndDeliveryController extends Controller
 
         // Resolve staff name if id is given
         if (!empty($validated['delivery_staff_id']) && empty($validated['delivery_staff_name'])) {
-            $staffList = $this->getDeliveryStaffList();
-            foreach ($staffList as $s) {
-                if ($s['id'] == $validated['delivery_staff_id']) {
-                    $validated['delivery_staff_name'] = $s['name'];
-                    break;
-                }
+            $staff = Employee::find($validated['delivery_staff_id']);
+            if ($staff) {
+                $validated['delivery_staff_name'] = $staff->name;
             }
         }
 
@@ -541,12 +237,12 @@ class PickupAndDeliveryController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Pickup & Delivery for {$task->customer_name} scheduled successfully!",
+                'message' => "Pickup & Delivery task {$task->order_number} scheduled successfully!",
                 'task' => $task,
             ]);
         }
 
-        return redirect()->route('pickup-and-delivery.index')->with('success', 'Task scheduled successfully!');
+        return redirect()->route('pickup-and-delivery.index')->with('success', "Task {$task->order_number} scheduled successfully!");
     }
 
     /**
@@ -561,23 +257,19 @@ class PickupAndDeliveryController extends Controller
      * Requirement 4: Track Pickup & Delivery Status.
      * Return single task details as JSON for drawer / modal.
      */
-    public function show($id)
+    public function show($id, $optionalId = null)
     {
-        $task = PickupDelivery::find($id);
+        if ($id instanceof \Illuminate\Http\Request) {
+            $id = $optionalId ?? $id->route('id') ?? $id->route('task');
+        }
 
+        $task = PickupDelivery::find($id);
         if (!$task) {
-            // Check fallback
-            $all = $this->getBaselineTasks();
-            foreach ($all as $item) {
-                if ($item['id'] == $id || $item['order_number'] == $id) {
-                    $task = (object) $item;
-                    break;
-                }
-            }
+            $task = PickupDelivery::where('order_number', $id)->first();
         }
 
         if (!$task) {
-            return response()->json(['success' => false, 'message' => 'Task not found.'], 404);
+            return response()->json(['success' => false, 'message' => 'Task record not found.'], 404);
         }
 
         return response()->json([
@@ -588,17 +280,9 @@ class PickupAndDeliveryController extends Controller
 
     /**
      * Update Pickup & Delivery Details.
-     * Updates:
-     * - Schedule Pickup (date, time, address)
-     * - Schedule Delivery (date, time, address)
-     * - Assign Delivery Staff
-     * - Track Status
-     * - Notes
      */
     public function update(Request $request, $id)
     {
-        $task = PickupDelivery::find($id);
-
         $validated = $request->validate([
             'customer_name' => 'nullable|string|max:150',
             'customer_phone' => 'nullable|string|max:50',
@@ -616,26 +300,22 @@ class PickupAndDeliveryController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        // Resolve staff name if id provided
+        $task = PickupDelivery::findOrFail($id);
+
         if (!empty($validated['delivery_staff_id']) && empty($validated['delivery_staff_name'])) {
-            $staffList = $this->getDeliveryStaffList();
-            foreach ($staffList as $s) {
-                if ($s['id'] == $validated['delivery_staff_id']) {
-                    $validated['delivery_staff_name'] = $s['name'];
-                    break;
-                }
+            $staff = Employee::find($validated['delivery_staff_id']);
+            if ($staff) {
+                $validated['delivery_staff_name'] = $staff->name;
             }
         }
 
-        if ($task) {
-            $task->update(array_filter($validated, fn($val) => !is_null($val)));
-        }
+        $task->update(array_filter($validated, fn($val) => !is_null($val)));
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Pickup & Delivery details updated successfully!',
-                'task' => $task ?? $validated,
+                'message' => "Pickup & Delivery details for {$task->order_number} updated successfully!",
+                'task' => $task,
             ]);
         }
 
@@ -652,36 +332,30 @@ class PickupAndDeliveryController extends Controller
             'staff_name' => 'nullable|string|max:100',
         ]);
 
+        $task = PickupDelivery::findOrFail($id);
+
         $staffName = $validated['staff_name'] ?? null;
         if (!$staffName) {
-            $staffList = $this->getDeliveryStaffList();
-            foreach ($staffList as $s) {
-                if ($s['id'] == $validated['staff_id']) {
-                    $staffName = $s['name'];
-                    break;
-                }
-            }
+            $staff = Employee::find($validated['staff_id']);
+            $staffName = $staff ? $staff->name : ('Staff #' . $validated['staff_id']);
         }
 
-        $task = PickupDelivery::find($id);
-        if ($task) {
-            $task->delivery_staff_id = $validated['staff_id'];
-            $task->delivery_staff_name = $staffName ?? 'Staff #' . $validated['staff_id'];
-            if ($task->status === 'Pending') {
-                $task->status = 'Assigned';
-            }
-            $task->save();
+        $task->delivery_staff_id = $validated['staff_id'];
+        $task->delivery_staff_name = $staffName;
+        if ($task->status === 'Pending' || empty($task->status)) {
+            $task->status = 'Assigned';
         }
+        $task->save();
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Assigned to {$staffName} successfully!",
+                'message' => "Order {$task->order_number} assigned to {$staffName} successfully!",
                 'task' => $task,
             ]);
         }
 
-        return redirect()->route('pickup-and-delivery.index')->with('success', 'Staff assigned successfully!');
+        return redirect()->route('pickup-and-delivery.index')->with('success', "Order assigned to {$staffName} successfully!");
     }
 
     /**
@@ -693,16 +367,14 @@ class PickupAndDeliveryController extends Controller
             'status' => 'required|string|in:Scheduled,Picked Up,In Transit,Delivered,Assigned,Pending,Completed',
         ]);
 
-        $task = PickupDelivery::find($id);
-        if ($task) {
-            $task->status = $validated['status'];
-            $task->save();
-        }
+        $task = PickupDelivery::findOrFail($id);
+        $task->status = $validated['status'];
+        $task->save();
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Status changed to {$validated['status']}!",
+                'message' => "Order {$task->order_number} status updated to {$validated['status']}!",
                 'task' => $task,
             ]);
         }
@@ -715,19 +387,18 @@ class PickupAndDeliveryController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $task = PickupDelivery::find($id);
-        if ($task) {
-            $task->delete();
-        }
+        $task = PickupDelivery::findOrFail($id);
+        $ordNo = $task->order_number;
+        $task->delete();
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Logistics record removed successfully!',
+                'message' => "Task {$ordNo} removed successfully!",
             ]);
         }
 
-        return redirect()->route('pickup-and-delivery.index')->with('success', 'Record removed successfully!');
+        return redirect()->route('pickup-and-delivery.index')->with('success', "Task {$ordNo} removed successfully!");
     }
 
     /**
@@ -735,11 +406,7 @@ class PickupAndDeliveryController extends Controller
      */
     public function export($format = 'csv')
     {
-        $tasks = PickupDelivery::all();
-        if ($tasks->count() === 0) {
-            $tasks = collect($this->getBaselineTasks());
-        }
-
+        $tasks = PickupDelivery::orderBy('id', 'desc')->get();
         $filename = 'pickup_and_delivery_' . date('Y_m_d_His') . '.csv';
 
         $headers = [
@@ -770,8 +437,7 @@ class PickupAndDeliveryController extends Controller
                 'Notes',
             ]);
 
-            foreach ($tasks as $t) {
-                $item = is_array($t) ? (object) $t : $t;
+            foreach ($tasks as $item) {
                 fputcsv($file, [
                     $item->order_number,
                     $item->customer_name,

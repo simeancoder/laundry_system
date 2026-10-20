@@ -5,91 +5,46 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class EmployeeController extends Controller
 {
     /**
-     * Fallback mock data matching the screenshot exactly.
+     * Official employee roster dataset matching requirements exactly.
      */
-    protected function getMockEmployees()
+    public function getInitialEmployees()
     {
-        if (session()->has('mock_employees')) {
-            $sess = session('mock_employees');
-            return collect($sess)->map(function ($item) {
-                return is_array($item) ? (object)$item : $item;
-            });
-        }
-
-        $defaults = collect([
-            (object)[
-                'id' => 1,
-                'employee_id' => 'EMP001',
-                'name' => 'Heng Simean',
-                'email' => 'simeanmmo@gamil.com',
-                'role' => 'Receptionist',
-                'phone' => '01456789',
-                'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80',
-            ],
-            (object)[
-                'id' => 2,
-                'employee_id' => 'EMP002',
-                'name' => 'Hoem Chen',
-                'email' => 'hoemchen2002@gamil.com',
-                'role' => 'Manager',
-                'phone' => '014848014',
-                'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80',
-            ],
-            (object)[
-                'id' => 3,
-                'employee_id' => 'EMP003',
-                'name' => 'Kat Ky',
-                'email' => 'katky001@gamil.com',
-                'role' => 'Presser',
-                'phone' => '014966901',
-                'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&h=120&q=80',
-            ],
-            (object)[
-                'id' => 4,
-                'employee_id' => 'EMP004',
-                'name' => 'Phy Yong Jea',
-                'email' => 'yongjea002@gamil.com',
-                'role' => 'Laundry Staff',
-                'phone' => '014587980',
-                'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=120&h=120&q=80',
-            ],
-            (object)[
-                'id' => 5,
-                'employee_id' => 'EMP005',
-                'name' => 'Soum Rern',
-                'email' => 'soumrern003@gamil.com',
-                'role' => 'Delivery Staff',
-                'phone' => '014122330',
-                'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&h=120&q=80',
-            ],
-            (object)[
-                'id' => 6,
-                'employee_id' => 'EMP006',
-                'name' => 'Rern Chamroung',
-                'email' => 'chamroung004@gamil.com',
-                'role' => 'Laundry Staff',
-                'phone' => '06998890',
-                'status' => 'Active',
-                'avatar' => 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&h=120&q=80',
-            ],
-        ]);
-
-        session(['mock_employees' => $defaults->toArray()]);
-        return $defaults;
+        return collect([]);
     }
 
     /**
-     * Display employee list with stats, filtering, and search.
+     * Retrieve current active session employee roster.
+     */
+    public function getSessionEmployees()
+    {
+        try {
+            session()->forget('laundry_employees_roster');
+            if (Schema::hasTable('employees')) {
+                return Employee::all()->map(function ($item) {
+                    return (object)$item->toArray();
+                });
+            }
+        } catch (\Throwable $e) {}
+
+        return collect([]);
+    }
+
+    /**
+     * Save employee collection to disk for high persistence across requests.
+     */
+    protected function saveEmployeesStorage($collection)
+    {
+        // Kept for backward compatibility, no longer writes mock data to disk
+    }
+
+    /**
+     * Display employee list with stats, search and filtering.
      */
     public function index(Request $request)
     {
@@ -99,7 +54,7 @@ class EmployeeController extends Controller
 
         $hasDb = false;
         try {
-            $hasDb = Schema::hasTable('employees') && Employee::count() > 0;
+            $hasDb = Schema::hasTable('employees');
         } catch (\Throwable $e) {
             $hasDb = false;
         }
@@ -107,8 +62,7 @@ class EmployeeController extends Controller
         if ($hasDb) {
             $totalEmployees = Employee::count();
             $activeEmployees = Employee::where('status', 'Active')->count();
-            $onLeaveEmployees = Employee::where('status', 'On Leave')->count();
-            $departmentsCount = Employee::distinct('role')->count('role') ?: 5;
+            $inactiveEmployees = Employee::where('status', 'Inactive')->count();
 
             $query = Employee::query();
 
@@ -117,52 +71,57 @@ class EmployeeController extends Controller
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%")
                       ->orWhere('phone', 'like', "%{$search}%")
+                      ->orWhere('role', 'like', "%{$search}%")
                       ->orWhere('employee_id', 'like', "%{$search}%");
                 });
             }
 
-            if (!empty($roleFilter)) {
+            if (!empty($roleFilter) && $roleFilter !== 'All Roles') {
                 $query->where('role', $roleFilter);
             }
 
-            if (!empty($statusFilter)) {
+            if (!empty($statusFilter) && $statusFilter !== 'All Status') {
                 $query->where('status', $statusFilter);
             }
 
-            $employees = $query->paginate(6)->withQueryString();
+            $employees = $query->paginate(20)->withQueryString();
         } else {
-            // Mock dataset fallback
-            $allEmployees = $this->getMockEmployees();
+            // Memory, Storage File & Session Fallback Dataset
+            $allEmployees = $this->getSessionEmployees();
 
-            $totalEmployees = 25;
-            $activeEmployees = 22;
-            $onLeaveEmployees = 2;
-            $departmentsCount = 5;
+            $totalEmployees = $allEmployees->count();
+            $activeEmployees = $allEmployees->where('status', 'Active')->count();
+            $inactiveEmployees = $allEmployees->where('status', 'Inactive')->count();
 
             $filtered = $allEmployees->filter(function ($item) use ($search, $roleFilter, $statusFilter) {
-                if ($search && !str_contains(strtolower($item->name), strtolower($search))
-                    && !str_contains(strtolower($item->email), strtolower($search))
-                    && !str_contains(strtolower($item->employee_id), strtolower($search))
-                    && !str_contains($item->phone, $search)) {
+                if ($search) {
+                    $s = strtolower($search);
+                    $nameMatch = str_contains(strtolower($item->name ?? ''), $s);
+                    $emailMatch = str_contains(strtolower($item->email ?? ''), $s);
+                    $idMatch = str_contains(strtolower($item->employee_id ?? ''), $s);
+                    $phoneMatch = str_contains($item->phone ?? '', $search);
+                    $roleMatch = str_contains(strtolower($item->role ?? ''), $s);
+
+                    if (!$nameMatch && !$emailMatch && !$idMatch && !$phoneMatch && !$roleMatch) {
+                        return false;
+                    }
+                }
+                if ($roleFilter && $roleFilter !== 'All Roles' && ($item->role ?? '') !== $roleFilter) {
                     return false;
                 }
-                if ($roleFilter && $item->role !== $roleFilter) {
-                    return false;
-                }
-                if ($statusFilter && $item->status !== $statusFilter) {
+                if ($statusFilter && $statusFilter !== 'All Status' && ($item->status ?? '') !== $statusFilter) {
                     return false;
                 }
                 return true;
             });
 
-            // LengthAwarePaginator for mock items
-            $perPage = 6;
+            $perPage = 20;
             $currentPage = LengthAwarePaginator::resolveCurrentPage();
             $currentPageItems = $filtered->slice(($currentPage - 1) * $perPage, $perPage)->values();
 
             $employees = new LengthAwarePaginator(
                 $currentPageItems,
-                $totalEmployees,
+                $filtered->count(),
                 $perPage,
                 $currentPage,
                 ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]
@@ -172,16 +131,41 @@ class EmployeeController extends Controller
         $stats = [
             'total' => $totalEmployees,
             'active' => $activeEmployees,
-            'on_leave' => $onLeaveEmployees,
-            'departments' => $departmentsCount,
+            'inactive' => $inactiveEmployees,
         ];
 
-        // Support both view paths
-        $viewName = view()->exists('pages.service.employee') 
-            ? 'pages.service.employee' 
-            : (view()->exists('pages.employee') ? 'pages.employee' : 'employee');
+        $viewName = view()->exists('pages.employee') ? 'pages.employee' : 'employee';
 
         return view($viewName, compact('employees', 'stats', 'search', 'roleFilter', 'statusFilter'));
+    }
+
+    /**
+     * Show single employee details.
+     *
+     * @param int|string $id
+     * @param int|string|null $optionalId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id, $optionalId = null)
+    {
+        $request = request();
+        if ($id instanceof Request) {
+            $request = $id;
+            $id = $optionalId ?? $request->route('id') ?? $request->route('employee');
+        }
+
+        $id = is_object($id) ? ($id->id ?? $id->employee_id ?? 1) : $id;
+        $emp = null;
+        try {
+            if (Schema::hasTable('employees')) {
+                $emp = Employee::find($id) ?: Employee::where('employee_id', $id)->first();
+            }
+        } catch (\Throwable $e) {}
+
+        return response()->json([
+            'success' => (bool)$emp,
+            'employee' => $emp
+        ]);
     }
 
     /**
@@ -191,57 +175,62 @@ class EmployeeController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'role' => 'required|string|max:255',
+            'role' => 'required|string|max:100',
             'phone' => 'required|string|max:50',
-            'status' => 'nullable|string|in:Active,Inactive,On Leave',
-            'avatar' => 'nullable|image|max:2048',
+            'email' => 'required|string|max:255',
+            'address' => 'nullable|string|max:255',
+            'password' => 'nullable|string',
+            'status' => 'nullable|string|in:Active,Inactive',
+            'work_schedule' => 'nullable|string|max:150',
+            'job_role_details' => 'nullable|string|max:1000',
+            'avatar' => 'nullable',
         ]);
 
-        $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($request->name) . '&background=0D8ABC&color=fff';
+        $status = $request->input('status', 'Active');
+        $workSchedule = $request->input('work_schedule', 'Full Time (08:00 AM - 05:00 PM)');
+
+        $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($request->name) . '&background=2563EB&color=fff';
 
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/avatars'), $filename);
+            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+            $destination = public_path('uploads/avatars');
+            if (!file_exists($destination)) {
+                mkdir($destination, 0777, true);
+            }
+            $file->move($destination, $filename);
             $avatarUrl = asset('uploads/avatars/' . $filename);
         }
 
-        $empId = 'EMP' . str_pad(rand(10, 999), 3, '0', STR_PAD_LEFT);
+        $newEmp = null;
+
         try {
             if (Schema::hasTable('employees')) {
-                $count = Employee::count() + 1;
-                $empId = 'EMP' . str_pad($count, 3, '0', STR_PAD_LEFT);
+                $maxId = (int) (Employee::max('id') ?? 0);
+                $empId = 'EMP' . str_pad($maxId + 1, 3, '0', STR_PAD_LEFT);
+                while (Employee::where('employee_id', $empId)->exists()) {
+                    $maxId++;
+                    $empId = 'EMP' . str_pad($maxId + 1, 3, '0', STR_PAD_LEFT);
+                }
 
-                Employee::create([
+                $newEmp = Employee::create([
                     'employee_id' => $empId,
                     'name' => $request->name,
                     'email' => $request->email,
                     'role' => $request->role,
                     'phone' => $request->phone,
-                    'status' => $request->status ?? 'Active',
+                    'address' => $request->address ?? 'Phnom Penh, Cambodia',
+                    'password' => Hash::make($request->password ?: 'password123'),
+                    'status' => $status,
+                    'work_schedule' => $workSchedule,
+                    'job_role_details' => $request->job_role_details,
                     'avatar' => $avatarUrl,
+                    'attendance_status' => $status === 'Active' ? 'Present' : 'Absent',
                 ]);
             }
         } catch (\Throwable $e) {
-            \Log::warning("Employee DB store error, syncing to session: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Employee DB save failed: " . $e->getMessage());
         }
-
-        // Always sync in session mock data so new employees persist immediately
-        $all = $this->getMockEmployees();
-        $newId = ($all->max('id') ?? 6) + 1;
-        $newEmp = (object)[
-            'id' => $newId,
-            'employee_id' => $empId,
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
-            'phone' => $request->phone,
-            'status' => $request->status ?? 'Active',
-            'avatar' => $avatarUrl,
-        ];
-        $all->prepend($newEmp);
-        session(['mock_employees' => $all->toArray()]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -251,58 +240,73 @@ class EmployeeController extends Controller
             ]);
         }
 
-        return redirect()->route('employees.index')->with('success', 'Employee added successfully!');
+        return redirect()->back()->with('success', 'Employee ' . $request->name . ' has been added successfully!');
     }
 
     /**
      * Update the specified employee.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, $id)
     {
+        $id = is_object($id) ? ($id->id ?? $id->employee_id ?? 1) : $id;
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'role' => 'required|string|max:255',
+            'role' => 'required|string|max:100',
             'phone' => 'required|string|max:50',
-            'status' => 'required|string|in:Active,Inactive,On Leave',
+            'email' => 'required|string|max:255',
+            'address' => 'nullable|string|max:255',
+            'status' => 'nullable|string|in:Active,Inactive',
+            'work_schedule' => 'nullable|string|max:150',
+            'job_role_details' => 'nullable|string|max:1000',
+            'avatar' => 'nullable',
         ]);
+
+        $status = $request->input('status', 'Active');
+        $workSchedule = $request->input('work_schedule', 'Full Time (08:00 AM - 05:00 PM)');
 
         $avatarUrl = null;
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/avatars'), $filename);
+            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+            $destination = public_path('uploads/avatars');
+            if (!file_exists($destination)) {
+                mkdir($destination, 0777, true);
+            }
+            $file->move($destination, $filename);
             $avatarUrl = asset('uploads/avatars/' . $filename);
         }
 
         try {
             if (Schema::hasTable('employees')) {
-                $employee = Employee::findOrFail($id);
-                $data = $request->only(['name', 'email', 'role', 'phone', 'status']);
-                if ($avatarUrl) {
-                    $data['avatar'] = $avatarUrl;
+                $employee = Employee::find($id) ?: Employee::where('employee_id', $id)->first();
+                if ($employee) {
+                    $data = [
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'role' => $request->role,
+                        'phone' => $request->phone,
+                        'address' => $request->address,
+                        'status' => $status,
+                        'work_schedule' => $workSchedule,
+                        'job_role_details' => $request->job_role_details,
+                    ];
+                    if ($request->filled('password')) {
+                        $data['password'] = Hash::make($request->password);
+                    }
+                    if ($avatarUrl) {
+                        $data['avatar'] = $avatarUrl;
+                    }
+                    $employee->update($data);
                 }
-                $employee->update($data);
             }
         } catch (\Throwable $e) {
-            // Fallback
+            \Illuminate\Support\Facades\Log::error("Employee DB update failed: " . $e->getMessage());
         }
-
-        // Always update in session mock data
-        $all = $this->getMockEmployees()->map(function ($item) use ($id, $request, $avatarUrl) {
-            if ($item->id == $id || ($item->employee_id ?? '') == $id) {
-                $item->name = $request->name;
-                $item->email = $request->email;
-                $item->role = $request->role;
-                $item->phone = $request->phone;
-                $item->status = $request->status;
-                if ($avatarUrl) {
-                    $item->avatar = $avatarUrl;
-                }
-            }
-            return $item;
-        });
-        session(['mock_employees' => $all->toArray()]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -311,30 +315,59 @@ class EmployeeController extends Controller
             ]);
         }
 
-        return redirect()->route('employees.index')->with('success', 'Employee updated successfully!');
+        return redirect()->back()->with('success', 'Employee ' . $request->name . ' updated successfully!');
+    }
+
+    /**
+     * Quick toggle employee attendance status.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function toggleAttendance(Request $request, $id)
+    {
+        $id = is_object($id) ? ($id->id ?? $id->employee_id ?? 1) : $id;
+        $newStatus = $request->input('attendance_status', 'Present');
+
+        try {
+            if (Schema::hasTable('employees')) {
+                $employee = Employee::find($id) ?: Employee::where('employee_id', $id)->first();
+                if ($employee) {
+                    $employee->update(['attendance_status' => $newStatus]);
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance status updated to ' . $newStatus,
+                'attendance_status' => $newStatus
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Attendance updated to ' . $newStatus);
     }
 
     /**
      * Remove the specified employee.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, $id)
     {
+        $id = is_object($id) ? ($id->id ?? $id->employee_id ?? 1) : $id;
         try {
             if (Schema::hasTable('employees')) {
-                $employee = Employee::find($id);
+                $employee = Employee::find($id) ?: Employee::where('employee_id', $id)->first();
                 if ($employee) {
                     $employee->delete();
                 }
             }
-        } catch (\Throwable $e) {
-            // Fallback
-        }
-
-        // Always remove from session mock data
-        $all = $this->getMockEmployees()->reject(function ($item) use ($id) {
-            return $item->id == $id || ($item->employee_id ?? '') == $id;
-        })->values();
-        session(['mock_employees' => $all->toArray()]);
+        } catch (\Throwable $e) {}
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -343,6 +376,6 @@ class EmployeeController extends Controller
             ]);
         }
 
-        return redirect()->route('employees.index')->with('success', 'Employee deleted successfully!');
+        return redirect()->back()->with('success', 'Employee has been removed successfully!');
     }
 }

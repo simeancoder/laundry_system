@@ -1,819 +1,812 @@
-<?php $__env->startSection('content'); ?>
-<div class="space-y-6 max-w-[1600px] mx-auto pb-10">
+@extends('layouts.navbar')
 
-    <!-- Top Row: Search Machines and Add New Machine Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <!-- Search machines bar -->
-        <div class="relative w-full sm:w-[420px]">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-500">
-                <i class="fa-solid fa-magnifying-glass text-sm"></i>
-            </span>
+@section('title', 'Machine Management - Laundry 6 Plus')
+
+@section('content')
+<div class="space-y-6 w-full mx-auto">
+
+    <!-- SUCCESS NOTIFICATION -->
+    @if(session('success'))
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-xs">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                <span class="font-medium">{{ session('success') }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800 font-bold text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+    @endif
+
+    <!-- ERROR NOTIFICATION -->
+    @if(session('error'))
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between shadow-xs">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-circle-exclamation text-rose-600 text-base"></i>
+                <span class="font-medium">{{ session('error') }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-rose-600 hover:text-rose-800 font-bold text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+    @endif
+
+    <!-- TOP ACTION BAR: REGISTER MACHINE BUTTON -->
+    <div class="flex justify-end items-center">
+        <button type="button" 
+                onclick="openAddMachineModal()" 
+                class="bg-[#2563EB] hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-xs transition flex items-center space-x-2 text-sm cursor-pointer active:scale-95">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>Register Machine</span>
+        </button>
+    </div>
+
+    <!-- 4 SUMMARY METRIC CARDS (EXACT MATCHING SCREENSHOT) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Card 1: Total Machines (Soft Blue) -->
+        <div class="bg-[#F0F5FF] border border-blue-100/80 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs flex items-center space-x-4 sm:space-x-5">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-blue-100/80 text-[#2563EB] flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="2" width="18" height="20" rx="3"></rect>
+                    <circle cx="12" cy="13" r="5"></circle>
+                    <circle cx="12" cy="13" r="2"></circle>
+                    <circle cx="6" cy="6" r="1" fill="currentColor"></circle>
+                    <circle cx="9" cy="6" r="1" fill="currentColor"></circle>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">Total Machines</p>
+                <h3 class="text-xl sm:text-xl font-bold text-gray-900 mt-0.5 tracking-tight" id="cardTotalMachines">{{ $stats['total'] ?? count($machines) }}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">All machines</p>
+            </div>
+        </div>
+
+        <!-- Card 2: Available (Soft Mint/Green) -->
+        <div class="bg-[#F0FDF4] border border-emerald-100/80 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs flex items-center space-x-4 sm:space-x-5">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="4"></rect>
+                    <path d="m9 12 2 2 4-4"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">Available</p>
+                <h3 class="text-xl sm:text-xl font-bold text-emerald-600 mt-0.5 tracking-tight" id="cardAvailableCount">{{ $stats['available'] ?? 8 }}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Ready to use</p>
+            </div>
+        </div>
+
+        <!-- Card 3: In Use (Soft Amber/Yellow) -->
+        <div class="bg-[#FFFBEB] border border-amber-100/80 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs flex items-center space-x-4 sm:space-x-5">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-100/80 text-amber-600 flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">In Use</p>
+                <h3 class="text-xl sm:text-xl font-bold text-amber-600 mt-0.5 tracking-tight" id="cardInUseCount">{{ $stats['in_use'] ?? 3 }}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Currently running</p>
+            </div>
+        </div>
+
+        <!-- Card 4: Under Maintenance (Soft Rose) -->
+        <div class="bg-[#FFF1F2] border border-rose-100/80 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs flex items-center space-x-4 sm:space-x-5">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-rose-100/80 text-rose-500 flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">Under Maintenance</p>
+                <h3 class="text-xl sm:text-xl font-bold text-rose-500 mt-0.5 tracking-tight" id="cardMaintenanceCount">{{ $stats['maintenance'] ?? 1 }}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Needs service</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER TOOLBAR (SEARCH + ALL STATUS + ALL TYPES + SEARCH BTN + RESET BTN) -->
+    <div class="bg-white border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
+        <!-- Search Input -->
+        <div class="relative w-full md:flex-1">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </div>
             <input type="text" 
                    id="machineSearchInput" 
-                   value="<?php echo e(request('search', $search ?? '')); ?>"
-                   oninput="handleSearch(this.value)"
-                   placeholder="Search machines" 
-                   class="w-full bg-[#E5E7EB] text-gray-800 placeholder-gray-500 text-sm rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 border border-transparent transition shadow-2xs">
+                   oninput="filterMachinesTable()" 
+                   placeholder="Search by machine name, ID, or model..." 
+                   value="{{ $search ?? '' }}"
+                   class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-2xs">
         </div>
 
-        <!-- + Add New Machine Button -->
-        <div>
-            <button onclick="openAddMachineModal()" 
-                    class="bg-[#5B46F6] hover:bg-[#4D38EA] text-white px-5 py-2.5 rounded-xl font-medium text-sm flex items-center space-x-2 shadow-sm transition active:scale-[0.98] cursor-pointer">
-                <span class="text-lg font-bold leading-none">+</span>
-                <span class="font-semibold">Add New Machine</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Header Row: Title, Subtitle, Export Report and Advanced Filters -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-1">
-        <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-[#1E1B4B] tracking-tight">Machine Management</h1>
-            <p class="text-gray-500 text-xs md:text-sm mt-1">Manage status, health monitoring, and maintenance logs for all units</p>
-            
-            <!-- Quick Sub-Navigation: Machine Units & Discounts/Promotions -->
-            <div class="flex items-center space-x-2 mt-3">
-                <a href="#machineInventorySection" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-[#5B46F6] text-white shadow-xs flex items-center space-x-1.5">
-                    <i class="fa-solid fa-server text-[11px]"></i>
-                    <span>Machine Units (<?php echo e(count($allMachines ?? [])); ?>)</span>
-                </a>
-                <a href="#discountsPromotionsSection" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center space-x-1.5">
-                    <i class="fa-solid fa-badge-percent text-indigo-600 text-[11px]"></i>
-                    <span>Discounts &amp; Promotions</span>
-                    <span class="ml-1 px-1.5 py-0.5 bg-emerald-500 text-white text-[9px] font-black rounded-full uppercase leading-none">Live</span>
-                </a>
-            </div>
-        </div>
-        <div class="flex items-center space-x-3">
-            <!-- Export Report Dropdown Menu (Excel & PDF) -->
-            <div class="relative inline-block text-left" id="exportReportDropdownWrapper">
-                <button type="button" 
-                        onclick="toggleExportMenu(event)" 
-                        id="btnExportReport"
-                        class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium text-sm px-4 py-2 rounded-lg transition shadow-2xs flex items-center space-x-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 active:scale-[0.98]">
-                    <span>Export Report</span>
-                    <i class="fa-solid fa-chevron-down text-[10px] text-gray-500 ml-1 transition-transform duration-200" id="exportChevronIcon"></i>
-                </button>
-
-                <!-- Dropdown Menu: Excel & PDF -->
-                <div id="exportDropdownMenu" 
-                     class="hidden absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 py-1.5 z-50 animate-in fade-in zoom-in duration-150">
-                    <div class="px-3.5 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                        Choose Export Format
-                    </div>
-                    
-                    <!-- Option 1: Excel -->
-                    <a href="<?php echo e(route('machines.export', 'excel')); ?>" 
-                       onclick="closeExportMenu()"
-                       class="flex items-center space-x-3 px-3.5 py-2.5 hover:bg-emerald-50 text-gray-700 hover:text-emerald-800 transition group cursor-pointer">
-                        <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition">
-                            <i class="fa-solid fa-file-excel text-base"></i>
-                        </div>
-                        <div>
-                            <div class="font-bold text-xs text-gray-900 group-hover:text-emerald-800">Excel</div>
-                            <div class="text-[10px] text-gray-500">Download Spreadsheet (.csv / .xlsx)</div>
-                        </div>
-                    </a>
-
-                    <!-- Option 2: PDF -->
-                    <a href="<?php echo e(route('machines.export', 'pdf')); ?>" 
-                       target="_blank"
-                       onclick="closeExportMenu()"
-                       class="flex items-center space-x-3 px-3.5 py-2.5 hover:bg-rose-50 text-gray-700 hover:text-rose-800 transition group cursor-pointer border-t border-gray-50">
-                        <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-200 transition">
-                            <i class="fa-solid fa-file-pdf text-base"></i>
-                        </div>
-                        <div>
-                            <div class="font-bold text-xs text-gray-900 group-hover:text-rose-800">PDF</div>
-                            <div class="text-[10px] text-gray-500">Printable Document (.pdf)</div>
-                        </div>
-                    </a>
+        <!-- Filter Dropdowns & Buttons -->
+        <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto">
+            <!-- All Status Dropdown -->
+            <div class="relative w-full sm:w-36">
+                <select id="statusFilterSelect" 
+                        onchange="filterMachinesTable()"
+                        class="appearance-none w-full pl-4 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#334155] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition cursor-pointer shadow-2xs">
+                    <option value="All Status" {{ ($statusFilter ?? '') === 'All Status' ? 'selected' : '' }}>All Status</option>
+                    <option value="Available" {{ ($statusFilter ?? '') === 'Available' ? 'selected' : '' }}>Available</option>
+                    <option value="In Use" {{ ($statusFilter ?? '') === 'In Use' ? 'selected' : '' }}>In Use</option>
+                    <option value="Under Maintenance" {{ ($statusFilter ?? '') === 'Under Maintenance' ? 'selected' : '' }}>Under Maintenance</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#64748B]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
             </div>
 
-            <!-- Advanced Filters Button -->
-            <button onclick="openAdvancedFiltersModal()" 
-                    class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium text-sm px-4 py-2 rounded-lg transition shadow-2xs flex items-center space-x-1.5 cursor-pointer">
-                <span>Advanced Filters</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- 4 KPI Summary Cards Grid matching Screenshot Exactly -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        <!-- Card 1: Total Units -->
-        <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs flex flex-col justify-between transition hover:shadow-md">
-            <div>
-                <div class="flex items-start justify-between">
-                    <!-- Washing machine front-load icon -->
-                    <div class="w-8 h-8 rounded-lg border border-gray-400 flex items-center justify-center p-1 text-gray-800">
-                        <svg class="w-6 h-6 text-gray-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <rect x="3" y="3" width="18" height="18" rx="3"></rect>
-                            <circle cx="12" cy="13" r="5"></circle>
-                            <circle cx="12" cy="13" r="2"></circle>
-                            <path d="M6 7h.01M9 7h.01"></path>
-                        </svg>
-                    </div>
-                    <span class="text-emerald-600 font-semibold text-xs sm:text-sm tracking-tight">+2 this month</span>
-                </div>
-                <span class="text-gray-600 text-xs sm:text-sm font-medium mt-3 block">Total Units</span>
-            </div>
-            <div class="text-4xl font-black text-[#1E2560] leading-none mt-1.5">
-                <?php echo e($stats['total_units'] ?? 24); ?>
-
-            </div>
-        </div>
-
-        <!-- Card 2: Active Cycles -->
-        <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs flex flex-col justify-between transition hover:shadow-md">
-            <div>
-                <div class="flex items-start justify-between">
-                    <!-- Washing machine front-load icon -->
-                    <div class="w-8 h-8 rounded-lg border border-gray-400 flex items-center justify-center p-1 text-gray-800">
-                        <svg class="w-6 h-6 text-gray-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                            <rect x="3" y="3" width="18" height="18" rx="3"></rect>
-                            <circle cx="12" cy="13" r="5"></circle>
-                            <circle cx="12" cy="13" r="2"></circle>
-                            <path d="M6 7h.01M9 7h.01"></path>
-                        </svg>
-                    </div>
-                    <span class="text-emerald-600 font-semibold text-xs sm:text-sm tracking-tight">83%</span>
-                </div>
-                <span class="text-gray-600 text-xs sm:text-sm font-medium mt-3 block">Active Cycles</span>
-            </div>
-            <div class="text-4xl font-black text-[#15803D] leading-none mt-1.5">
-                <?php echo e($stats['active_cycles'] ?? 20); ?>
-
-            </div>
-        </div>
-
-        <!-- Card 3: Maintenance Alerts -->
-        <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs flex flex-col justify-between transition hover:shadow-md">
-            <div>
-                <div class="flex items-start justify-between">
-                    <!-- Warning triangle icon with exclamation mark -->
-                    <div class="w-8 h-8 flex items-center justify-center text-gray-800">
-                        <svg class="w-7 h-7 text-gray-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-                            <line x1="12" y1="9" x2="12" y2="13"></line>
-                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                        </svg>
-                    </div>
-                    <!-- Critical in green text matching screenshot -->
-                    <span class="text-emerald-600 font-semibold text-xs sm:text-sm tracking-tight">Critical</span>
-                </div>
-                <span class="text-gray-600 text-xs sm:text-sm font-medium mt-3 block">Maintenance Alerts</span>
-            </div>
-            <div class="text-4xl font-black text-[#DC2626] leading-none mt-1.5">
-                <?php echo e($stats['maintenance_alerts'] ?? 2); ?>
-
-            </div>
-        </div>
-
-        <!-- Card 4: Upcoming Service -->
-        <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs flex flex-col justify-between transition hover:shadow-md">
-            <div>
-                <div class="flex items-start justify-between">
-                    <div></div>
-                    <span class="text-emerald-600 font-semibold text-xs sm:text-sm tracking-tight">This week</span>
-                </div>
-                <span class="text-gray-600 text-xs sm:text-sm font-medium mt-3 block">Upcoming Service</span>
-            </div>
-            <div class="text-4xl font-black text-[#1E2560] leading-none mt-1.5">
-                <?php echo e($stats['upcoming_service'] ?? 24); ?>
-
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Main Section: 2 Columns Side-by-Side (Search & Filter + Machine Inventory) -->
-    <div id="machineInventorySection" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-
-        <!-- Left Column: Search & Filter Card -->
-        <div class="lg:col-span-4 xl:col-span-3 bg-white rounded-2xl border border-gray-200 p-5 shadow-xs">
-            <h2 class="font-bold text-gray-900 text-base mb-4">Search & Filter</h2>
-
-            <!-- MACHINE TYPE -->
-            <div class="mb-5">
-                <label class="block text-[11px] font-bold text-gray-600 tracking-wider uppercase mb-1.5">MACHINE TYPE</label>
-                <div class="relative">
-                    <select id="filterTypeSelect" onchange="applyFilters()"
-                            class="w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer">
-                        <option value="all" <?php echo e(($typeFilter ?? 'all') == 'all' ? 'selected' : ''); ?>>All Types</option>
-                        <option value="Washer" <?php echo e(($typeFilter ?? '') == 'Washer' ? 'selected' : ''); ?>>Washer</option>
-                        <option value="Dryer" <?php echo e(($typeFilter ?? '') == 'Dryer' ? 'selected' : ''); ?>>Dryer</option>
-                        <option value="Presser" <?php echo e(($typeFilter ?? '') == 'Presser' ? 'selected' : ''); ?>>Presser</option>
-                    </select>
-                    <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+            <!-- All Types Dropdown -->
+            <div class="relative w-full sm:w-36">
+                <select id="typeFilterSelect" 
+                        onchange="filterMachinesTable()"
+                        class="appearance-none w-full pl-4 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-[#334155] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition cursor-pointer shadow-2xs">
+                    <option value="All Types" {{ ($typeFilter ?? '') === 'All Types' ? 'selected' : '' }}>All Types</option>
+                    <option value="Front Load">Front Load</option>
+                    <option value="Top Load">Top Load</option>
+                    <option value="Dryer">Dryer</option>
+                    <option value="Ironing">Ironing</option>
+                    <option value="Steam">Steam</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#64748B]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
             </div>
 
-            <!-- STATUS Options List -->
-            <div class="mb-5">
-                <label class="block text-[11px] font-bold text-gray-600 tracking-wider uppercase mb-2">STATUS</label>
-                <div class="space-y-1 pl-3" id="statusOptionsContainer">
-                    <button type="button" 
-                            onclick="toggleStatusFilter('Running', this)" 
-                            class="status-option-btn w-full text-left py-1 text-sm text-gray-700 hover:text-indigo-600 font-normal transition flex items-center justify-between cursor-pointer <?php echo e(($statusFilter ?? '') == 'Running' ? 'font-bold text-indigo-600' : ''); ?>"
-                            data-status="Running">
-                        <span>Running</span>
-                        <span class="status-check text-xs text-indigo-600 <?php echo e(($statusFilter ?? '') == 'Running' ? '' : 'hidden'); ?>">
-                            <i class="fa-solid fa-check"></i>
-                        </span>
-                    </button>
-                    <button type="button" 
-                            onclick="toggleStatusFilter('Idle', this)" 
-                            class="status-option-btn w-full text-left py-1 text-sm text-gray-700 hover:text-indigo-600 font-normal transition flex items-center justify-between cursor-pointer <?php echo e(($statusFilter ?? '') == 'Idle' ? 'font-bold text-indigo-600' : ''); ?>"
-                            data-status="Idle">
-                        <span>Idle</span>
-                        <span class="status-check text-xs text-indigo-600 <?php echo e(($statusFilter ?? '') == 'Idle' ? '' : 'hidden'); ?>">
-                            <i class="fa-solid fa-check"></i>
-                        </span>
-                    </button>
-                    <button type="button" 
-                            onclick="toggleStatusFilter('Alert', this)" 
-                            class="status-option-btn w-full text-left py-1 text-sm text-gray-700 hover:text-indigo-600 font-normal transition flex items-center justify-between cursor-pointer <?php echo e(($statusFilter ?? '') == 'Alert' ? 'font-bold text-indigo-600' : ''); ?>"
-                            data-status="Alert">
-                        <span>Alert</span>
-                        <span class="status-check text-xs text-indigo-600 <?php echo e(($statusFilter ?? '') == 'Alert' ? '' : 'hidden'); ?>">
-                            <i class="fa-solid fa-check"></i>
-                        </span>
-                    </button>
-                    <button type="button" 
-                            onclick="toggleStatusFilter('Repairing', this)" 
-                            class="status-option-btn w-full text-left py-1 text-sm text-gray-700 hover:text-indigo-600 font-normal transition flex items-center justify-between cursor-pointer <?php echo e(($statusFilter ?? '') == 'Repairing' ? 'font-bold text-indigo-600' : ''); ?>"
-                            data-status="Repairing">
-                        <span>Repairing</span>
-                        <span class="status-check text-xs text-indigo-600 <?php echo e(($statusFilter ?? '') == 'Repairing' ? '' : 'hidden'); ?>">
-                            <i class="fa-solid fa-check"></i>
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- LOCATION -->
-            <div class="mb-6">
-                <label class="block text-[11px] font-bold text-gray-600 tracking-wider uppercase mb-1.5">LOCATION</label>
-                <div class="relative">
-                    <select id="filterLocationSelect" onchange="applyFilters()"
-                            class="w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer">
-                        <option value="all" <?php echo e(($locationFilter ?? 'all') == 'all' ? 'selected' : ''); ?>>All Locations</option>
-                        <option value="Main Floor - Zone A" <?php echo e(($locationFilter ?? '') == 'Main Floor - Zone A' ? 'selected' : ''); ?>>Main Floor - Zone A</option>
-                        <option value="Main Floor - Zone B" <?php echo e(($locationFilter ?? '') == 'Main Floor - Zone B' ? 'selected' : ''); ?>>Main Floor - Zone B</option>
-                        <option value="Express Bay - Zone B" <?php echo e(($locationFilter ?? '') == 'Express Bay - Zone B' ? 'selected' : ''); ?>>Express Bay - Zone B</option>
-                        <option value="Commercial Wing" <?php echo e(($locationFilter ?? '') == 'Commercial Wing' ? 'selected' : ''); ?>>Commercial Wing</option>
-                        <option value="VIP Section" <?php echo e(($locationFilter ?? '') == 'VIP Section' ? 'selected' : ''); ?>>VIP Section</option>
-                        <option value="Maintenance Bay" <?php echo e(($locationFilter ?? '') == 'Maintenance Bay' ? 'selected' : ''); ?>>Maintenance Bay</option>
-                    </select>
-                    <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-                </div>
-            </div>
-
-            <!-- Reset Filters Button matching screenshot -->
+            <!-- Search Button -->
             <button type="button" 
-                    onclick="resetAllFilters()"
-                    class="w-full border border-[#147D64] text-[#147D64] hover:bg-emerald-50/50 rounded-lg py-2 text-center font-medium text-sm transition cursor-pointer active:scale-[0.99]">
-                Reset Filters
+                    onclick="filterMachinesTable()" 
+                    class="bg-[#2563EB] hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-xs transition flex items-center space-x-1.5 text-sm cursor-pointer">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span>Search</span>
+            </button>
+
+            <!-- Reset Button -->
+            <button type="button" 
+                    onclick="resetFilterToolbar()" 
+                    class="border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-semibold px-4 py-2.5 rounded-xl shadow-2xs transition flex items-center space-x-1.5 text-sm cursor-pointer">
+                <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <span>Reset</span>
             </button>
         </div>
-
-        <!-- Right Column: Machine Inventory Card -->
-        <div class="lg:col-span-8 xl:col-span-9 bg-white rounded-2xl border border-gray-200 p-5 shadow-xs">
-            <h2 class="font-bold text-gray-900 text-base mb-4">Machine Inventory</h2>
-
-            <!-- Table Header Bar matching screenshot's gray pill -->
-            <div class="bg-[#D6DDD9] rounded-xl px-6 py-3 mb-3 grid grid-cols-12 items-center text-xs font-bold text-gray-800 tracking-wider uppercase">
-                <div class="col-span-3">SERIAL ID</div>
-                <div class="col-span-3">MODEL</div>
-                <div class="col-span-3">INSTALLATION DATE</div>
-                <div class="col-span-2">STATUS</div>
-                <div class="col-span-1 text-center">ACTION</div>
-            </div>
-
-            <!-- Machine Rows / Cards Container -->
-            <div id="machineCardsContainer" class="space-y-3">
-                <?php $__empty_1 = true; $__currentLoopData = $machines; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                    <div class="machine-row-card bg-white rounded-xl border border-gray-300 p-4 transition hover:border-gray-400 shadow-2xs"
-                         id="machine-card-<?php echo e($m['id']); ?>"
-                         data-id="<?php echo e($m['id']); ?>"
-                         data-serial="<?php echo e($m['serial_id']); ?>"
-                         data-type="<?php echo e($m['type']); ?>"
-                         data-status="<?php echo e($m['status']); ?>"
-                         data-location="<?php echo e($m['location']); ?>">
-                        <div class="grid grid-cols-12 items-center gap-2">
-                            <!-- Serial ID -->
-                            <div class="col-span-3">
-                                <span class="font-bold text-base text-gray-900"><?php echo e($m['serial_id']); ?></span>
-                            </div>
-
-                            <!-- Model (Formatted as multi-line stacked text matching screenshot) -->
-                            <div class="col-span-3">
-                                <div class="text-sm font-medium text-gray-800 leading-snug whitespace-pre-line">
-                                    <?php echo nl2br(e($m['full_model'] ?? $m['model'])); ?>
-
-                                </div>
-                            </div>
-
-                            <!-- Installation Date -->
-                            <div class="col-span-3">
-                                <span class="text-sm text-gray-700 font-normal"><?php echo e($m['installation_date']); ?></span>
-                            </div>
-
-                            <!-- Status -->
-                            <div class="col-span-2">
-                                <?php
-                                    $badgeClass = match($m['status']) {
-                                        'Running' => 'bg-emerald-100 text-emerald-800 border border-emerald-200',
-                                        'Idle' => 'bg-blue-100 text-blue-800 border border-blue-200',
-                                        'Alert' => 'bg-amber-100 text-amber-800 border border-amber-200',
-                                        'Repairing' => 'bg-rose-100 text-rose-800 border border-rose-200',
-                                        default => 'bg-gray-100 text-gray-700'
-                                    };
-                                ?>
-                                <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold <?php echo e($badgeClass); ?>">
-                                    <?php echo e($m['status']); ?>
-
-                                </span>
-                            </div>
-
-                            <!-- Action: Vertically Stacked Icons (Eye, Edit, Trash) matching screenshot -->
-                            <div class="col-span-1 flex flex-col items-center justify-center space-y-2">
-                                <!-- View Details -->
-                                <button onclick="viewMachineById(<?php echo e($m['id']); ?>)"
-                                        class="text-gray-700 hover:text-blue-600 transition p-0.5 cursor-pointer"
-                                        title="View Machine Telemetry">
-                                    <i class="fa-regular fa-eye text-sm"></i>
-                                </button>
-                                <!-- Edit Machine -->
-                                <button onclick="openEditMachineById(<?php echo e($m['id']); ?>)"
-                                        class="text-gray-700 hover:text-amber-600 transition p-0.5 cursor-pointer"
-                                        title="Edit Machine">
-                                    <i class="fa-regular fa-pen-to-square text-sm"></i>
-                                </button>
-                                <!-- Delete / Archive -->
-                                <button onclick="confirmDeleteMachine(<?php echo e($m['id']); ?>, '<?php echo e($m['serial_id']); ?>')"
-                                        class="text-gray-700 hover:text-red-600 transition p-0.5 cursor-pointer"
-                                        title="Decommission Machine">
-                                    <i class="fa-regular fa-trash-can text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                    <div class="text-center py-10 text-gray-500 text-sm bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                        No machine units found matching your search and filter criteria.
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Footer: Showing Count & Pagination Controls -->
-            <div class="mt-5 pt-4 border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
-                <div class="text-sm font-medium text-blue-600" id="paginationInfo">
-                    Showing <span id="info-from"><?php echo e($from ?? 1); ?></span> to <span id="info-to"><?php echo e($to ?? count($machines)); ?></span> of <span id="info-total"><?php echo e($totalItems ?? 24); ?></span> items
-                </div>
-
-                <div class="flex items-center space-x-1.5" id="paginationControls">
-                    <!-- Previous Button -->
-                    <button onclick="changePage('prev')" id="btnPrevPage"
-                            class="flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                        <i class="fa-solid fa-angle-left text-xs"></i>
-                        <span>Previous</span>
-                    </button>
-
-                    <!-- Page Numbers -->
-                    <button onclick="changePage(1)" id="pageBtn-1" class="page-num-btn w-8 h-8 rounded-lg text-xs font-bold transition cursor-pointer bg-[#5B46F6] text-white shadow-xs">1</button>
-                    <button onclick="changePage(2)" id="pageBtn-2" class="page-num-btn w-8 h-8 rounded-lg text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition cursor-pointer">2</button>
-                    <button onclick="changePage(3)" id="pageBtn-3" class="page-num-btn w-8 h-8 rounded-lg text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition cursor-pointer">3</button>
-                    <button onclick="changePage(4)" id="pageBtn-4" class="page-num-btn w-8 h-8 rounded-lg text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition cursor-pointer">4</button>
-                    <button onclick="changePage(5)" id="pageBtn-5" class="page-num-btn w-8 h-8 rounded-lg text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition cursor-pointer">5</button>
-
-                    <!-- Next Button -->
-                    <button onclick="changePage('next')" id="btnNextPage"
-                            class="flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                        <span>Next</span>
-                        <i class="fa-solid fa-angle-right text-xs"></i>
-                    </button>
-                </div>
-            </div>
-
-        </div>
-
     </div>
 
-    <!-- ============================================== -->
-    <!-- FUNCTION: DISCOUNT & PROMOTION (Below Machine Dashboard) -->
-    <!-- ============================================== -->
-    <div id="discountsPromotionsSection" class="mt-10 pt-8 border-t border-gray-200 space-y-6">
-
-        <!-- Top Header Row -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <div class="flex items-center space-x-2.5">
-                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center space-x-1">
-                        <i class="fa-solid fa-tags text-[10px]"></i>
-                        <span>Marketing &amp; Campaigns</span>
-                    </span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 flex items-center space-x-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="promoLiveBadge">4 Active Campaigns</span>
-                    </span>
-                </div>
-                <h2 class="text-2xl md:text-3xl font-bold text-[#1E1B4B] tracking-tight mt-1">Discounts &amp; Promotions</h2>
-                <p class="text-gray-500 text-xs md:text-sm mt-0.5">Manage machine wash discounts, promo codes, seasonal vouchers, and test discount calculations.</p>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex flex-wrap items-center gap-2.5">
-                <!-- Toggle Discount Calculator Button -->
-                <button type="button" 
-                        onclick="toggleDiscountCalculator()" 
-                        class="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-semibold text-xs px-4 py-2.5 rounded-xl transition shadow-2xs flex items-center space-x-2 cursor-pointer active:scale-[0.98]">
-                    <i class="fa-solid fa-calculator text-indigo-600 text-sm"></i>
-                    <span>Test Calculator (OK)</span>
-                </button>
-
-                <!-- + Create New Promotion Button -->
-                <button type="button" 
-                        onclick="openAddPromotionModal()" 
-                        class="bg-[#5B46F6] hover:bg-[#4D38EA] text-white px-5 py-2.5 rounded-xl font-semibold text-xs flex items-center space-x-2 shadow-sm transition active:scale-[0.98] cursor-pointer">
-                    <i class="fa-solid fa-plus text-xs"></i>
-                    <span>Create Promotion</span>
-                </button>
-            </div>
+    <!-- MAIN MACHINE LIST CARD CONTAINER -->
+    <div class="bg-white border border-[#E2E8F0] rounded-2xl sm:rounded-3xl shadow-[0_4px_25px_-5px_rgba(0,0,0,0.03)] overflow-hidden">
+        
+        <!-- CARD HEADER: MACHINE LIST + BADGE -->
+        <div class="p-6 pb-4 flex items-center space-x-3">
+            <h2 class="text-xl font-bold text-gray-900 tracking-tight">Machine List</h2>
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#DBEAFE] text-[#1D4ED8]" id="badgeMachineCount">
+                {{ count($machines) }} machines
+            </span>
         </div>
 
-        <!-- 4 KPI Summary Cards for Promotions -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            <!-- Card 1: Active Promotions -->
-            <div class="bg-gradient-to-br from-indigo-50/70 to-white rounded-2xl border border-indigo-100 p-5 shadow-xs flex flex-col justify-between transition hover:shadow-md">
-                <div class="flex items-start justify-between">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                        <i class="fa-solid fa-badge-percent text-lg"></i>
-                    </div>
-                    <span class="text-emerald-600 font-semibold text-xs tracking-tight flex items-center space-x-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Running Now</span>
-                    </span>
-                </div>
-                <div class="mt-3">
-                    <span class="text-gray-500 text-xs font-medium block">Active Promotions</span>
-                    <div class="text-3xl font-black text-gray-900 leading-none mt-1" id="kpiActivePromos">
-                        <?php echo e($promoStats['active_promotions'] ?? 4); ?>
+        <!-- FULL-WIDTH TABLE SECTION -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-[#F8FAFC] border-y border-[#E2E8F0]/80 text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        <th class="py-4 px-6 w-12 font-bold text-gray-500">#</th>
+                        <th class="py-4 px-6 font-bold text-gray-500">MACHINE ID</th>
+                        <th class="py-4 px-6 font-bold text-gray-500">MACHINE NAME</th>
+                        <th class="py-4 px-6 font-bold text-gray-500">TYPE</th>
+                        <th class="py-4 px-6 font-bold text-gray-500">CAPACITY (KG)</th>
+                        <th class="py-4 px-6 font-bold text-gray-500">STATUS</th>
+                        <th class="py-4 px-6 font-bold text-gray-500">LAST MAINTENANCE</th>
+                        <th class="py-4 px-6 font-bold text-gray-500 text-center w-36">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="machinesTableBody" class="divide-y divide-[#F1F5F9] text-sm bg-white">
+                    @forelse($machines as $index => $item)
+                    @php
+                        $status = $item->status ?? 'Available';
+                        $statusBadgeClass = match($status) {
+                            'Available' => 'bg-[#DCFCE7] text-[#16A34A]',
+                            'In Use' => 'bg-[#FEF3C7] text-[#D97706]',
+                            'Under Maintenance' => 'bg-[#FEE2E2] text-[#DC2626]',
+                            default => 'bg-gray-100 text-gray-700'
+                        };
+                    @endphp
+                    <tr class="hover:bg-slate-50/60 transition machine-row"
+                        id="machine-row-{{ $item->id }}"
+                        data-id="{{ $item->id }}"
+                        data-machine-id="{{ $item->machine_id }}"
+                        data-name="{{ strtolower($item->name ?? '') }}"
+                        data-raw-name="{{ $item->name ?? '' }}"
+                        data-type="{{ $item->type ?? '' }}"
+                        data-capacity="{{ $item->capacity ?? '-' }}"
+                        data-model="{{ $item->model ?? '' }}"
+                        data-location="{{ $item->location ?? 'Laundry Room 1' }}"
+                        data-status="{{ $item->status ?? 'Available' }}"
+                        data-last-maint="{{ $item->last_maintenance ?? '2025-09-10' }}"
+                        data-next-maint="{{ $item->next_maintenance ?? '2025-10-10' }}"
+                        data-notes="{{ $item->notes ?? '' }}"
+                        data-history="{{ json_encode($item->maintenance_history ?? []) }}">
+                        
+                        <!-- # Column -->
+                        <td class="py-4 px-6 text-gray-900 font-bold text-sm machine-index-num">
+                            {{ $loop->iteration ?? ($index + 1) }}.
+                        </td>
 
-                    </div>
-                </div>
-            </div>
+                        <!-- Machine ID Column -->
+                        <td class="py-4 px-6 font-extrabold text-gray-900 text-sm whitespace-nowrap">
+                            {{ $item->machine_id }}
+                        </td>
 
-            <!-- Card 2: Total Savings Given -->
-            <div class="bg-gradient-to-br from-emerald-50/70 to-white rounded-2xl border border-emerald-100 p-5 shadow-xs flex flex-col justify-between transition hover:shadow-md">
-                <div class="flex items-start justify-between">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                        <i class="fa-solid fa-hand-holding-dollar text-lg"></i>
-                    </div>
-                    <span class="text-emerald-600 font-semibold text-xs tracking-tight">+18% this month</span>
-                </div>
-                <div class="mt-3">
-                    <span class="text-gray-500 text-xs font-medium block">Total Discounts Granted</span>
-                    <div class="text-3xl font-black text-emerald-700 leading-none mt-1" id="kpiTotalSavings">
-                        <?php echo e($promoStats['total_savings'] ?? '$1,280.50'); ?>
+                        <!-- Machine Name Column -->
+                        <td class="py-4 px-6 text-gray-600 font-medium text-sm whitespace-nowrap">
+                            {{ $item->name }}
+                        </td>
 
-                    </div>
-                </div>
-            </div>
+                        <!-- Type Column -->
+                        <td class="py-4 px-6 text-gray-600 font-medium text-sm whitespace-nowrap">
+                            {{ $item->type }}
+                        </td>
 
-            <!-- Card 3: Total Redemptions -->
-            <div class="bg-gradient-to-br from-blue-50/70 to-white rounded-2xl border border-blue-100 p-5 shadow-xs flex flex-col justify-between transition hover:shadow-md">
-                <div class="flex items-start justify-between">
-                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                        <i class="fa-solid fa-receipt text-lg"></i>
-                    </div>
-                    <span class="text-blue-600 font-semibold text-xs tracking-tight">236 All-time</span>
-                </div>
-                <div class="mt-3">
-                    <span class="text-gray-500 text-xs font-medium block">Coupon Redemptions</span>
-                    <div class="text-3xl font-black text-gray-900 leading-none mt-1" id="kpiTotalRedemptions">
-                        <?php echo e($promoStats['total_redemptions'] ?? 236); ?> Orders
-                    </div>
-                </div>
-            </div>
+                        <!-- Capacity Column -->
+                        <td class="py-4 px-6 text-gray-600 font-medium text-sm whitespace-nowrap">
+                            {{ $item->capacity ?? '-' }}
+                        </td>
 
-            <!-- Card 4: Top Promo Code -->
-            <div class="bg-gradient-to-br from-purple-50/70 to-white rounded-2xl border border-purple-100 p-5 shadow-xs flex flex-col justify-between transition hover:shadow-md">
-                <div class="flex items-start justify-between">
-                    <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs">
-                        <i class="fa-solid fa-crown text-base"></i>
-                    </div>
-                    <span class="text-purple-600 font-semibold text-xs tracking-tight">58 Used</span>
-                </div>
-                <div class="mt-3">
-                    <span class="text-gray-500 text-xs font-medium block">Top Running Promo</span>
-                    <div class="text-2xl font-black text-purple-700 font-mono leading-none mt-1" id="kpiTopPromo">
-                        <?php echo e($promoStats['top_code'] ?? 'WASHER20'); ?>
+                        <!-- Status Column -->
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold {{ $statusBadgeClass }}">
+                                {{ $item->status }}
+                            </span>
+                        </td>
 
-                    </div>
-                </div>
-            </div>
+                        <!-- Last Maintenance Column -->
+                        <td class="py-4 px-6 text-gray-600 font-medium text-sm whitespace-nowrap">
+                            {{ $item->last_maintenance ?? '-' }}
+                        </td>
 
+                        <!-- Actions Column: 3 Colored Buttons (View Eye, Edit Pencil, Delete Trash) -->
+                        <td class="py-4 px-6 text-center whitespace-nowrap">
+                            <div class="flex items-center justify-center space-x-2">
+                                <!-- View Details Button (Cyan) -->
+                                <button type="button" 
+                                        data-id="{{ $item->id }}"
+                                        onclick="handleViewMachineClick(this)"
+                                        class="w-8 h-8 rounded-lg bg-[#0EA5E9] hover:bg-sky-600 text-white flex items-center justify-center shadow-2xs transition active:scale-90 cursor-pointer" 
+                                        title="View Details">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </button>
+
+                                <!-- Edit Button (Emerald) -->
+                                <button type="button" 
+                                        data-id="{{ $item->id }}"
+                                        onclick="handleEditMachineClick(this)"
+                                        class="w-8 h-8 rounded-lg bg-[#10B981] hover:bg-emerald-600 text-white flex items-center justify-center shadow-2xs transition active:scale-90 cursor-pointer" 
+                                        title="Edit Machine">
+                                    <i class="fa-solid fa-pencil text-xs"></i>
+                                </button>
+
+                                <!-- Delete Button (Rose) -->
+                                <button type="button" 
+                                        data-id="{{ $item->id }}"
+                                        data-machine-id="{{ $item->machine_id }}"
+                                        data-name="{{ $item->name }}"
+                                        onclick="handleDeleteMachineClick(this)"
+                                        class="w-8 h-8 rounded-lg bg-[#EF4444] hover:bg-rose-600 text-white flex items-center justify-center shadow-2xs transition active:scale-90 cursor-pointer" 
+                                        title="Delete Machine">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr id="noResultsRow">
+                        <td colspan="8" class="py-12 text-center text-gray-400 font-medium">
+                            <i class="fa-solid fa-cubes text-3xl mb-3 text-gray-300 block"></i>
+                            No machines found matching your criteria.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
-        <!-- Interactive Discount Calculator Box (Expandable / Collapsible) -->
-        <div id="discountCalculatorWidget" class="bg-white rounded-2xl border-2 border-indigo-200 p-6 shadow-md transition-all">
-            <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-                <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                        <i class="fa-solid fa-calculator text-base"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-gray-900 text-base">Quick Discount Calculator &amp; Validator</h3>
-                        <p class="text-xs text-gray-500">Test promo codes against machine cycles or manual order subtotals and click OK to apply.</p>
-                    </div>
-                </div>
-                <button type="button" onclick="toggleDiscountCalculator()" class="text-xs font-semibold text-gray-400 hover:text-gray-600">
-                    <i class="fa-solid fa-xmark text-sm"></i>
+        <!-- Table Footer & Pagination Matching Screenshot -->
+        <div class="p-6 pt-5 border-t border-[#F1F5F9] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+            <div id="tableInfoText" class="text-xs sm:text-sm font-medium text-gray-500">
+                Showing 1 - {{ count($machines) }} of {{ $stats['total'] ?? count($machines) }} machines
+            </div>
+
+            <div class="flex items-center space-x-1 sm:space-x-1.5">
+                <button type="button" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-400 hover:text-gray-700 bg-white flex items-center justify-center transition cursor-pointer shadow-2xs">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <button type="button" class="w-8 h-8 rounded-lg bg-[#2563EB] text-white font-bold flex items-center justify-center text-xs shadow-2xs">
+                    1
+                </button>
+                <button type="button" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-400 hover:text-gray-700 bg-white flex items-center justify-center transition cursor-pointer shadow-2xs">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                 </button>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
-                <!-- Select Machine / Service -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Machine / Service Unit</label>
-                    <select id="calcMachineSelect" onchange="onCalcMachineChanged(this.value)" class="w-full text-xs bg-gray-50 border border-gray-300 rounded-xl p-2.5 font-medium text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="8.00" data-type="Washers">WM-101 TuboWash 9000 (Washer) - $8.00</option>
-                        <option value="6.50" data-type="Washers">WM-111 EcoWash Lite (Washer) - $6.50</option>
-                        <option value="12.00" data-type="Dryers">WM-112 HeatDry Pro (Dryer) - $12.00</option>
-                        <option value="10.00" data-type="Washers">WM-102 SpeedClean Super (Washer) - $10.00</option>
-                        <option value="15.00" data-type="Dryers">HD-102 AeroDry Industrial (Dryer) - $15.00</option>
-                        <option value="14.00" data-type="Pressers">PR-101 SteamPress Pro (Presser) - $14.00</option>
-                        <option value="35.00" data-type="Commercial Wing">Commercial Wing Bulk Wash &amp; Fold - $35.00</option>
-                        <option value="custom" data-type="Custom">Custom Order Subtotal...</option>
-                    </select>
-                </div>
-
-                <!-- Order Subtotal ($) -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Cycle / Order Amount ($)</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 font-bold text-sm">$</span>
-                        <input type="number" step="0.01" id="calcOrderAmount" value="8.00" oninput="runLiveCalculation()" class="w-full text-xs font-bold text-gray-900 bg-gray-50 border border-gray-300 rounded-xl pl-8 pr-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <!-- Select / Enter Promo Code -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Promotion Code</label>
-                    <div class="flex items-center space-x-2">
-                        <select id="calcPromoSelect" onchange="runLiveCalculation()" class="w-full text-xs font-bold font-mono text-indigo-700 bg-indigo-50/50 border border-indigo-200 rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option value="WASHER20">WASHER20 (20% Off Washers)</option>
-                            <option value="DRYFREESHIP">DRYFREESHIP ($5.00 Off Dryers)</option>
-                            <option value="NEWCLEAN10">NEWCLEAN10 ($3.00 Off All)</option>
-                            <option value="VIPBULK25">VIPBULK25 (25% Commercial)</option>
-                            <option value="PRESSPRO15">PRESSPRO15 (15% Pressers)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Calculation Output Breakdown & Action -->
-            <div class="mt-5 p-4 bg-gray-50 rounded-xl border border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div class="flex flex-wrap items-center gap-6 text-xs">
-                    <div>
-                        <span class="text-gray-400 block font-medium">Original Price:</span>
-                        <span class="text-sm font-bold text-gray-700" id="calcDisplayOriginal">$8.00</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-400 block font-medium">Discount Applied:</span>
-                        <span class="text-sm font-bold text-emerald-600" id="calcDisplayDiscount">-$1.60 (20%)</span>
-                    </div>
-                    <div class="pl-3 border-l border-gray-300">
-                        <span class="text-gray-500 block font-bold uppercase text-[10px]">Net Payable:</span>
-                        <span class="text-xl font-black text-indigo-700" id="calcDisplayFinal">$6.40</span>
-                    </div>
-                </div>
-
-                <div>
-                    <button type="button" 
-                            onclick="confirmApplyDiscountFromCalc()"
-                            class="bg-[#10B981] hover:bg-[#059669] text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center space-x-2 shadow-xs transition active:scale-[0.98] cursor-pointer">
-                        <i class="fa-solid fa-check"></i>
-                        <span>Apply Discount (OK)</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filter Bar & Promotions List -->
-        <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs space-y-4">
-            
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <!-- Search Promo Code Bar -->
-                <div class="relative w-full md:w-80">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400">
-                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                    </span>
-                    <input type="text" 
-                           id="promoSearchInput" 
-                           oninput="handlePromoSearch(this.value)" 
-                           placeholder="Search coupon or campaign..." 
-                           class="w-full text-xs bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3.5 py-2.5 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                </div>
-
-                <!-- Status Filter Pills -->
-                <div class="flex flex-wrap items-center gap-1.5" id="promoStatusPills">
-                    <button type="button" onclick="filterPromosByStatus('All', this)" class="promo-pill px-3 py-1.5 rounded-lg text-xs font-bold transition bg-[#5B46F6] text-white shadow-xs">
-                        All (<span id="countAllPromos">6</span>)
-                    </button>
-                    <button type="button" onclick="filterPromosByStatus('Active', this)" class="promo-pill px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition">
-                        Active (<span id="countActivePromos">4</span>)
-                    </button>
-                    <button type="button" onclick="filterPromosByStatus('Scheduled', this)" class="promo-pill px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition">
-                        Scheduled (<span id="countScheduledPromos">1</span>)
-                    </button>
-                    <button type="button" onclick="filterPromosByStatus('Expired', this)" class="promo-pill px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition">
-                        Expired (<span id="countExpiredPromos">1</span>)
-                    </button>
-                </div>
-            </div>
-
-            <!-- Table Header Pill -->
-            <div class="bg-[#E9EEF5] rounded-xl px-5 py-3 grid grid-cols-12 items-center text-[11px] font-bold text-gray-700 tracking-wider uppercase">
-                <div class="col-span-3">PROMO CODE &amp; CAMPAIGN</div>
-                <div class="col-span-2">DISCOUNT VALUE</div>
-                <div class="col-span-2">APPLIES TO</div>
-                <div class="col-span-2">VALIDITY &amp; LIMIT</div>
-                <div class="col-span-2">STATUS</div>
-                <div class="col-span-1 text-center">ACTION</div>
-            </div>
-
-            <!-- Promotion Rows Container -->
-            <div id="promotionsCardsContainer" class="space-y-3">
-                <!-- Dynamically rendered by JavaScript -->
-            </div>
-
         </div>
 
     </div>
 
 </div>
 
-<!-- ============================================== -->
-<!-- MODAL 1: ADD NEW MACHINE -->
-<!-- ============================================== -->
-<div id="addMachineModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 transform transition-all animate-in fade-in zoom-in duration-150">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-xl bg-[#EDE9FE] text-[#5B46F6] flex items-center justify-center">
-                    <i class="fa-solid fa-plus text-sm"></i>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Add New Machine Unit</h3>
-                    <p class="text-xs text-gray-500">Register a new washing machine, dryer, or presser</p>
-                </div>
-            </div>
-            <button onclick="closeAddMachineModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <i class="fa-solid fa-xmark text-lg"></i>
+<!-- ======================================================= -->
+<!-- 1. VIEW MACHINE DETAILS MODAL (MATCHES SCREENSHOT 2)    -->
+<!-- ======================================================= -->
+<div id="viewMachineModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl animate-fade-in border border-gray-100 my-8 space-y-4">
+        
+        <!-- Header: Title & Close -->
+        <div class="flex items-start justify-between pb-1">
+            <h2 class="text-2xl font-extrabold text-[#0F172A] tracking-tight">Machine Details</h2>
+            <button type="button" onclick="closeViewMachineModal()" class="text-gray-400 hover:text-gray-600 text-3xl font-light leading-none -mt-2 cursor-pointer">
+                &times;
             </button>
         </div>
 
-        <form id="addMachineForm" onsubmit="submitAddMachine(event)" class="space-y-4 mt-4">
-            <?php echo csrf_field(); ?>
-            <div class="grid grid-cols-2 gap-3">
+        <!-- Top Machine Hero Card -->
+        <div class="flex items-center space-x-4 pt-1">
+            <div class="w-16 h-16 rounded-2xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center flex-shrink-0">
+                <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="2" width="18" height="20" rx="3"></rect>
+                    <circle cx="12" cy="13" r="5"></circle>
+                    <circle cx="12" cy="13" r="2"></circle>
+                    <circle cx="6" cy="6" r="1" fill="currentColor"></circle>
+                    <circle cx="9" cy="6" r="1" fill="currentColor"></circle>
+                </svg>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h3 id="viewHeroMachineId" class="text-2xl font-black text-[#0F172A] leading-tight"></h3>
+                    <span id="viewHeroStatusBadge" class="inline-block px-3 py-0.5 rounded-full text-xs font-bold"></span>
+                </div>
+                <p id="viewHeroSubName" class="text-gray-600 font-medium text-sm mt-0.5"></p>
+                <p id="viewHeroCapacity" class="text-gray-500 font-medium text-sm"></p>
+            </div>
+        </div>
+
+        <!-- Box 1: Machine Information -->
+        <div class="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 space-y-3">
+            <div class="flex items-center space-x-2 text-gray-900 font-bold text-sm">
+                <i class="fa-solid fa-users-gear text-blue-600 text-sm"></i>
+                <span>Machine Information</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-y-2.5 text-xs sm:text-sm">
+                <div class="flex items-center space-x-2 text-gray-500">
+                    <i class="fa-regular fa-bell text-gray-400 w-4"></i>
+                    <span>Machine ID</span>
+                </div>
+                <div id="viewInfoMachineId" class="font-bold text-gray-900"></div>
+
+                <div class="flex items-center space-x-2 text-gray-500">
+                    <i class="fa-solid fa-tag text-gray-400 w-4"></i>
+                    <span>Machine Name</span>
+                </div>
+                <div id="viewInfoName" class="font-bold text-gray-900"></div>
+
+                <div class="flex items-center space-x-2 text-gray-500">
+                    <i class="fa-regular fa-circle-check text-gray-400 w-4"></i>
+                    <span>Type</span>
+                </div>
+                <div id="viewInfoType" class="font-bold text-gray-900"></div>
+
+                <div class="flex items-center space-x-2 text-gray-500">
+                    <i class="fa-regular fa-circle text-gray-400 w-4"></i>
+                    <span>Capacity</span>
+                </div>
+                <div id="viewInfoCapacity" class="font-bold text-gray-900"></div>
+
+                <div class="flex items-center space-x-2 text-gray-500">
+                    <i class="fa-solid fa-microchip text-gray-400 w-4"></i>
+                    <span>Model</span>
+                </div>
+                <div id="viewInfoModel" class="font-bold text-gray-900"></div>
+
+                <div class="flex items-center space-x-2 text-gray-500">
+                    <i class="fa-solid fa-location-dot text-gray-400 w-4"></i>
+                    <span>Location</span>
+                </div>
+                <div id="viewInfoLocation" class="font-bold text-gray-900"></div>
+            </div>
+        </div>
+
+        <!-- Box 2: Status -->
+        <div class="bg-white border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 space-y-2">
+            <div class="flex items-center space-x-2 text-gray-900 font-bold text-sm">
+                <i class="fa-regular fa-clock text-blue-600"></i>
+                <span>Status</span>
+            </div>
+            <div>
+                <span id="viewStatusBadgeLarge" class="inline-block px-4 py-1.5 rounded-full text-xs font-bold"></span>
+            </div>
+            <div class="flex items-center space-x-2 text-xs sm:text-sm font-medium text-gray-600 pt-0.5">
+                <span id="viewStatusDot" class="w-2.5 h-2.5 rounded-full inline-block"></span>
+                <span id="viewStatusDescription"></span>
+            </div>
+        </div>
+
+        <!-- Box 3: Last Maintenance -->
+        <div class="bg-white border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 space-y-2">
+            <div class="flex items-center space-x-2 text-gray-900 font-bold text-sm">
+                <i class="fa-regular fa-calendar-check text-blue-600"></i>
+                <span>Last Maintenance</span>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-xs sm:text-sm pt-1">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Serial ID</label>
-                    <input type="text" name="serial_id" required placeholder="e.g. WM-116" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <span class="text-gray-400 text-xs block font-medium">Date</span>
+                    <span id="viewMaintLastDate" class="text-sm sm:text-base font-extrabold text-gray-900 mt-0.5 block"></span>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Machine Type</label>
-                    <select name="type" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="Washer">Washer</option>
-                        <option value="Dryer">Dryer</option>
-                        <option value="Presser">Presser</option>
+                    <span class="text-gray-400 text-xs block font-medium">Next Maintenance</span>
+                    <span id="viewMaintNextDate" class="text-sm sm:text-base font-extrabold text-gray-900 mt-0.5 block"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box 4: Maintenance History -->
+        <div class="bg-white border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 space-y-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-gray-900 font-bold text-sm">
+                    <i class="fa-solid fa-cube text-blue-600"></i>
+                    <span>Maintenance History</span>
+                </div>
+                <button type="button" onclick="openAddLogForm()" class="text-[#2563EB] hover:text-blue-800 text-xs font-bold transition cursor-pointer">
+                    + Add Log
+                </button>
+            </div>
+
+            <!-- Inline Log Form (Hidden by default) -->
+            <form id="addMaintLogForm" class="hidden bg-blue-50/60 p-3 rounded-xl border border-blue-100 space-y-2 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" id="newLogDate" value="{{ date('Y-m-d') }}" class="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs">
+                    <select id="newLogType" class="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs">
+                        <option value="Routine Check">Routine Check</option>
+                        <option value="Cleaning">Cleaning</option>
+                        <option value="Repair">Repair</option>
+                        <option value="Inspection">Inspection</option>
                     </select>
                 </div>
-            </div>
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="newLogNote" placeholder="Maintenance note..." class="flex-1 px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs">
+                    <button type="button" onclick="submitQuickLog()" class="bg-[#2563EB] text-white px-3 py-1.5 rounded-lg font-bold">Save</button>
+                </div>
+            </form>
 
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Model Name</label>
-                <input type="text" name="model" required placeholder="e.g. TuboWash 9000" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <!-- History Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="text-gray-400 font-bold border-b border-gray-100 pb-1.5">
+                            <th class="pb-2 font-bold">Date</th>
+                            <th class="pb-2 font-bold">Type</th>
+                            <th class="pb-2 font-bold">Note</th>
+                        </tr>
+                    </thead>
+                    <tbody id="viewMaintenanceHistoryBody" class="divide-y divide-gray-50 text-gray-700">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Installation Date</label>
-                    <input type="text" name="installation_date" value="<?php echo e(date('d M Y')); ?>" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        <!-- Footer Action Buttons: Edit Machine & Delete Machine -->
+        <div class="flex items-center justify-between gap-3 pt-2">
+            <!-- Edit Button (White with Blue Border) -->
+            <button type="button" 
+                    id="modalEditBtn"
+                    class="w-1/2 py-3 px-4 rounded-2xl border-2 border-[#2563EB] text-[#2563EB] hover:bg-blue-50 font-bold text-sm transition flex items-center justify-center space-x-2 cursor-pointer shadow-2xs">
+                <i class="fa-solid fa-pencil text-xs"></i>
+                <span>Edit Machine</span>
+            </button>
+
+            <!-- Delete Button (Solid Red) -->
+            <button type="button" 
+                    id="modalDeleteBtn"
+                    class="w-1/2 py-3 px-4 rounded-2xl bg-[#EF4444] hover:bg-rose-600 text-white font-bold text-sm transition flex items-center justify-center space-x-2 cursor-pointer shadow-2xs">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+                <span>Delete Machine</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ======================================================= -->
+<!-- 2. REGISTER NEW MACHINE MODAL                           -->
+<!-- ======================================================= -->
+<div id="addMachineModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl animate-fade-in border border-gray-100 my-8">
+        
+        <!-- Modal Header -->
+        <div class="flex items-start justify-between pb-4 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-xl flex-shrink-0">
+                    <svg class="w-6 h-6 text-[#2563EB]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="2" width="18" height="20" rx="3"></rect>
+                        <circle cx="12" cy="13" r="5"></circle>
+                        <circle cx="12" cy="13" r="2"></circle>
+                    </svg>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Operating Status</label>
-                    <select name="status" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="Running">Running</option>
-                        <option value="Idle">Idle</option>
-                        <option value="Alert">Alert</option>
-                        <option value="Repairing">Repairing</option>
+                    <h3 class="text-xl font-extrabold text-[#0F172A] tracking-tight leading-tight">Register Washing Machine</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Add a new machine unit to shop inventory.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeAddMachineModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-light leading-none -mt-1 cursor-pointer">
+                &times;
+            </button>
+        </div>
+
+        <!-- Add Form -->
+        <form id="addMachineForm" method="POST" action="" class="space-y-3.5 mt-4">
+            @csrf
+
+            <!-- Machine ID & Name Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Machine ID</label>
+                    <input type="text" 
+                           name="machine_id" 
+                           placeholder="Auto (e.g. WM-013)" 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Machine Name <span class="text-rose-500">*</span></label>
+                    <input type="text" 
+                           name="name" 
+                           required 
+                           placeholder="e.g. Washer 6, Dryer 4" 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- Type & Capacity Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Type <span class="text-rose-500">*</span></label>
+                    <div class="relative">
+                        <select name="type" required class="appearance-none w-full px-4 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition cursor-pointer">
+                            <option value="Front Load">Front Load</option>
+                            <option value="Top Load">Top Load</option>
+                            <option value="Dryer">Dryer</option>
+                            <option value="Ironing">Ironing</option>
+                            <option value="Steam">Steam</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                            <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Capacity (Kg)</label>
+                    <input type="text" 
+                           name="capacity" 
+                           placeholder="e.g. 15 or -" 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- Model & Location Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Model</label>
+                    <input type="text" 
+                           name="model" 
+                           placeholder="e.g. LG WD-10, SpeedQueen" 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Location</label>
+                    <input type="text" 
+                           name="location" 
+                           placeholder="e.g. Laundry Room 1" 
+                           value="Laundry Room 1"
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">Machine Status <span class="text-rose-500">*</span></label>
+                <div class="relative">
+                    <select name="status" required class="appearance-none w-full px-4 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition cursor-pointer">
+                        <option value="Available" selected>Available (Ready to use)</option>
+                        <option value="In Use">In Use (Currently running)</option>
+                        <option value="Under Maintenance">Under Maintenance (Needs service)</option>
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                        <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                    </div>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Floor Location</label>
-                <select name="location" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    <option value="Main Floor - Zone A">Main Floor - Zone A</option>
-                    <option value="Main Floor - Zone B">Main Floor - Zone B</option>
-                    <option value="Express Bay - Zone B">Express Bay - Zone B</option>
-                    <option value="Commercial Wing">Commercial Wing</option>
-                    <option value="VIP Section">VIP Section</option>
-                    <option value="Maintenance Bay">Maintenance Bay</option>
-                </select>
+            <!-- Maintenance Schedule Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Last Maintenance</label>
+                    <input type="date" 
+                           name="last_maintenance" 
+                           value="{{ date('Y-m-d') }}"
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Next Maintenance</label>
+                    <input type="date" 
+                           name="next_maintenance" 
+                           value="{{ date('Y-m-d', strtotime('+30 days')) }}"
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
             </div>
 
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100 mt-5">
-                <button type="button" onclick="closeAddMachineModal()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer">
+            <!-- Notes -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">Notes</label>
+                <textarea name="notes" rows="2" placeholder="Operational details, specifications..." class="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition resize-none"></textarea>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex items-center justify-between pt-3 border-t border-gray-100 gap-3">
+                <button type="button" 
+                        onclick="closeAddMachineModal()" 
+                        class="w-1/2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 text-sm font-semibold transition cursor-pointer text-center">
                     Cancel
                 </button>
-                <button type="submit" class="bg-[#5B46F6] hover:bg-[#4D38EA] text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-sm flex items-center space-x-1.5 transition cursor-pointer">
+                <button type="submit" 
+                        class="w-1/2 py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-semibold shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95">
                     <i class="fa-solid fa-check text-xs"></i>
-                    <span>Register Unit</span>
+                    <span>Register Machine</span>
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- ============================================== -->
-<!-- MODAL 2: EDIT MACHINE -->
-<!-- ============================================== -->
-<div id="editMachineModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 transform transition-all animate-in fade-in zoom-in duration-150">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-                    <i class="fa-solid fa-pen text-sm"></i>
+<!-- ======================================================= -->
+<!-- 3. EDIT MACHINE MODAL                                   -->
+<!-- ======================================================= -->
+<div id="editMachineModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl animate-fade-in border border-gray-100 my-8">
+        
+        <!-- Header -->
+        <div class="flex items-start justify-between pb-4 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl flex-shrink-0">
+                    <i class="fa-solid fa-pen-to-square"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-bold text-gray-900">Edit Machine Unit</h3>
-                    <p class="text-xs text-gray-500">Update unit parameters and operational state</p>
+                    <h3 class="text-xl font-extrabold text-[#0F172A] tracking-tight leading-tight">Update Machine Information</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Modify machine details, change status, or reschedule maintenance.</p>
                 </div>
             </div>
-            <button onclick="closeEditMachineModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <i class="fa-solid fa-xmark text-lg"></i>
+            <button type="button" onclick="closeEditMachineModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-light leading-none -mt-1 cursor-pointer">
+                &times;
             </button>
         </div>
 
-        <form id="editMachineForm" onsubmit="submitEditMachine(event)" class="space-y-4 mt-4">
-            <?php echo csrf_field(); ?>
-            <input type="hidden" id="edit_id" name="id">
-            <div class="grid grid-cols-2 gap-3">
+        <!-- Edit Form -->
+        <form id="editMachineForm" method="POST" action="" class="space-y-3.5 mt-4">
+            @csrf
+
+            <!-- Machine ID & Name Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Serial ID</label>
-                    <input type="text" id="edit_serial" name="serial_id" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Machine ID</label>
+                    <input type="text" 
+                           id="editMachineId" 
+                           name="machine_id" 
+                           readonly 
+                           class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 cursor-not-allowed">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Machine Type</label>
-                    <select id="edit_type" name="type" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                        <option value="Washer">Washer</option>
-                        <option value="Dryer">Dryer</option>
-                        <option value="Presser">Presser</option>
-                    </select>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Machine Name <span class="text-rose-500">*</span></label>
+                    <input type="text" 
+                           id="editMachineName" 
+                           name="name" 
+                           required 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
                 </div>
             </div>
 
+            <!-- Type & Capacity Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Type <span class="text-rose-500">*</span></label>
+                    <div class="relative">
+                        <select id="editMachineType" name="type" required class="appearance-none w-full px-4 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition cursor-pointer">
+                            <option value="Front Load">Front Load</option>
+                            <option value="Top Load">Top Load</option>
+                            <option value="Dryer">Dryer</option>
+                            <option value="Ironing">Ironing</option>
+                            <option value="Steam">Steam</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                            <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Capacity (Kg)</label>
+                    <input type="text" 
+                           id="editMachineCapacity" 
+                           name="capacity" 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- Model & Location Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Model</label>
+                    <input type="text" 
+                           id="editMachineModel" 
+                           name="model" 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Location</label>
+                    <input type="text" 
+                           id="editMachineLocation" 
+                           name="location" 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- Status Dropdown (Available / In Use / Under Maintenance) -->
             <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Model Name</label>
-                <input type="text" id="edit_model" name="model" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Operating Status</label>
-                    <select id="edit_status" name="status" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                        <option value="Running">Running</option>
-                        <option value="Idle">Idle</option>
-                        <option value="Alert">Alert</option>
-                        <option value="Repairing">Repairing</option>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">Machine Status <span class="text-rose-500">*</span></label>
+                <div class="relative">
+                    <select id="editMachineStatus" name="status" required class="appearance-none w-full px-4 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition cursor-pointer">
+                        <option value="Available">Available (Ready to use)</option>
+                        <option value="In Use">In Use (Currently running)</option>
+                        <option value="Under Maintenance">Under Maintenance (Needs service)</option>
                     </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Floor Location</label>
-                    <select id="edit_location" name="location" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                        <option value="Main Floor - Zone A">Main Floor - Zone A</option>
-                        <option value="Main Floor - Zone B">Main Floor - Zone B</option>
-                        <option value="Express Bay - Zone B">Express Bay - Zone B</option>
-                        <option value="Commercial Wing">Commercial Wing</option>
-                        <option value="VIP Section">VIP Section</option>
-                        <option value="Maintenance Bay">Maintenance Bay</option>
-                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                        <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100 mt-5">
-                <button type="button" onclick="closeEditMachineModal()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer">
+            <!-- Maintenance Schedule Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Last Maintenance</label>
+                    <input type="date" 
+                           id="editLastMaintenance" 
+                           name="last_maintenance" 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1.5">Next Maintenance</label>
+                    <input type="date" 
+                           id="editNextMaintenance" 
+                           name="next_maintenance" 
+                           class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">Notes</label>
+                <textarea id="editMachineNotes" name="notes" rows="2" class="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition resize-none"></textarea>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex items-center justify-between pt-3 border-t border-gray-100 gap-3">
+                <button type="button" 
+                        onclick="closeEditMachineModal()" 
+                        class="w-1/2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 text-sm font-semibold transition cursor-pointer text-center">
                     Cancel
                 </button>
-                <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-sm flex items-center space-x-1.5 transition cursor-pointer">
-                    <i class="fa-solid fa-floppy-disk text-xs"></i>
+                <button type="submit" 
+                        class="w-1/2 py-2.5 px-4 rounded-xl bg-[#10B981] hover:bg-emerald-600 text-white text-sm font-semibold shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95">
+                    <i class="fa-solid fa-check text-xs"></i>
                     <span>Save Changes</span>
                 </button>
             </div>
@@ -821,1012 +814,449 @@
     </div>
 </div>
 
-<!-- ============================================== -->
-<!-- MODAL 3: VIEW MACHINE TELEMETRY & DETAILS -->
-<!-- ============================================== -->
-<div id="viewMachineModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 transform transition-all animate-in fade-in zoom-in duration-150">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 font-bold flex items-center justify-center shadow-xs border border-blue-100">
-                    <i class="fa-solid fa-microchip text-base"></i>
-                </div>
-                <div>
-                    <h3 id="view_serial" class="text-base font-bold text-gray-900">WM-101</h3>
-                    <p id="view_model" class="text-xs text-gray-500 font-medium">TuboWash 9000</p>
-                </div>
-            </div>
-            <button onclick="closeViewMachineModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+<!-- ======================================================= -->
+<!-- 4. DELETE MACHINE CONFIRMATION MODAL                    -->
+<!-- ======================================================= -->
+<div id="deleteMachineModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center border border-gray-100 animate-fade-in">
+        <div class="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4 text-2xl">
+            <i class="fa-solid fa-triangle-exclamation"></i>
         </div>
-
-        <div class="space-y-4 mt-4 text-xs">
-            <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-200/70">
-                <div>
-                    <span class="text-gray-400 font-semibold block uppercase text-[10px]">Machine Type</span>
-                    <span id="view_type" class="inline-block mt-1 font-bold text-gray-800">Washer</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 font-semibold block uppercase text-[10px]">Current Status</span>
-                    <span id="view_status" class="inline-flex items-center font-bold mt-1 text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
-                        Running
-                    </span>
-                </div>
-                <div>
-                    <span class="text-gray-400 font-semibold block uppercase text-[10px]">Location & Bay</span>
-                    <span id="view_location" class="font-medium text-gray-700 block mt-1">Main Floor - Zone A</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 font-semibold block uppercase text-[10px]">Installation Date</span>
-                    <span id="view_installation" class="font-medium text-gray-700 block mt-1">15 Jan 2023</span>
-                </div>
-            </div>
-
-            <!-- Telemetry Metrics Grid -->
-            <div>
-                <span class="text-gray-500 font-semibold block mb-2 uppercase text-[10px]">Real-Time Health & Diagnostic Telemetry</span>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200/60 text-center">
-                        <span class="text-[10px] text-gray-400 block font-medium">Motor Health</span>
-                        <span id="view_health" class="text-base font-bold text-emerald-600 block mt-0.5">98%</span>
-                    </div>
-                    <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200/60 text-center">
-                        <span class="text-[10px] text-gray-400 block font-medium">Operating Temp</span>
-                        <span id="view_temp" class="text-base font-bold text-gray-800 block mt-0.5">60°C</span>
-                    </div>
-                    <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200/60 text-center">
-                        <span class="text-[10px] text-gray-400 block font-medium">Today's Cycles</span>
-                        <span id="view_today_cycles" class="text-base font-bold text-indigo-600 block mt-0.5">8</span>
-                    </div>
-                    <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200/60 text-center">
-                        <span class="text-[10px] text-gray-400 block font-medium">Total Cycles</span>
-                        <span id="view_total_cycles" class="text-base font-bold text-gray-800 block mt-0.5">1,240</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-100 flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-wrench text-blue-600"></i>
-                    <span class="text-gray-700 text-xs">Last Preventive Maintenance:</span>
-                </div>
-                <span id="view_serviced" class="font-bold text-gray-900 text-xs">10 Aug 2026</span>
-            </div>
-        </div>
-
-        <div class="flex items-center justify-end space-x-2 pt-4 border-t border-gray-100 mt-5">
-            <button onclick="closeViewMachineModal()" class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition cursor-pointer">
-                Close
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================== -->
-<!-- MODAL 4: ADVANCED FILTERS -->
-<!-- ============================================== -->
-<div id="advancedFiltersModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
-                    <i class="fa-solid fa-sliders text-sm"></i>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Advanced Machine Filters</h3>
-                    <p class="text-xs text-gray-500">Filter units by health diagnostics and service cycles</p>
-                </div>
-            </div>
-            <button onclick="closeAdvancedFiltersModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
-
-        <form id="advFilterForm" onsubmit="applyAdvancedFilters(event)" class="space-y-4 mt-4 text-xs">
-            <div>
-                <label class="block font-semibold text-gray-700 mb-1">Motor Health Threshold</label>
-                <select id="adv_health" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-purple-400">
-                    <option value="all">All Health Conditions</option>
-                    <option value="optimal">Optimal (&gt; 95%)</option>
-                    <option value="good">Good (85% - 95%)</option>
-                    <option value="warning">Attention Needed (&lt; 85%)</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block font-semibold text-gray-700 mb-1">Cycle Volume Range</label>
-                <select id="adv_cycles" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-purple-400">
-                    <option value="all">All Lifetime Cycles</option>
-                    <option value="low">Under 500 cycles</option>
-                    <option value="mid">500 - 1,500 cycles</option>
-                    <option value="high">Over 1,500 heavy cycles</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block font-semibold text-gray-700 mb-1">Sort Machines By</label>
-                <select id="adv_sort" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-purple-400">
-                    <option value="id_asc">Serial ID (A to Z)</option>
-                    <option value="id_desc">Serial ID (Z to A)</option>
-                    <option value="cycles_desc">Highest Cycles First</option>
-                    <option value="health_asc">Lowest Motor Health (Alerts)</option>
-                </select>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
-                <button type="button" onclick="closeAdvancedFiltersModal()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer">
-                    Cancel
-                </button>
-                <button type="submit" class="bg-[#5B46F6] hover:bg-[#4D38EA] text-white px-5 py-2 rounded-lg text-xs font-bold shadow-xs transition cursor-pointer">
-                    Apply Advanced Filters
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ============================================== -->
-<!-- TOAST NOTIFICATION CONTAINER -->
-<!-- ============================================== -->
-<div id="machineToast" class="fixed bottom-6 right-6 z-50 hidden max-w-md bg-white border border-gray-200 rounded-xl p-4 shadow-2xl transition-all duration-300 transform translate-y-2">
-    <div class="flex items-start space-x-3">
-        <div id="toastIcon" class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-check text-sm"></i>
-        </div>
-        <div class="flex-1 min-w-0">
-            <h4 id="toastTitle" class="text-xs font-bold text-gray-900 leading-tight">Notification</h4>
-            <p id="toastMessage" class="text-[11px] text-gray-600 mt-0.5 leading-tight"></p>
-        </div>
-        <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
-            <i class="fa-solid fa-xmark text-xs"></i>
-        </button>
-    </div>
-</div>
-
-<!-- ============================================== -->
-<!-- PROMOTION MODAL 1: ADD NEW PROMOTION -->
-<!-- ============================================== -->
-<div id="addPromotionModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 my-8 transform transition-all animate-in fade-in zoom-in duration-150">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <i class="fa-solid fa-plus text-sm"></i>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Create New Promotion</h3>
-                    <p class="text-xs text-gray-500">Configure discount code, percentage or fixed value, and validity</p>
-                </div>
-            </div>
-            <button onclick="closeAddPromotionModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
-
-        <form id="addPromotionForm" onsubmit="submitAddPromotion(event)" class="space-y-4 mt-4">
-            <?php echo csrf_field(); ?>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Promo Code (Uppercase)</label>
-                    <input type="text" name="code" id="newPromoCode" required placeholder="e.g. AUTUMN20" class="w-full text-xs font-mono font-bold uppercase bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Target Machine Scope</label>
-                    <select name="applies_to" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="All Machines">All Machines</option>
-                        <option value="Washers">Washers Only</option>
-                        <option value="Dryers">Dryers Only</option>
-                        <option value="Presser Units">Presser Units</option>
-                        <option value="Commercial Wing">Commercial Wing</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Campaign Title</label>
-                <input type="text" name="title" required placeholder="e.g. Autumn Wash & Care Discount" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Discount Type</label>
-                    <select name="discount_type" id="newDiscountType" onchange="updateDiscountValuePlaceholder(this.value)" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="percentage">Percentage Off (%)</option>
-                        <option value="fixed">Fixed Dollar Off ($)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1" id="newDiscountValueLabel">Discount Value (%)</label>
-                    <input type="number" step="0.01" name="discount_value" required placeholder="e.g. 20" class="w-full text-xs font-bold bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Min Order Spend ($)</label>
-                    <input type="number" step="0.01" name="min_spend" value="10.00" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Usage Limit (Orders)</label>
-                    <input type="number" name="usage_limit" value="100" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Start Date</label>
-                    <input type="date" name="start_date" value="<?php echo e(date('Y-m-d')); ?>" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Expiration Date</label>
-                    <input type="date" name="end_date" value="<?php echo e(date('Y-m-d', strtotime('+30 days'))); ?>" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Description &amp; Terms</label>
-                <textarea name="description" rows="2" placeholder="e.g. Valid on all front-load washing machines..." class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
-                <button type="button" onclick="closeAddPromotionModal()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer">
-                    Cancel
-                </button>
-                <button type="submit" class="bg-[#5B46F6] hover:bg-[#4D38EA] text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow-xs transition cursor-pointer flex items-center space-x-1.5">
-                    <i class="fa-solid fa-check"></i>
-                    <span>Save Promotion (OK)</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ============================================== -->
-<!-- PROMOTION MODAL 2: EDIT PROMOTION -->
-<!-- ============================================== -->
-<div id="editPromotionModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 my-8 transform transition-all animate-in fade-in zoom-in duration-150">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                    <i class="fa-solid fa-pen-to-square text-sm"></i>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Edit Promotion</h3>
-                    <p class="text-xs text-gray-500">Update campaign details and validity</p>
-                </div>
-            </div>
-            <button onclick="closeEditPromotionModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
-
-        <form id="editPromotionForm" onsubmit="submitEditPromotion(event)" class="space-y-4 mt-4">
-            <?php echo csrf_field(); ?>
-            <input type="hidden" id="editPromoId" name="promo_id">
-            
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Promo Code</label>
-                    <input type="text" id="editPromoCode" readonly class="w-full text-xs font-mono font-bold uppercase bg-gray-100 border border-gray-200 rounded-lg p-2.5 text-gray-500 cursor-not-allowed">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Target Machine Scope</label>
-                    <select id="editPromoApplies" name="applies_to" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="All Machines">All Machines</option>
-                        <option value="Washers">Washers Only</option>
-                        <option value="Dryers">Dryers Only</option>
-                        <option value="Presser Units">Presser Units</option>
-                        <option value="Commercial Wing">Commercial Wing</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Campaign Title</label>
-                <input type="text" id="editPromoTitle" name="title" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Discount Type</label>
-                    <select id="editPromoType" name="discount_type" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="percentage">Percentage Off (%)</option>
-                        <option value="fixed">Fixed Dollar Off ($)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Discount Value</label>
-                    <input type="number" step="0.01" id="editPromoValue" name="discount_value" required class="w-full text-xs font-bold bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Min Order Spend ($)</label>
-                    <input type="number" step="0.01" id="editPromoMin" name="min_spend" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Usage Limit</label>
-                    <input type="number" id="editPromoLimit" name="usage_limit" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Campaign Status</label>
-                    <select id="editPromoStatus" name="status" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="Active">Active</option>
-                        <option value="Scheduled">Scheduled</option>
-                        <option value="Paused">Paused</option>
-                        <option value="Expired">Expired</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Expiration Date</label>
-                    <input type="date" id="editPromoEnd" name="end_date" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Description &amp; Terms</label>
-                <textarea id="editPromoDesc" name="description" rows="2" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
-                <button type="button" onclick="closeEditPromotionModal()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer">
-                    Cancel
-                </button>
-                <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold shadow-xs transition cursor-pointer flex items-center space-x-1.5">
-                    <i class="fa-solid fa-check"></i>
-                    <span>Update Promotion (OK)</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ============================================== -->
-<!-- PROMOTION MODAL 3: VIEW VOUCHER DETAILS -->
-<!-- ============================================== -->
-<div id="viewPromotionModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-gray-100 transform transition-all animate-in fade-in zoom-in duration-150">
+        <h3 class="text-lg font-bold text-gray-900 mb-1">Delete Machine Unit</h3>
+        <p class="text-xs text-gray-500 mb-6">Are you sure you want to remove <span id="deleteMachineNameSpan" class="font-bold text-gray-800"></span>? This will permanently delete its record and maintenance history.</p>
         
-        <!-- Voucher Card Top -->
-        <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white p-6 relative overflow-hidden">
-            <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-sm pointer-events-none"></div>
-            <div class="flex items-center justify-between">
-                <span class="text-[10px] font-bold tracking-wider uppercase bg-white/20 px-2.5 py-0.5 rounded-full">Laundry 6 Plus Coupon</span>
-                <button onclick="closeViewPromotionModal()" class="text-white/70 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-base"></i>
+        <form id="deleteMachineForm" method="POST" action="">
+            @csrf
+            @method('DELETE')
+            <div class="flex items-center justify-center space-x-3">
+                <button type="button" onclick="closeDeleteMachineModal()" class="w-1/2 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-semibold transition cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold transition shadow-2xs cursor-pointer">
+                    Yes, Delete
                 </button>
             </div>
-
-            <div class="mt-4 text-center">
-                <div class="text-4xl font-black tracking-tight" id="viewPromoDiscountLarge">20% OFF</div>
-                <div class="text-sm font-semibold text-indigo-100 mt-1" id="viewPromoTitle">Washer Wednesday Special</div>
-            </div>
-
-            <!-- Coupon Code Badge -->
-            <div class="mt-5 bg-white/10 border border-white/20 backdrop-blur-sm rounded-xl p-3 flex items-center justify-between">
-                <div>
-                    <span class="text-[10px] text-indigo-200 block uppercase font-medium">Coupon Code:</span>
-                    <span class="font-mono text-lg font-black tracking-wider text-white" id="viewPromoCode">WASHER20</span>
-                </div>
-                <button type="button" onclick="copyCurrentViewingPromoCode()" class="bg-white text-indigo-700 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs transition flex items-center space-x-1 cursor-pointer">
-                    <i class="fa-regular fa-copy text-xs"></i>
-                    <span>Copy</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Voucher Details Body -->
-        <div class="p-6 space-y-3.5 text-xs text-gray-700">
-            <div class="flex items-center justify-between py-1 border-b border-gray-100">
-                <span class="text-gray-400 font-medium">Applies To:</span>
-                <span class="font-bold text-gray-900" id="viewPromoApplies">Washers Only</span>
-            </div>
-            <div class="flex items-center justify-between py-1 border-b border-gray-100">
-                <span class="text-gray-400 font-medium">Minimum Spend:</span>
-                <span class="font-bold text-gray-900" id="viewPromoMinSpend">$10.00</span>
-            </div>
-            <div class="flex items-center justify-between py-1 border-b border-gray-100">
-                <span class="text-gray-400 font-medium">Validity Period:</span>
-                <span class="font-medium text-gray-800" id="viewPromoDates">01 Sep 2026 - 31 Dec 2026</span>
-            </div>
-            <div class="flex items-center justify-between py-1 border-b border-gray-100">
-                <span class="text-gray-400 font-medium">Redemptions Used:</span>
-                <span class="font-bold text-emerald-600" id="viewPromoRedemptions">58 / 100 used</span>
-            </div>
-            <div class="pt-1">
-                <span class="text-gray-400 font-medium block">Terms &amp; Notes:</span>
-                <p class="text-gray-600 mt-1 leading-relaxed bg-gray-50 p-2.5 rounded-lg border border-gray-100" id="viewPromoTerms">
-                    Applicable on all front-load washing machines. Cannot be combined with other commercial clearance deals.
-                </p>
-            </div>
-        </div>
-
-        <div class="p-4 bg-gray-50 border-t border-gray-100 text-center">
-            <button onclick="closeViewPromotionModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-xs transition cursor-pointer">
-                OK, Done
-            </button>
-        </div>
+        </form>
     </div>
 </div>
 
-<!-- ============================================== -->
-<!-- PROMOTION MODAL 4: DELETE CONFIRMATION -->
-<!-- ============================================== -->
-<div id="deletePromotionModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-gray-100 transform transition-all animate-in fade-in zoom-in duration-150">
-        <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 text-2xl">
-            <i class="fa-solid fa-trash-can"></i>
-        </div>
-        <h3 class="text-lg font-bold text-gray-900 tracking-tight">Deactivate Promotion</h3>
-        <p class="text-xs text-gray-500 mt-2 font-medium">
-            Are you sure you want to deactivate promotion code <span id="deletePromoCodeDisplay" class="font-bold text-rose-600 font-mono">WASHER20</span>? Customers won't be able to apply it.
-        </p>
-
-        <div class="mt-6 flex items-center space-x-3">
-            <button type="button" onclick="closeDeletePromotionModal()" class="flex-1 py-2.5 px-4 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer">
-                Cancel
-            </button>
-            <button type="button" onclick="confirmDeletePromotionAction()" class="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer">
-                OK, Delete
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================== -->
-<!-- PROMOTION MODAL 5: DISCOUNT APPLIED CELEBRATION -->
-<!-- ============================================== -->
-<div id="discountAppliedModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-gray-100 transform transition-all animate-in fade-in zoom-in duration-150">
-        <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-2xl">
-            <i class="fa-solid fa-check"></i>
-        </div>
-        <h3 class="text-lg font-bold text-gray-900 tracking-tight">Discount Applied!</h3>
-        <p class="text-xs text-gray-500 mt-1" id="appliedPromoMsg">Promo code applied successfully to machine order.</p>
-
-        <div class="my-4 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl text-left space-y-1.5 text-xs">
-            <div class="flex justify-between">
-                <span class="text-gray-500">Promo Code:</span>
-                <span class="font-mono font-bold text-indigo-700" id="appliedModalCode">WASHER20</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-500">Savings Granted:</span>
-                <span class="font-bold text-emerald-700" id="appliedModalDiscount">-$1.60</span>
-            </div>
-            <div class="flex justify-between border-t border-emerald-200 pt-1.5 font-bold">
-                <span class="text-gray-800">Final Total:</span>
-                <span class="text-base text-gray-900" id="appliedModalTotal">$6.40</span>
-            </div>
-        </div>
-
-        <button onclick="closeDiscountAppliedModal()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-xs transition cursor-pointer">
-            OK
-        </button>
-    </div>
-</div>
-
-<?php $__env->startPush('scripts'); ?>
-<script id="all-machines-data" type="application/json"><?php echo json_encode($allMachines ?? [], 15, 512) ?></script>
-<script id="all-promotions-data" type="application/json"><?php echo json_encode($promotions ?? [], 15, 512) ?></script>
+<!-- JAVASCRIPT LOGIC -->
 <script>
-    // Master In-Memory Dataset of all 24 machines from Controller
-    const allMachinesMaster = JSON.parse(document.getElementById('all-machines-data').textContent || '[]');
-    let filteredMachines = [...allMachinesMaster];
+    let currentViewingMachine = null;
 
-    // HTML escape utility
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+    /**
+     * Resolves the exact machine endpoint relative to current browser URL.
+     * Works seamlessly on localhost, XAMPP subdirectories, and artisan serve.
+     */
+    function getAppEndpoint(subpath = '') {
+        const cleanPath = window.location.pathname.replace(/\/+$/, '');
+        let base = cleanPath;
+        const match = cleanPath.match(/^(.*?\/(?:machine|machines))(?:\/.*)?$/);
+        if (match) {
+            base = match[1];
+        }
+        if (subpath) {
+            return (base + '/' + subpath).replace(/\/+/g, '/');
+        }
+        return base;
     }
 
-    // Lookup machine by ID for modals
-    function viewMachineById(id) {
-        const m = allMachinesMaster.find(item => item.id == id);
-        if (m) viewMachineDetails(m);
+    // Extract machine data safely from table row
+    function getMachineFromElement(el) {
+        const row = el.closest('.machine-row');
+        if (!row) return null;
+        let history = [];
+        try {
+            history = JSON.parse(row.getAttribute('data-history') || '[]');
+        } catch(e) {
+            history = [];
+        }
+        return {
+            id: row.getAttribute('data-id') || '',
+            machine_id: row.getAttribute('data-machine-id') || '',
+            name: row.getAttribute('data-raw-name') || '',
+            type: row.getAttribute('data-type') || 'Front Load',
+            capacity: row.getAttribute('data-capacity') || '-',
+            model: row.getAttribute('data-model') || '',
+            location: row.getAttribute('data-location') || 'Laundry Room 1',
+            status: row.getAttribute('data-status') || 'Available',
+            last_maintenance: row.getAttribute('data-last-maint') || '2025-09-10',
+            next_maintenance: row.getAttribute('data-next-maint') || '2025-10-10',
+            notes: row.getAttribute('data-notes') || '',
+            maintenance_history: history
+        };
     }
 
-    function openEditMachineById(id) {
-        const m = allMachinesMaster.find(item => item.id == id);
-        if (m) openEditMachineModal(m);
+    // 1. View Machine Details Modal
+    function handleViewMachineClick(btn) {
+        const machine = getMachineFromElement(btn);
+        if (!machine) return;
+        openViewMachineModal(machine);
     }
 
-    // State Variables
-    let currentSearchTerm = "<?php echo e(request('search', '')); ?>";
-    let selectedType = "<?php echo e(request('type', 'all')); ?>";
-    let selectedStatus = "<?php echo e(request('status', 'all')); ?>";
-    let selectedLocation = "<?php echo e(request('location', 'all')); ?>";
-    let currentPage = <?php echo e($currentPage ?? 1); ?>;
-    const perPage = 5;
+    function openViewMachineModal(machine) {
+        currentViewingMachine = machine;
 
-    // Initialize UI on page load
-    document.addEventListener("DOMContentLoaded", function() {
-        renderFilteredPage();
-    });
+        // Hero info
+        document.getElementById('viewHeroMachineId').innerText = machine.machine_id;
+        document.getElementById('viewHeroSubName').innerText = `${machine.name} (${machine.type})`;
+        document.getElementById('viewHeroCapacity').innerText = `Capacity: ${machine.capacity} Kg`;
 
-    // 1. SEARCH FUNCTIONALITY
-    function handleSearch(term) {
-        currentSearchTerm = term.trim().toLowerCase();
-        currentPage = 1;
-        applyFilters();
-    }
+        // Hero badge
+        const heroBadge = document.getElementById('viewHeroStatusBadge');
+        heroBadge.innerText = machine.status;
+        heroBadge.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-bold ' + getStatusClasses(machine.status);
 
-    // 2. TOGGLE STATUS FILTER BUTTON
-    function toggleStatusFilter(status, btnElement) {
-        if (selectedStatus === status) {
-            selectedStatus = 'all';
+        // Information Grid
+        document.getElementById('viewInfoMachineId').innerText = machine.machine_id;
+        document.getElementById('viewInfoName').innerText = machine.name;
+        document.getElementById('viewInfoType').innerText = machine.type;
+        document.getElementById('viewInfoCapacity').innerText = `${machine.capacity} Kg`;
+        document.getElementById('viewInfoModel').innerText = machine.model || 'Standard Model';
+        document.getElementById('viewInfoLocation').innerText = machine.location || 'Laundry Room 1';
+
+        // Status Card
+        const statusBadgeLarge = document.getElementById('viewStatusBadgeLarge');
+        statusBadgeLarge.innerText = machine.status;
+        statusBadgeLarge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold ' + getStatusClasses(machine.status);
+
+        const statusDot = document.getElementById('viewStatusDot');
+        const statusDesc = document.getElementById('viewStatusDescription');
+        if (machine.status === 'In Use') {
+            statusDot.className = 'w-2.5 h-2.5 rounded-full inline-block bg-amber-500';
+            statusDesc.innerText = 'Currently running';
+        } else if (machine.status === 'Available') {
+            statusDot.className = 'w-2.5 h-2.5 rounded-full inline-block bg-emerald-500';
+            statusDesc.innerText = 'Ready to use';
         } else {
-            selectedStatus = status;
+            statusDot.className = 'w-2.5 h-2.5 rounded-full inline-block bg-rose-500';
+            statusDesc.innerText = 'Needs service';
         }
 
-        // Update UI buttons
-        document.querySelectorAll('.status-option-btn').forEach(btn => {
-            const check = btn.querySelector('.status-check');
-            if (btn.getAttribute('data-status') === selectedStatus) {
-                btn.classList.add('font-bold', 'text-indigo-600');
-                btn.classList.remove('font-normal', 'text-gray-700');
-                if (check) check.classList.remove('hidden');
-            } else {
-                btn.classList.remove('font-bold', 'text-indigo-600');
-                btn.classList.add('font-normal', 'text-gray-700');
-                if (check) check.classList.add('hidden');
-            }
-        });
+        // Maintenance Schedule Card
+        document.getElementById('viewMaintLastDate').innerText = machine.last_maintenance || '-';
+        document.getElementById('viewMaintNextDate').innerText = machine.next_maintenance || '-';
 
-        currentPage = 1;
-        applyFilters();
-    }
+        // Maintenance History Table
+        renderHistoryRows(machine.maintenance_history || []);
 
-    // 3. APPLY FILTERS (Type, Status, Location, Search)
-    function applyFilters() {
-        const typeSelect = document.getElementById('filterTypeSelect');
-        if (typeSelect) selectedType = typeSelect.value;
+        // Hook Edit & Delete Buttons inside view modal
+        document.getElementById('modalEditBtn').onclick = function() {
+            closeViewMachineModal();
+            openEditMachineModal(machine);
+        };
+        document.getElementById('modalDeleteBtn').onclick = function() {
+            closeViewMachineModal();
+            confirmDeleteMachine(machine.id, `${machine.machine_id} - ${machine.name}`);
+        };
 
-        const locSelect = document.getElementById('filterLocationSelect');
-        if (locSelect) selectedLocation = locSelect.value;
-
-        filteredMachines = allMachinesMaster.filter(m => {
-            // Type Match
-            const matchesType = (selectedType === 'all' || m.type.toLowerCase() === selectedType.toLowerCase());
-
-            // Status Match
-            const matchesStatus = (selectedStatus === 'all' || m.status.toLowerCase() === selectedStatus.toLowerCase());
-
-            // Location Match
-            const matchesLocation = (selectedLocation === 'all' || m.location.toLowerCase().includes(selectedLocation.toLowerCase()));
-
-            // Search Match (Serial, Model, Type, Location, Installation Date)
-            let matchesSearch = true;
-            if (currentSearchTerm) {
-                const combined = (m.serial_id + ' ' + m.model + ' ' + m.type + ' ' + m.location + ' ' + m.installation_date).toLowerCase();
-                matchesSearch = combined.includes(currentSearchTerm);
-            }
-
-            return matchesType && matchesStatus && matchesLocation && matchesSearch;
-        });
-
-        currentPage = 1;
-        renderFilteredPage();
-    }
-
-    // 4. RESET ALL FILTERS
-    function resetAllFilters() {
-        currentSearchTerm = '';
-        selectedType = 'all';
-        selectedStatus = 'all';
-        selectedLocation = 'all';
-        currentPage = 1;
-
-        const searchInput = document.getElementById('machineSearchInput');
-        if (searchInput) searchInput.value = '';
-
-        const typeSelect = document.getElementById('filterTypeSelect');
-        if (typeSelect) typeSelect.value = 'all';
-
-        const locSelect = document.getElementById('filterLocationSelect');
-        if (locSelect) locSelect.value = 'all';
-
-        document.querySelectorAll('.status-option-btn').forEach(btn => {
-            btn.classList.remove('font-bold', 'text-indigo-600');
-            btn.classList.add('font-normal', 'text-gray-700');
-            const check = btn.querySelector('.status-check');
-            if (check) check.classList.add('hidden');
-        });
-
-        filteredMachines = [...allMachinesMaster];
-        renderFilteredPage();
-        showToast("Filters Cleared", "Displaying all machine inventory records.", "info");
-    }
-
-    // 5. RENDER FILTERED CARDS & PAGINATION
-    function renderFilteredPage() {
-        const total = filteredMachines.length;
-        const totalPages = Math.max(1, Math.ceil(total / perPage));
-        if (currentPage > totalPages) currentPage = totalPages;
-
-        const startIndex = (currentPage - 1) * perPage;
-        const endIndex = Math.min(startIndex + perPage, total);
-        const pagedItems = filteredMachines.slice(startIndex, endIndex);
-
-        const container = document.getElementById('machineCardsContainer');
-        container.innerHTML = '';
-
-        if (pagedItems.length === 0) {
-            container.innerHTML = `
-                <div class="text-center py-12 text-gray-500 text-sm bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                    <i class="fa-solid fa-box-open text-2xl text-gray-400 mb-2 block"></i>
-                    No machine units match your filter criteria.
-                </div>
-            `;
-        } else {
-            pagedItems.forEach(m => {
-                let badgeClass = 'bg-gray-100 text-gray-700';
-                if (m.status === 'Running') badgeClass = 'bg-emerald-100 text-emerald-800 border border-emerald-200';
-                else if (m.status === 'Idle') badgeClass = 'bg-blue-100 text-blue-800 border border-blue-200';
-                else if (m.status === 'Alert') badgeClass = 'bg-amber-100 text-amber-800 border border-amber-200';
-                else if (m.status === 'Repairing') badgeClass = 'bg-rose-100 text-rose-800 border border-rose-200';
-
-                // Display multiline formatted model
-                const modelFormatted = (m.full_model || m.model).replace(/\n/g, '<br>');
-                const safeJson = JSON.stringify(m).replace(/"/g, '&quot;');
-
-                const cardHtml = `
-                    <div class="machine-row-card bg-white rounded-xl border border-gray-300 p-4 transition hover:border-gray-400 shadow-2xs" id="machine-card-${m.id}">
-                        <div class="grid grid-cols-12 items-center gap-2">
-                            <div class="col-span-3">
-                                <span class="font-bold text-base text-gray-900">${escapeHtml(m.serial_id)}</span>
-                            </div>
-                            <div class="col-span-3">
-                                <div class="text-sm font-medium text-gray-800 leading-snug">
-                                    ${modelFormatted}
-                                </div>
-                            </div>
-                            <div class="col-span-3">
-                                <span class="text-sm text-gray-700 font-normal">${escapeHtml(m.installation_date)}</span>
-                            </div>
-                            <div class="col-span-2">
-                                <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeClass}">
-                                    ${escapeHtml(m.status)}
-                                </span>
-                            </div>
-                            <div class="col-span-1 flex flex-col items-center justify-center space-y-2">
-                                <button onclick="viewMachineById(${m.id})" class="text-gray-700 hover:text-blue-600 transition p-0.5 cursor-pointer" title="View Machine Telemetry">
-                                    <i class="fa-regular fa-eye text-sm"></i>
-                                </button>
-                                <button onclick="openEditMachineById(${m.id})" class="text-gray-700 hover:text-amber-600 transition p-0.5 cursor-pointer" title="Edit Machine">
-                                    <i class="fa-regular fa-pen-to-square text-sm"></i>
-                                </button>
-                                <button onclick="confirmDeleteMachine(${m.id}, '${escapeHtml(m.serial_id)}')" class="text-gray-700 hover:text-red-600 transition p-0.5 cursor-pointer" title="Decommission Machine">
-                                    <i class="fa-regular fa-trash-can text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', cardHtml);
-            });
-        }
-
-        // Update Pagination Info
-        document.getElementById('info-from').innerText = total > 0 ? (startIndex + 1) : 0;
-        document.getElementById('info-to').innerText = endIndex;
-        document.getElementById('info-total').innerText = total;
-
-        // Update Previous / Next Buttons
-        const btnPrev = document.getElementById('btnPrevPage');
-        const btnNext = document.getElementById('btnNextPage');
-        if (btnPrev) btnPrev.disabled = (currentPage <= 1);
-        if (btnNext) btnNext.disabled = (currentPage >= totalPages);
-
-        // Update 1..5 page buttons
-        for (let i = 1; i <= 5; i++) {
-            const btn = document.getElementById(`pageBtn-${i}`);
-            if (btn) {
-                if (i > totalPages) {
-                    btn.classList.add('hidden');
-                } else {
-                    btn.classList.remove('hidden');
-                    if (i === currentPage) {
-                        btn.className = "page-num-btn w-8 h-8 rounded-lg text-xs font-bold transition cursor-pointer bg-[#5B46F6] text-white shadow-xs";
-                    } else {
-                        btn.className = "page-num-btn w-8 h-8 rounded-lg text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition cursor-pointer";
-                    }
-                }
-            }
-        }
-    }
-
-    // 6. PAGE NAVIGATION
-    function changePage(page) {
-        const totalPages = Math.max(1, Math.ceil(filteredMachines.length / perPage));
-        if (page === 'prev') {
-            if (currentPage > 1) currentPage--;
-        } else if (page === 'next') {
-            if (currentPage < totalPages) currentPage++;
-        } else {
-            currentPage = Math.min(Math.max(1, parseInt(page)), totalPages);
-        }
-        renderFilteredPage();
-    }
-
-    // 7. VIEW MACHINE TELEMETRY MODAL
-    function viewMachineDetails(m) {
-        document.getElementById('view_serial').innerText = m.serial_id;
-        document.getElementById('view_model').innerText = m.model;
-        document.getElementById('view_type').innerText = m.type;
-        document.getElementById('view_location').innerText = m.location;
-        document.getElementById('view_installation').innerText = m.installation_date;
-        document.getElementById('view_health').innerText = m.motor_health || '98%';
-        document.getElementById('view_temp').innerText = m.temperature || '55°C';
-        document.getElementById('view_today_cycles').innerText = m.cycles_today || 6;
-        document.getElementById('view_total_cycles').innerText = (m.total_cycles || 1200).toLocaleString();
-        document.getElementById('view_serviced').innerText = m.last_serviced || '10 Aug 2026';
-
-        const statusEl = document.getElementById('view_status');
-        statusEl.innerText = m.status;
-        if (m.status === 'Running') {
-            statusEl.className = "inline-flex items-center font-bold mt-1 text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md";
-        } else if (m.status === 'Idle') {
-            statusEl.className = "inline-flex items-center font-bold mt-1 text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md";
-        } else if (m.status === 'Alert') {
-            statusEl.className = "inline-flex items-center font-bold mt-1 text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md";
-        } else {
-            statusEl.className = "inline-flex items-center font-bold mt-1 text-rose-700 bg-rose-100 px-2 py-0.5 rounded-md";
-        }
+        // Hide inline log form if open
+        const form = document.getElementById('addMaintLogForm');
+        if (form) form.classList.add('hidden');
 
         document.getElementById('viewMachineModal').classList.remove('hidden');
     }
+
     function closeViewMachineModal() {
         document.getElementById('viewMachineModal').classList.add('hidden');
     }
 
-    // 8. ADD NEW MACHINE MODAL & ACTION
+    function getStatusClasses(status) {
+        switch(status) {
+            case 'Available':
+                return 'bg-[#DCFCE7] text-[#16A34A]';
+            case 'In Use':
+                return 'bg-[#FEF3C7] text-[#D97706]';
+            case 'Under Maintenance':
+                return 'bg-[#FEE2E2] text-[#DC2626]';
+            default:
+                return 'bg-gray-100 text-gray-700';
+        }
+    }
+
+    function renderHistoryRows(history) {
+        const tbody = document.getElementById('viewMaintenanceHistoryBody');
+        tbody.innerHTML = '';
+
+        if (!history || history.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="py-3 text-center text-gray-400">No maintenance records logged yet.</td></tr>';
+            return;
+        }
+
+        history.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50/50 transition';
+            tr.innerHTML = `
+                <td class="py-2.5 font-medium text-gray-600 whitespace-nowrap">${item.date || '-'}</td>
+                <td class="py-2.5 font-bold text-[#2563EB] whitespace-nowrap">${item.type || 'Routine Check'}</td>
+                <td class="py-2.5 text-gray-700">${item.note || 'Normal'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openAddLogForm() {
+        const form = document.getElementById('addMaintLogForm');
+        if (form) {
+            form.classList.toggle('hidden');
+        }
+    }
+
+    function submitQuickLog() {
+        if (!currentViewingMachine) return;
+        const date = document.getElementById('newLogDate').value;
+        const type = document.getElementById('newLogType').value;
+        const note = document.getElementById('newLogNote').value;
+
+        if (!note.trim()) {
+            alert('Please enter a note for the maintenance log.');
+            return;
+        }
+
+        const endpoint = getAppEndpoint(currentViewingMachine.id);
+        const token = document.querySelector('input[name="_token"]')?.value || '';
+
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                log_date: date,
+                log_type: type,
+                log_note: note
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            window.location.reload();
+        })
+        .catch(err => {
+            window.location.reload();
+        });
+    }
+
+    // 2. Add Machine Modal
     function openAddMachineModal() {
+        const form = document.getElementById('addMachineForm');
+        if (form) {
+            form.action = getAppEndpoint();
+        }
         document.getElementById('addMachineModal').classList.remove('hidden');
     }
     function closeAddMachineModal() {
         document.getElementById('addMachineModal').classList.add('hidden');
     }
 
-    function submitAddMachine(e) {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData(form);
-
-        const newMachine = {
-            id: allMachinesMaster.length + 1,
-            serial_id: formData.get('serial_id'),
-            model: formData.get('model'),
-            type: formData.get('type'),
-            full_model: `${formData.get('model')}\n(${formData.get('type')})`,
-            installation_date: formData.get('installation_date'),
-            status: formData.get('status'),
-            location: formData.get('location'),
-            cycles_today: 0,
-            total_cycles: 0,
-            temperature: 'Ambient',
-            motor_health: '100%',
-            last_serviced: 'New Installation'
-        };
-
-        allMachinesMaster.unshift(newMachine);
-        closeAddMachineModal();
-        form.reset();
-        applyFilters();
-        showToast("Machine Registered", `Unit ${newMachine.serial_id} added successfully!`, "success");
-
-        // Background POST to backend route
-        fetch("<?php echo e(route('machines.store')); ?>", {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        }).catch(err => console.log('Saved to active session:', err));
+    // 3. Edit Machine Modal
+    function handleEditMachineClick(btn) {
+        const machine = getMachineFromElement(btn);
+        if (!machine) return;
+        openEditMachineModal(machine);
     }
 
-    // 9. EDIT MACHINE MODAL & ACTION
-    function openEditMachineModal(m) {
-        document.getElementById('edit_id').value = m.id;
-        document.getElementById('edit_serial').value = m.serial_id;
-        document.getElementById('edit_model').value = m.model;
-        document.getElementById('edit_type').value = m.type;
-        document.getElementById('edit_status').value = m.status;
-        document.getElementById('edit_location').value = m.location;
+    function openEditMachineModal(machine) {
+        document.getElementById('editMachineId').value = machine.machine_id;
+        document.getElementById('editMachineName').value = machine.name;
+        document.getElementById('editMachineType').value = machine.type;
+        document.getElementById('editMachineCapacity').value = machine.capacity;
+        document.getElementById('editMachineModel').value = machine.model || '';
+        document.getElementById('editMachineLocation').value = machine.location || 'Laundry Room 1';
+        document.getElementById('editMachineStatus').value = machine.status;
+        document.getElementById('editLastMaintenance').value = machine.last_maintenance;
+        document.getElementById('editNextMaintenance').value = machine.next_maintenance;
+        document.getElementById('editMachineNotes').value = machine.notes || '';
 
+        const editForm = document.getElementById('editMachineForm');
+        if (editForm) {
+            editForm.action = getAppEndpoint(machine.id);
+        }
         document.getElementById('editMachineModal').classList.remove('hidden');
     }
     function closeEditMachineModal() {
         document.getElementById('editMachineModal').classList.add('hidden');
     }
 
-    function submitEditMachine(e) {
-        e.preventDefault();
-        const id = parseInt(document.getElementById('edit_id').value);
-        const serial = document.getElementById('edit_serial').value;
-        const model = document.getElementById('edit_model').value;
-        const type = document.getElementById('edit_type').value;
-        const status = document.getElementById('edit_status').value;
-        const location = document.getElementById('edit_location').value;
+    // 4. Delete Machine Modal
+    function handleDeleteMachineClick(btn) {
+        const id = btn.getAttribute('data-id');
+        const mid = btn.getAttribute('data-machine-id');
+        const name = btn.getAttribute('data-name');
+        confirmDeleteMachine(id, `${mid} - ${name}`);
+    }
 
-        const idx = allMachinesMaster.findIndex(m => m.id === id);
-        if (idx !== -1) {
-            allMachinesMaster[idx].serial_id = serial;
-            allMachinesMaster[idx].model = model;
-            allMachinesMaster[idx].type = type;
-            allMachinesMaster[idx].full_model = `${model}\n(${type})`;
-            allMachinesMaster[idx].status = status;
-            allMachinesMaster[idx].location = location;
+    function confirmDeleteMachine(id, name) {
+        document.getElementById('deleteMachineNameSpan').innerText = name;
+        const deleteForm = document.getElementById('deleteMachineForm');
+        if (deleteForm) {
+            deleteForm.action = getAppEndpoint(id);
         }
+        document.getElementById('deleteMachineModal').classList.remove('hidden');
+    }
+    function closeDeleteMachineModal() {
+        document.getElementById('deleteMachineModal').classList.add('hidden');
+    }
 
-        closeEditMachineModal();
-        renderFilteredPage();
-        showToast("Machine Updated", `Unit ${serial} has been successfully updated.`, "success");
+    // 5. Instant Filtering & Search
+    function filterMachinesTable() {
+        const searchVal = (document.getElementById('machineSearchInput').value || '').trim().toLowerCase();
+        const statusVal = document.getElementById('statusFilterSelect').value;
+        const typeVal = document.getElementById('typeFilterSelect').value;
 
-        // Background PUT to backend route
-        const data = new URLSearchParams();
-        data.append('_token', '<?php echo e(csrf_token()); ?>');
-        data.append('_method', 'PUT');
-        data.append('serial_id', serial);
-        data.append('model', model);
-        data.append('type', type);
-        data.append('status', status);
-        data.append('location', location);
+        const rows = document.querySelectorAll('.machine-row');
+        let visibleCount = 0;
 
-        fetch(`/machines/${id}`, {
-            method: 'POST',
-            body: data,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+        rows.forEach(row => {
+            const name = row.getAttribute('data-name') || '';
+            const mid = (row.getAttribute('data-machine-id') || '').toLowerCase();
+            const model = (row.getAttribute('data-model') || '').toLowerCase();
+            const type = (row.getAttribute('data-type') || '').toLowerCase();
+            const status = row.getAttribute('data-status') || '';
+
+            const matchesSearch = !searchVal || 
+                name.includes(searchVal) || 
+                mid.includes(searchVal) || 
+                model.includes(searchVal) || 
+                type.includes(searchVal);
+
+            const matchesStatus = (statusVal === 'All Status' || !statusVal) || (status === statusVal);
+            const matchesType = (typeVal === 'All Types' || !typeVal) || (type === typeVal.toLowerCase());
+
+            if (matchesSearch && matchesStatus && matchesType) {
+                row.style.display = '';
+                visibleCount++;
+                const indexCell = row.querySelector('.machine-index-num');
+                if (indexCell) {
+                    indexCell.innerText = `${visibleCount}.`;
+                }
+            } else {
+                row.style.display = 'none';
             }
-        }).catch(err => console.log('Updated in active session:', err));
-    }
-
-    // 10. DELETE / DECOMMISSION MACHINE
-    function confirmDeleteMachine(id, serial) {
-        if (confirm(`Are you sure you want to decommission and remove unit ${serial}?`)) {
-            const idx = allMachinesMaster.findIndex(m => m.id === id);
-            if (idx !== -1) {
-                allMachinesMaster.splice(idx, 1);
-            }
-            applyFilters();
-            showToast("Unit Decommissioned", `Unit ${serial} archived from active inventory.`, "warning");
-
-            // Background DELETE to backend route
-            fetch(`/machines/${id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ _method: 'DELETE' })
-            }).catch(err => console.log('Decommissioned:', err));
-        }
-    }
-
-    // 11. ADVANCED FILTERS MODAL
-    function openAdvancedFiltersModal() {
-        document.getElementById('advancedFiltersModal').classList.remove('hidden');
-    }
-    function closeAdvancedFiltersModal() {
-        document.getElementById('advancedFiltersModal').classList.add('hidden');
-    }
-
-    function applyAdvancedFilters(e) {
-        e.preventDefault();
-        const healthFilter = document.getElementById('adv_health').value;
-        const cyclesFilter = document.getElementById('adv_cycles').value;
-        const sortFilter = document.getElementById('adv_sort').value;
-
-        // Apply health filter
-        filteredMachines = allMachinesMaster.filter(m => {
-            const healthNum = parseInt(m.motor_health) || 90;
-            if (healthFilter === 'optimal' && healthNum <= 95) return false;
-            if (healthFilter === 'good' && (healthNum < 85 || healthNum > 95)) return false;
-            if (healthFilter === 'warning' && healthNum >= 85) return false;
-
-            const cyclesNum = m.total_cycles || 1000;
-            if (cyclesFilter === 'low' && cyclesNum >= 500) return false;
-            if (cyclesFilter === 'mid' && (cyclesNum < 500 || cyclesNum > 1500)) return false;
-            if (cyclesFilter === 'high' && cyclesNum <= 1500) return false;
-
-            return true;
         });
 
-        // Apply sort
-        if (sortFilter === 'id_asc') {
-            filteredMachines.sort((a, b) => a.serial_id.localeCompare(b.serial_id));
-        } else if (sortFilter === 'id_desc') {
-            filteredMachines.sort((a, b) => b.serial_id.localeCompare(a.serial_id));
-        } else if (sortFilter === 'cycles_desc') {
-            filteredMachines.sort((a, b) => (b.total_cycles || 0) - (a.total_cycles || 0));
-        } else if (sortFilter === 'health_asc') {
-            filteredMachines.sort((a, b) => (parseInt(a.motor_health) || 100) - (parseInt(b.motor_health) || 100));
+        // Toggle Empty state
+        const noResults = document.getElementById('noResultsRow');
+        if (noResults) {
+            noResults.style.display = (visibleCount === 0) ? '' : 'none';
         }
 
-        closeAdvancedFiltersModal();
-        currentPage = 1;
-        renderFilteredPage();
-        showToast("Advanced Filters Applied", `Found ${filteredMachines.length} units matching specifications.`, "info");
-    }
-
-    // 12. TOAST NOTIFICATION UTILITY
-    let toastTimeout;
-    function showToast(title, message, type = "success") {
-        const toast = document.getElementById('machineToast');
-        const titleEl = document.getElementById('toastTitle');
-        const msgEl = document.getElementById('toastMessage');
-        const iconEl = document.getElementById('toastIcon');
-
-        titleEl.innerText = title;
-        msgEl.innerText = message;
-
-        if (type === "success") {
-            iconEl.className = "w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0";
-            iconEl.innerHTML = '<i class="fa-solid fa-check text-sm"></i>';
-        } else if (type === "warning") {
-            iconEl.className = "w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center flex-shrink-0";
-            iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-sm"></i>';
-        } else {
-            iconEl.className = "w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0";
-            iconEl.innerHTML = '<i class="fa-solid fa-circle-info text-sm"></i>';
+        // Update Info text & badge
+        const infoText = document.getElementById('tableInfoText');
+        if (infoText) {
+            infoText.innerText = visibleCount > 0 
+                ? `Showing 1 - ${visibleCount} of ${visibleCount} machines`
+                : `Showing 0 machines`;
         }
-
-        toast.classList.remove('hidden');
-        clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(hideToast, 4000);
-    }
-
-    function hideToast() {
-        document.getElementById('machineToast').classList.add('hidden');
-    }
-
-    // 13. EXPORT REPORT DROPDOWN TOGGLE
-    function toggleExportMenu(e) {
-        e.stopPropagation();
-        const menu = document.getElementById('exportDropdownMenu');
-        const chevron = document.getElementById('exportChevronIcon');
-        if (!menu) return;
-        
-        const isHidden = menu.classList.contains('hidden');
-        if (isHidden) {
-            menu.classList.remove('hidden');
-            if (chevron) chevron.classList.add('rotate-180');
-        } else {
-            menu.classList.add('hidden');
-            if (chevron) chevron.classList.remove('rotate-180');
+        const badge = document.getElementById('badgeMachineCount');
+        if (badge) {
+            badge.innerText = `${visibleCount} machines`;
         }
     }
 
-    function closeExportMenu() {
-        const menu = document.getElementById('exportDropdownMenu');
-        const chevron = document.getElementById('exportChevronIcon');
-        if (menu) menu.classList.add('hidden');
-        if (chevron) chevron.classList.remove('rotate-180');
+    function resetFilterToolbar() {
+        document.getElementById('machineSearchInput').value = '';
+        document.getElementById('statusFilterSelect').value = 'All Status';
+        document.getElementById('typeFilterSelect').value = 'All Types';
+        filterMachinesTable();
     }
 
-    // Close export dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        const wrapper = document.getElementById('exportReportDropdownWrapper');
-        if (wrapper && !wrapper.contains(e.target)) {
-            closeExportMenu();
+    // 6. Form submissions with AJAX & Native Fail-Safe
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Form
+        const addForm = document.getElementById('addMachineForm');
+        if (addForm) {
+            addForm.action = getAppEndpoint();
+            addForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Registering...</span>';
+                }
+                const formData = new FormData(this);
+                fetch(getAppEndpoint(), {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    closeAddMachineModal();
+                    window.location.reload();
+                })
+                .catch(err => {
+                    addForm.submit();
+                });
+            });
+        }
+
+        // Edit Form
+        const editForm = document.getElementById('editMachineForm');
+        if (editForm) {
+            editForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Saving...</span>';
+                }
+                const formData = new FormData(this);
+                const targetAction = this.action || getAppEndpoint();
+                fetch(targetAction, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    closeEditMachineModal();
+                    window.location.reload();
+                })
+                .catch(err => {
+                    editForm.submit();
+                });
+            });
+        }
+
+        // Delete Form
+        const deleteForm = document.getElementById('deleteMachineForm');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Deleting...</span>';
+                }
+                const formData = new FormData(this);
+                const targetAction = this.action || getAppEndpoint();
+                fetch(targetAction, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    closeDeleteMachineModal();
+                    window.location.reload();
+                })
+                .catch(err => {
+                    deleteForm.submit();
+                });
+            });
         }
     });
 </script>
-<?php $__env->stopPush(); ?>
-<?php $__env->stopSection(); ?>
-
-<?php echo $__env->make('layouts.navbar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/Laundry_Managerment_System/laundry_system/resources/views/pages/machine.blade.php ENDPATH**/ ?>
+@endsection

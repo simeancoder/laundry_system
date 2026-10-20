@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\CustomerOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class CustomerController extends Controller
@@ -15,197 +16,7 @@ class CustomerController extends Controller
      */
     protected function getBaselineCustomers()
     {
-        return [
-            [
-                'id' => 1,
-                'customer_id' => 'C0001',
-                'name' => 'Sokha Dara',
-                'phone' => '012 345 678',
-                'email' => 'sokha@example.com',
-                'address' => 'Svay Dangkum, SR',
-                'tier' => 'GOLD',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-08-01',
-                'orders' => [
-                    ['id' => 1, 'order_number' => '#ORD-0001', 'service_type' => 'Wash & Fold', 'status' => 'Delivered', 'order_date' => '2025-09-15', 'total_amount' => 12.50],
-                    ['id' => 2, 'order_number' => '#ORD-0002', 'service_type' => 'Wash Only', 'status' => 'Delivered', 'order_date' => '2025-09-10', 'total_amount' => 8.00],
-                    ['id' => 3, 'order_number' => '#ORD-0003', 'service_type' => 'Dry Cleaning', 'status' => 'Ready for Pickup', 'order_date' => '2025-09-05', 'total_amount' => 25.00],
-                    ['id' => 4, 'order_number' => '#ORD-0004', 'service_type' => 'Wash & Fold', 'status' => 'Delivered', 'order_date' => '2025-08-28', 'total_amount' => 15.00],
-                    ['id' => 5, 'order_number' => '#ORD-0005', 'service_type' => 'Ironing', 'status' => 'Completed', 'order_date' => '2025-08-09', 'total_amount' => 6.50],
-                ]
-            ],
-            [
-                'id' => 2,
-                'customer_id' => 'C0002',
-                'name' => 'Chan Sreyneath',
-                'phone' => '011 234 567',
-                'email' => 'sreyneath@example.com',
-                'address' => 'Taphul, SR',
-                'tier' => 'SILVER',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-08-05',
-                'orders' => [
-                    ['id' => 6, 'order_number' => '#ORD-0006', 'service_type' => 'Dry Cleaning', 'status' => 'Delivered', 'order_date' => '2025-09-12', 'total_amount' => 30.00],
-                    ['id' => 7, 'order_number' => '#ORD-0007', 'service_type' => 'Wash & Fold', 'status' => 'Completed', 'order_date' => '2025-09-01', 'total_amount' => 14.00],
-                ]
-            ],
-            [
-                'id' => 3,
-                'customer_id' => 'C0003',
-                'name' => 'Heng Chana',
-                'phone' => '017 890 123',
-                'email' => 'channa@example.com',
-                'address' => 'Sala Kamreuk, SR',
-                'tier' => 'BRONZE',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-08-10',
-                'orders' => [
-                    ['id' => 8, 'order_number' => '#ORD-0008', 'service_type' => 'Wash Only', 'status' => 'Delivered', 'order_date' => '2025-09-11', 'total_amount' => 9.50],
-                    ['id' => 9, 'order_number' => '#ORD-0009', 'service_type' => 'Ironing', 'status' => 'Completed', 'order_date' => '2025-08-20', 'total_amount' => 7.00],
-                ]
-            ],
-            [
-                'id' => 4,
-                'customer_id' => 'C0004',
-                'name' => 'Kim Sovannary',
-                'phone' => '015 678 901',
-                'email' => 'sovannary@example.com',
-                'address' => 'Svay Dangkum, SR',
-                'tier' => 'GOLD',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-08-14',
-                'orders' => [
-                    ['id' => 10, 'order_number' => '#ORD-0010', 'service_type' => 'Wash & Fold', 'status' => 'Ready for Pickup', 'order_date' => '2025-09-18', 'total_amount' => 18.00],
-                    ['id' => 11, 'order_number' => '#ORD-0011', 'service_type' => 'Dry Cleaning', 'status' => 'Delivered', 'order_date' => '2025-09-03', 'total_amount' => 22.00],
-                ]
-            ],
-            [
-                'id' => 5,
-                'customer_id' => 'C0005',
-                'name' => 'Neang Pheaktra',
-                'phone' => '010 555 888',
-                'email' => 'pheaktra@example.com',
-                'address' => 'Kok Chork, SR',
-                'tier' => 'REGULAR',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-08-18',
-                'orders' => [
-                    ['id' => 12, 'order_number' => '#ORD-0012', 'service_type' => 'Wash Only', 'status' => 'Delivered', 'order_date' => '2025-09-14', 'total_amount' => 10.00],
-                ]
-            ],
-            [
-                'id' => 6,
-                'customer_id' => 'C0006',
-                'name' => 'Lim Vannak',
-                'phone' => '016 222 333',
-                'email' => 'vannak@example.com',
-                'address' => 'National Road 6, SR',
-                'tier' => 'SILVER',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-08-22',
-                'orders' => [
-                    ['id' => 13, 'order_number' => '#ORD-0013', 'service_type' => 'Wash & Fold', 'status' => 'Delivered', 'order_date' => '2025-09-16', 'total_amount' => 16.50],
-                    ['id' => 14, 'order_number' => '#ORD-0014', 'service_type' => 'Ironing', 'status' => 'Completed', 'order_date' => '2025-09-02', 'total_amount' => 8.00],
-                ]
-            ],
-            [
-                'id' => 7,
-                'customer_id' => 'C0007',
-                'name' => 'Thon Sreynich',
-                'phone' => '092 777 666',
-                'email' => 'sreynich@example.com',
-                'address' => 'Taphul, SR',
-                'tier' => 'REGULAR',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-08-26',
-                'orders' => [
-                    ['id' => 15, 'order_number' => '#ORD-0015', 'service_type' => 'Dry Cleaning', 'status' => 'Delivered', 'order_date' => '2025-09-09', 'total_amount' => 28.00],
-                ]
-            ],
-            [
-                'id' => 8,
-                'customer_id' => 'C0008',
-                'name' => 'Pich Sothy',
-                'phone' => '012 999 444',
-                'email' => 'sothy@example.com',
-                'address' => 'Sla Kram, SR',
-                'tier' => 'GOLD',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-08-30',
-                'orders' => [
-                    ['id' => 16, 'order_number' => '#ORD-0016', 'service_type' => 'Wash & Fold', 'status' => 'Delivered', 'order_date' => '2025-09-17', 'total_amount' => 20.00],
-                    ['id' => 17, 'order_number' => '#ORD-0017', 'service_type' => 'Dry Cleaning', 'status' => 'Ready for Pickup', 'order_date' => '2025-09-04', 'total_amount' => 35.00],
-                ]
-            ],
-            [
-                'id' => 9,
-                'customer_id' => 'C0009',
-                'name' => 'Chea Ratanak',
-                'phone' => '097 333 222',
-                'email' => 'ratanak@example.com',
-                'address' => 'Bakheng, SR',
-                'tier' => 'BRONZE',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-09-02',
-                'orders' => [
-                    ['id' => 18, 'order_number' => '#ORD-0018', 'service_type' => 'Wash Only', 'status' => 'Delivered', 'order_date' => '2025-09-13', 'total_amount' => 11.00],
-                ]
-            ],
-            [
-                'id' => 10,
-                'customer_id' => 'C0010',
-                'name' => 'Va Sovan',
-                'phone' => '099 666 777',
-                'email' => 'sovan@example.com',
-                'address' => 'Tor Ang, SR',
-                'tier' => 'REGULAR',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-09-05',
-                'orders' => [
-                    ['id' => 19, 'order_number' => '#ORD-0019', 'service_type' => 'Ironing', 'status' => 'Completed', 'order_date' => '2025-09-07', 'total_amount' => 7.50],
-                ]
-            ],
-            [
-                'id' => 11,
-                'customer_id' => 'C0011',
-                'name' => 'Keo Bopha',
-                'phone' => '070 123 456',
-                'email' => 'bopha@example.com',
-                'address' => 'Wat Bo, SR',
-                'tier' => 'SILVER',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-09-08',
-                'orders' => [
-                    ['id' => 20, 'order_number' => '#ORD-0020', 'service_type' => 'Wash & Fold', 'status' => 'Delivered', 'order_date' => '2025-09-10', 'total_amount' => 13.00],
-                ]
-            ],
-            [
-                'id' => 12,
-                'customer_id' => 'C0012',
-                'name' => 'Seng Samnang',
-                'phone' => '088 456 789',
-                'email' => 'samnang@example.com',
-                'address' => 'Kouk Chak, SR',
-                'tier' => 'GOLD',
-                'status' => 'Active',
-                'avatar' => null,
-                'registration_date' => '2025-09-12',
-                'orders' => [
-                    ['id' => 21, 'order_number' => '#ORD-0021', 'service_type' => 'Dry Cleaning', 'status' => 'Delivered', 'order_date' => '2025-09-14', 'total_amount' => 32.00],
-                ]
-            ],
-        ];
+        return [];
     }
 
     /**
@@ -213,10 +24,8 @@ class CustomerController extends Controller
      */
     protected function getSessionCustomers()
     {
-        if (!session()->has('mock_customers')) {
-            session(['mock_customers' => $this->getBaselineCustomers()]);
-        }
-        return session('mock_customers');
+        session()->forget('mock_customers');
+        return [];
     }
 
     /**
@@ -232,7 +41,7 @@ class CustomerController extends Controller
 
         $hasDb = false;
         try {
-            $hasDb = Schema::hasTable('customers') && Customer::count() > 0;
+            $hasDb = Schema::hasTable('customers');
         } catch (\Throwable $e) {
             $hasDb = false;
         }
@@ -347,10 +156,10 @@ class CustomerController extends Controller
         $validated = $request->validate([
             'customer_id' => 'nullable|string|max:50',
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:50',
-            'email' => 'required|email|max:255',
-            'address' => 'required|string|max:500',
-            'tier' => 'nullable|string|in:GOLD,SILVER,BRONZE,REGULAR',
+            'phone' => 'nullable|string|max:50',
+            'email' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'tier' => 'nullable|string',
             'status' => 'nullable|string|in:Active,Inactive',
             'registration_date' => 'nullable|date',
         ]);
@@ -362,7 +171,10 @@ class CustomerController extends Controller
             $hasDb = false;
         }
 
-        $tier = $validated['tier'] ?? 'REGULAR';
+        $tier = strtoupper($validated['tier'] ?? 'REGULAR');
+        if (!in_array($tier, ['GOLD', 'SILVER', 'BRONZE', 'VIP', 'REGULAR'])) {
+            $tier = 'REGULAR';
+        }
         $status = $validated['status'] ?? 'Active';
         $registrationDate = $validated['registration_date'] ?? date('Y-m-d');
 
@@ -398,7 +210,7 @@ class CustomerController extends Controller
                     'registration_date' => $registrationDate,
                 ]);
             } catch (\Throwable $e) {
-                \Log::warning("Customer DB store failed, falling back to session: " . $e->getMessage());
+                Log::warning("Customer DB store failed, falling back to session: " . $e->getMessage());
                 $customer = null;
             }
         }
@@ -445,6 +257,10 @@ class CustomerController extends Controller
 
     /**
      * Display the specified customer details (e.g. for profile drawer or AJAX).
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(Request $request, $id)
     {
@@ -487,18 +303,30 @@ class CustomerController extends Controller
 
     /**
      * Update the specified customer in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:50',
-            'email' => 'required|email|max:255',
-            'address' => 'required|string|max:500',
-            'tier' => 'nullable|string|in:GOLD,SILVER,BRONZE,REGULAR',
+            'name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'email' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'tier' => 'nullable|string',
             'status' => 'nullable|string|in:Active,Inactive',
             'registration_date' => 'nullable|date',
         ]);
+
+        if (isset($validated['tier'])) {
+            $tier = strtoupper($validated['tier']);
+            if (!in_array($tier, ['GOLD', 'SILVER', 'BRONZE', 'VIP', 'REGULAR'])) {
+                $tier = 'REGULAR';
+            }
+            $validated['tier'] = $tier;
+        }
 
         $hasDb = false;
         try {
@@ -517,10 +345,10 @@ class CustomerController extends Controller
                     $customer = Customer::where('customer_id', $id)->first();
                 }
                 if ($customer) {
-                    $customer->update($validated);
+                    $customer->update(array_filter($validated, fn($v) => !is_null($v)));
                 }
             } catch (\Throwable $e) {
-                \Log::warning("Customer DB update failed, continuing with session: " . $e->getMessage());
+                Log::warning("Customer DB update failed, continuing with session: " . $e->getMessage());
             }
         }
 
@@ -530,10 +358,10 @@ class CustomerController extends Controller
 
         foreach ($list as &$item) {
             if ($item['id'] == $id || $item['customer_id'] == $id) {
-                $item['name'] = $validated['name'];
-                $item['phone'] = $validated['phone'];
-                $item['email'] = $validated['email'];
-                $item['address'] = $validated['address'];
+                if (isset($validated['name'])) $item['name'] = $validated['name'];
+                if (isset($validated['phone'])) $item['phone'] = $validated['phone'];
+                if (isset($validated['email'])) $item['email'] = $validated['email'];
+                if (isset($validated['address'])) $item['address'] = $validated['address'];
                 if (isset($validated['tier'])) $item['tier'] = $validated['tier'];
                 if (isset($validated['status'])) $item['status'] = $validated['status'];
                 if (isset($validated['registration_date'])) $item['registration_date'] = $validated['registration_date'];
@@ -560,6 +388,10 @@ class CustomerController extends Controller
 
     /**
      * Remove the specified customer from storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, $id)
     {
@@ -583,7 +415,7 @@ class CustomerController extends Controller
                     $customer->delete();
                 }
             } catch (\Throwable $e) {
-                \Log::warning("Customer DB delete failed: " . $e->getMessage());
+                Log::warning("Customer DB delete failed: " . $e->getMessage());
             }
         }
 
@@ -609,6 +441,10 @@ class CustomerController extends Controller
 
     /**
      * Get order history of a specific customer.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function orders(Request $request, $id)
     {

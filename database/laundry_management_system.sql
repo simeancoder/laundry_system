@@ -421,3 +421,367 @@ ON DUPLICATE KEY UPDATE
 
 
 
+-- ====================================================================
+-- Laundry Management System - Discount & Promotion Database SQL Script
+-- Designed for Navicat / phpMyAdmin / MySQL CLI / MariaDB
+-- Target Database: laundry_management_system
+-- Date: 2026-10-04
+-- ====================================================================
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 1. Create Table Structure for promotions
+CREATE TABLE IF NOT EXISTS `promotions` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Percentage Discount',
+  `discount_value` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `discount_unit` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '%',
+  `start_date` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `end_date` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `coupon_code` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Active','Expired','Inactive') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. Clear old promotion records before inserting the official 6 promotions
+TRUNCATE TABLE `promotions`;
+
+-- 3. Insert Exactly the 6 Baseline Promotions from Screenshot
+-- Total Promotions: 6 | Active: 4 | Expired: 2 | Coupon Codes: 6
+INSERT INTO `promotions` (
+  `id`,
+  `name`,
+  `type`,
+  `discount_value`,
+  `discount_unit`,
+  `start_date`,
+  `end_date`,
+  `coupon_code`,
+  `description`,
+  `status`,
+  `created_at`,
+  `updated_at`
+) VALUES
+(
+  1,
+  'Back to School Special',
+  'Percentage Discount',
+  20.00,
+  '%',
+  '2025-09-01',
+  '2025-09-30',
+  'SCHOOL20',
+  'Special seasonal discount for students and educators on all laundry and washing services.',
+  'Active',
+  NOW(),
+  NOW()
+),
+(
+  2,
+  'New Customer Discount',
+  'Fixed Amount',
+  5.00,
+  '$',
+  '2025-09-01',
+  '2025-12-31',
+  'WELCOME5',
+  'First-time customer welcome bonus applicable on any drop-off laundry or dry cleaning basket.',
+  'Active',
+  NOW(),
+  NOW()
+),
+(
+  3,
+  'Loyalty Program',
+  'Loyalty Discount',
+  10.00,
+  '%',
+  '2025-01-01',
+  '2025-12-31',
+  'LOYALTY10',
+  'Exclusive member reward discount for our returning loyal clients throughout the year.',
+  'Active',
+  NOW(),
+  NOW()
+),
+(
+  4,
+  'Summer Sale',
+  'Percentage Discount',
+  15.00,
+  '%',
+  '2025-07-01',
+  '2025-07-31',
+  'SUMMER15',
+  'Mid-year summer promotion on bulk washing, drying, and ironing services.',
+  'Active',
+  NOW(),
+  NOW()
+),
+(
+  5,
+  'Holiday Promotion',
+  'Fixed Amount',
+  10.00,
+  '$',
+  '2025-12-20',
+  '2025-12-31',
+  'HOLIDAY10',
+  'Festive end of year promotion for blankets, comforters, and holiday apparel.',
+  'Expired',
+  NOW(),
+  NOW()
+),
+(
+  6,
+  'VIP Member Discount',
+  'Percentage Discount',
+  25.00,
+  '%',
+  '2025-08-01',
+  '2025-08-31',
+  'VIP25',
+  'Special anniversary appreciation offer exclusively for VIP cardholders.',
+  'Expired',
+  NOW(),
+  NOW()
+);
+
+SET FOREIGN_KEY_CHECKS = 1;
+-- ====================================================================
+-- Laundry Management System - Notifications Database SQL Script
+-- Designed for Navicat / phpMyAdmin / MySQL CLI / MariaDB
+-- Target Database: laundry_management_system
+-- Date: 2026-10-04
+-- ====================================================================
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 1. Create Table Structure for notifications
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Order Ready',
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Order Ready',
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `target` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'All Customers',
+  `scheduled_date` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('Sent','Pending','Scheduled','Failed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Sent',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. Clear old notification records before inserting the official 32 notifications
+TRUNCATE TABLE `notifications`;
+
+-- 3. Insert Exactly the 32 Baseline Notifications Matching Teacher Screenshot
+INSERT INTO `notifications` (
+  `id`,
+  `type`,
+  `title`,
+  `message`,
+  `target`,
+  `scheduled_date`,
+  `status`,
+  `created_at`,
+  `updated_at`
+) VALUES
+(1, 'Order Ready', 'Order Ready', 'Your order #ORD-0010 is ready for pickup.', 'Sokha Dara', '2025-09-15 10:24 AM', 'Sent', NOW(), NOW()),
+(2, 'Pickup Reminder', 'Pickup Reminder', 'Please pick up your order #ORD-0009 today.', 'Chan Sreyneath', '2025-09-14 09:00 AM', 'Sent', NOW(), NOW()),
+(3, 'Delivery Reminder', 'Delivery Reminder', 'Your order #ORD-0008 is out for delivery.', 'Heng Channa', '2025-09-13 02:30 PM', 'Sent', NOW(), NOW()),
+(4, 'Payment Reminder', 'Payment Reminder', 'Your payment for order #ORD-0007 is pending.', 'Lim Vannak', '2025-09-12 11:00 AM', 'Pending', NOW(), NOW()),
+(5, 'Promotion', 'Promotion', 'Get 20% OFF on dry cleaning service this week!', 'All Customers', '2025-09-12 09:00 AM', 'Sent', NOW(), NOW()),
+(6, 'Order Ready', 'Order Ready', 'Your order #ORD-0006 is ready for pickup.', 'Kim Sovannary', '2025-09-11 03:20 PM', 'Sent', NOW(), NOW()),
+(7, 'Pickup Reminder', 'Pickup Reminder', 'Please pick up your order #ORD-0005 today.', 'Thon Sreynich', '2025-09-11 10:00 AM', 'Sent', NOW(), NOW()),
+(8, 'Payment Reminder', 'Payment Reminder', 'Your payment for order #ORD-0004 is pending.', 'Pich Sothey', '2025-09-10 04:15 PM', 'Sent', NOW(), NOW()),
+(9, 'Promotion', 'Promotion', 'Happy New Month! 15% OFF for all services.', 'All Customers', '2025-09-10 09:00 AM', 'Scheduled', NOW(), NOW()),
+(10, 'Delivery Reminder', 'Delivery Reminder', 'Your order #ORD-0003 is out for delivery.', 'Va Sovan', '2025-09-09 01:45 PM', 'Sent', NOW(), NOW()),
+(11, 'Order Ready', 'Order Ready', 'Your order #ORD-0002 is ready for pickup.', 'Meng Chhay', '2025-09-09 11:15 AM', 'Sent', NOW(), NOW()),
+(12, 'Pickup Reminder', 'Pickup Reminder', 'Please pick up your order #ORD-0001 today.', 'Keo Pisey', '2025-09-08 09:30 AM', 'Sent', NOW(), NOW()),
+(13, 'Delivery Reminder', 'Delivery Reminder', 'Your order #ORD-0032 is out for delivery.', 'Chea Ratanak', '2025-09-08 03:00 PM', 'Sent', NOW(), NOW()),
+(14, 'Payment Reminder', 'Payment Reminder', 'Your payment for order #ORD-0030 is pending.', 'Seng Rath', '2025-09-07 10:45 AM', 'Sent', NOW(), NOW()),
+(15, 'Order Ready', 'Order Ready', 'Your order #ORD-0028 is ready for pickup.', 'Somnang Bun', '2025-09-07 02:20 PM', 'Sent', NOW(), NOW()),
+(16, 'Pickup Reminder', 'Pickup Reminder', 'Please pick up your order #ORD-0026 today.', 'Korm Theara', '2025-09-06 08:50 AM', 'Sent', NOW(), NOW()),
+(17, 'Delivery Reminder', 'Delivery Reminder', 'Your order #ORD-0023 is out for delivery.', 'Nhem Vicheka', '2025-09-06 01:10 PM', 'Sent', NOW(), NOW()),
+(18, 'Payment Reminder', 'Payment Reminder', 'Your payment for order #ORD-0021 is pending.', 'Chan Borey', '2025-09-05 11:30 AM', 'Pending', NOW(), NOW()),
+(19, 'Order Ready', 'Order Ready', 'Your order #ORD-0019 is ready for pickup.', 'Tep Sreypov', '2025-09-05 04:00 PM', 'Sent', NOW(), NOW()),
+(20, 'Pickup Reminder', 'Pickup Reminder', 'Please pick up your order #ORD-0018 today.', 'Oun Sreymom', '2025-09-04 09:15 AM', 'Sent', NOW(), NOW()),
+(21, 'Order Ready', 'Order Ready', 'Your order #ORD-0017 is ready for pickup.', 'Phan Sopheak', '2025-09-04 02:40 PM', 'Sent', NOW(), NOW()),
+(22, 'Delivery Reminder', 'Delivery Reminder', 'Your order #ORD-0016 is out for delivery.', 'Hout Kolap', '2025-09-03 10:20 AM', 'Sent', NOW(), NOW()),
+(23, 'Order Ready', 'Order Ready', 'Your order #ORD-0015 is ready for pickup.', 'Vorn Kosal', '2025-09-03 03:50 PM', 'Sent', NOW(), NOW()),
+(24, 'Pickup Reminder', 'Pickup Reminder', 'Please pick up your order #ORD-0014 today.', 'Ly Davin', '2025-09-02 08:30 AM', 'Sent', NOW(), NOW()),
+(25, 'Order Ready', 'Order Ready', 'Your order #ORD-0013 is ready for pickup.', 'Prak Chanthou', '2025-09-02 01:25 PM', 'Sent', NOW(), NOW()),
+(26, 'Delivery Reminder', 'Delivery Reminder', 'Your order #ORD-0012 is out for delivery.', 'Say Piseth', '2025-09-01 11:40 AM', 'Sent', NOW(), NOW()),
+(27, 'Order Ready', 'Order Ready', 'Your order #ORD-0011 is ready for pickup.', 'Ros Samnang', '2025-09-01 04:10 PM', 'Sent', NOW(), NOW()),
+(28, 'Pickup Reminder', 'Pickup Reminder', 'Please pick up your order #ORD-0033 today.', 'Kruy Sreymao', '2025-08-31 09:00 AM', 'Sent', NOW(), NOW()),
+(29, 'Order Ready', 'Order Ready', 'Your order #ORD-0034 is ready for pickup.', 'Nuon Vanna', '2025-08-30 02:15 PM', 'Sent', NOW(), NOW()),
+(30, 'Pickup Reminder', 'Pickup Reminder', 'Please pick up your order #ORD-0035 today.', 'Sok Sreymom', '2025-08-30 10:30 AM', 'Sent', NOW(), NOW()),
+(31, 'Order Ready', 'Order Ready', 'Your order #ORD-0036 is ready for pickup.', 'Chhit Visal', '2025-08-29 03:00 PM', 'Sent', NOW(), NOW()),
+(32, 'Order Ready', 'Order Ready', 'Your order #ORD-0037 is ready for pickup.', 'Pen Socheat', '2025-08-28 11:20 AM', 'Sent', NOW(), NOW());
+
+SET FOREIGN_KEY_CHECKS = 1;
+-- ====================================================================
+-- Laundry Management System - Reports Database SQL Script
+-- Designed for Navicat / phpMyAdmin / MySQL CLI / MariaDB
+-- Target Database: laundry_management_system
+-- Date: 2026-10-04
+-- ====================================================================
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 1. Create Table Structure for reports
+CREATE TABLE IF NOT EXISTS `reports` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Sales',
+  `date_range` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `generated_by` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Admin',
+  `generated_on` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Completed',
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `details` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. Clear old report records before inserting the official 25 baseline reports
+TRUNCATE TABLE `reports`;
+
+-- 3. Insert Exactly the 25 Baseline Reports Matching Teacher Screenshot
+INSERT INTO `reports` (
+  `id`,
+  `name`,
+  `type`,
+  `date_range`,
+  `generated_by`,
+  `generated_on`,
+  `status`,
+  `created_at`,
+  `updated_at`
+) VALUES
+-- Page 1 (Rows 1 to 5 from screenshot)
+(1, 'Daily Sales Report', 'Sales', '01 May 2024', 'Admin', '01 May 2024 10:30 AM', 'Completed', NOW(), NOW()),
+(2, 'Monthly Sales Report', 'Sales', 'April 2024', 'Admin', '01 May 2024 10:25 AM', 'Completed', NOW(), NOW()),
+(3, 'Laundry Order Report', 'Order', '01 Apr 2024 - 30 Apr 2024', 'Admin', '01 May 2024 10:20 AM', 'Completed', NOW(), NOW()),
+(4, 'Payment Report', 'Payment', '01 Apr 2024 - 30 Apr 2024', 'Admin', '01 May 2024 10:15 AM', 'Completed', NOW(), NOW()),
+(5, 'Inventory Report', 'Inventory', '30 Apr 2024', 'Admin', '30 Apr 2024 05:40 PM', 'Completed', NOW(), NOW()),
+
+-- Page 2 (Rows 6 to 10)
+(6, 'Employee Report', 'Employee', '01 Apr 2024 - 30 Apr 2024', 'Admin', '30 Apr 2024 04:30 PM', 'Completed', NOW(), NOW()),
+(7, 'Machine Usage Report', 'Machine', '01 Apr 2024 - 30 Apr 2024', 'Admin', '30 Apr 2024 03:15 PM', 'Completed', NOW(), NOW()),
+(8, 'Delivery Report', 'Delivery', '01 Apr 2024 - 30 Apr 2024', 'Admin', '30 Apr 2024 02:00 PM', 'Completed', NOW(), NOW()),
+(9, 'Service Popularity Report', 'Service', '01 Apr 2024 - 30 Apr 2024', 'Admin', '30 Apr 2024 11:30 AM', 'Completed', NOW(), NOW()),
+(10, 'Customer Report', 'Customer', '01 Apr 2024 - 30 Apr 2024', 'Admin', '30 Apr 2024 09:45 AM', 'Completed', NOW(), NOW()),
+
+-- Page 3 (Rows 11 to 15)
+(11, 'Daily Sales Report', 'Sales', '30 Apr 2024', 'Admin', '30 Apr 2024 08:30 PM', 'Completed', NOW(), NOW()),
+(12, 'Daily Sales Report', 'Sales', '29 Apr 2024', 'Admin', '29 Apr 2024 08:30 PM', 'Completed', NOW(), NOW()),
+(13, 'Laundry Order Report', 'Order', '15 Apr 2024 - 21 Apr 2024', 'Admin', '22 Apr 2024 10:00 AM', 'Completed', NOW(), NOW()),
+(14, 'Payment Report', 'Payment', '15 Apr 2024 - 21 Apr 2024', 'Admin', '22 Apr 2024 09:30 AM', 'Completed', NOW(), NOW()),
+(15, 'Inventory Report', 'Inventory', '15 Apr 2024', 'Admin', '15 Apr 2024 04:00 PM', 'Completed', NOW(), NOW()),
+
+-- Page 4 (Rows 16 to 20)
+(16, 'Machine Usage Report', 'Machine', '01 Apr 2024 - 15 Apr 2024', 'Admin', '16 Apr 2024 11:00 AM', 'Completed', NOW(), NOW()),
+(17, 'Delivery Report', 'Delivery', '08 Apr 2024 - 14 Apr 2024', 'Admin', '15 Apr 2024 02:20 PM', 'Completed', NOW(), NOW()),
+(18, 'Monthly Sales Report', 'Sales', 'March 2024', 'Admin', '01 Apr 2024 10:00 AM', 'Completed', NOW(), NOW()),
+(19, 'Laundry Order Report', 'Order', '01 Mar 2024 - 31 Mar 2024', 'Admin', '01 Apr 2024 09:30 AM', 'Completed', NOW(), NOW()),
+(20, 'Payment Report', 'Payment', '01 Mar 2024 - 31 Mar 2024', 'Admin', '01 Apr 2024 09:00 AM', 'Completed', NOW(), NOW()),
+
+-- Page 5 (Rows 21 to 25)
+(21, 'Customer Report', 'Customer', '01 Mar 2024 - 31 Mar 2024', 'Admin', '31 Mar 2024 04:30 PM', 'Completed', NOW(), NOW()),
+(22, 'Employee Report', 'Employee', '01 Mar 2024 - 31 Mar 2024', 'Admin', '31 Mar 2024 03:00 PM', 'Completed', NOW(), NOW()),
+(23, 'Inventory Report', 'Inventory', '31 Mar 2024', 'Admin', '31 Mar 2024 01:15 PM', 'Completed', NOW(), NOW()),
+(24, 'Service Popularity Report', 'Service', '01 Mar 2024 - 31 Mar 2024', 'Admin', '30 Mar 2024 10:45 AM', 'Completed', NOW(), NOW()),
+(25, 'Machine Usage Report', 'Machine', '01 Mar 2024 - 31 Mar 2024', 'Admin', '30 Mar 2024 09:30 AM', 'Completed', NOW(), NOW());
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ====================================================================
+-- Laundry Management System - Settings Database SQL Script
+-- Designed for Navicat / phpMyAdmin / MySQL CLI / MariaDB
+-- Target Database: laundry_management_system
+-- Date: 2026-10-04
+-- ====================================================================
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 1. Create Table Structure for settings
+CREATE TABLE IF NOT EXISTS `settings` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `value` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `group` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'general',
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `settings_key_unique` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. Create Table Structure for database_backups
+CREATE TABLE IF NOT EXISTS `database_backups` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `filename` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `filesize` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0 KB',
+  `created_by` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Admin',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 3. Clear old records to avoid duplication
+TRUNCATE TABLE `settings`;
+TRUNCATE TABLE `database_backups`;
+
+-- 4. Insert Default Baseline Settings (Matching Teacher Screenshot exactly)
+INSERT INTO `settings` (`key`, `value`, `group`, `description`, `created_at`, `updated_at`) VALUES
+-- Laundry Information
+('laundry_name', 'Clean & Fresh Laundry', 'laundry_info', 'Name of the laundry business', NOW(), NOW()),
+('phone_number', '012 345 678', 'laundry_info', 'Contact phone number', NOW(), NOW()),
+('email', 'info@cleanfresh.com', 'laundry_info', 'Contact email address', NOW(), NOW()),
+('address', '#123, Street 456, Sangkat Boeung Kak, Khan Toul Kork, Phnom Penh, Cambodia', 'laundry_info', 'Physical address of laundry shop', NOW(), NOW()),
+('logo', 'default_logo.png', 'laundry_info', 'Laundry shop logo file', NOW(), NOW()),
+
+-- Business Hours
+('hours_monday', '{\"from\":\"07:00 AM\",\"to\":\"07:00 PM\",\"active\":1}', 'business_hours', 'Operating hours for Monday', NOW(), NOW()),
+('hours_tuesday', '{\"from\":\"07:00 AM\",\"to\":\"07:00 PM\",\"active\":1}', 'business_hours', 'Operating hours for Tuesday', NOW(), NOW()),
+('hours_wednesday', '{\"from\":\"07:00 AM\",\"to\":\"07:00 PM\",\"active\":1}', 'business_hours', 'Operating hours for Wednesday', NOW(), NOW()),
+('hours_thursday', '{\"from\":\"07:00 AM\",\"to\":\"07:00 PM\",\"active\":1}', 'business_hours', 'Operating hours for Thursday', NOW(), NOW()),
+('hours_friday', '{\"from\":\"07:00 AM\",\"to\":\"07:00 PM\",\"active\":1}', 'business_hours', 'Operating hours for Friday', NOW(), NOW()),
+('hours_saturday', '{\"from\":\"07:00 AM\",\"to\":\"07:00 PM\",\"active\":1}', 'business_hours', 'Operating hours for Saturday', NOW(), NOW()),
+('hours_sunday', '{\"from\":\"Closed\",\"to\":\"\",\"active\":0}', 'business_hours', 'Operating hours for Sunday', NOW(), NOW()),
+
+-- Pricing Configuration
+('pricing_wash_fold', '1.50', 'pricing', 'Wash & Fold Price (USD)', NOW(), NOW()),
+('pricing_ironing', '0.80', 'pricing', 'Ironing Price (USD)', NOW(), NOW()),
+('pricing_dry_cleaning', '3.00', 'pricing', 'Dry Cleaning Price (USD)', NOW(), NOW()),
+('pricing_blanket', '4.00', 'pricing', 'Blanket Price (USD)', NOW(), NOW()),
+('pricing_curtain', '2.00', 'pricing', 'Curtain Price (USD)', NOW(), NOW()),
+('pricing_shoes_cleaning', '2.50', 'pricing', 'Shoes Cleaning Price (USD)', NOW(), NOW()),
+
+-- Tax Settings
+('tax_name', 'Value Added Tax (VAT)', 'tax', 'Tax name or designation', NOW(), NOW()),
+('tax_rate', '10', 'tax', 'Tax rate percentage', NOW(), NOW()),
+('tax_type', 'Inclusive', 'tax', 'Tax calculation type (Inclusive/Exclusive)', NOW(), NOW()),
+('apply_tax_on', 'All Services', 'tax', 'Services subject to this tax', NOW(), NOW()),
+
+-- Backup Meta
+('last_backup_date', '01 May 2024 10:30 AM', 'backup', 'Date and time of last database backup', NOW(), NOW()),
+('last_backup_by', 'Admin', 'backup', 'User who ran the last backup', NOW(), NOW());
+
+-- 5. Insert Baseline Database Backup Record
+INSERT INTO `database_backups` (`id`, `filename`, `filesize`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'backup_20240501.sql', '24.6 MB', 'Admin', '2024-05-01 10:30:00', '2024-05-01 10:30:00');
+
+SET FOREIGN_KEY_CHECKS = 1;
+

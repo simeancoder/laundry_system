@@ -1,4 +1,5 @@
 @extends('layouts.navbar')
+@section('title', 'Orders')
 
 @section('content')
 <div class="space-y-6">
@@ -7,7 +8,7 @@
     @if(session('success'))
         <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between shadow-sm">
             <div class="flex items-center space-x-3">
-                <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
+                <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 shrink-0"></i>
                 <span class="text-sm font-medium">{{ session('success') }}</span>
             </div>
             <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700">
@@ -19,7 +20,7 @@
     @if(session('error'))
         <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center justify-between shadow-sm">
             <div class="flex items-center space-x-3">
-                <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
+                <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 shrink-0"></i>
                 <span class="text-sm font-medium">{{ session('error') }}</span>
             </div>
             <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-700">
@@ -36,7 +37,7 @@
                 <i data-lucide="file-text" class="w-4 h-4"></i>
             </div>
             <p class="text-xs font-semibold text-gray-500">Total Orders</p>
-            <p class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-0.5">{{ $stats['total_orders'] }}</p>
+            <p class="text-xl sm:text-xl font-bold text-gray-900 mt-0.5">{{ $stats['total_orders'] }}</p>
             <p class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center">
                 <span>↑ 12%</span><span class="text-gray-400 font-normal ml-1">vs. last month</span>
             </p>
@@ -48,7 +49,7 @@
                 <i data-lucide="clock" class="w-4 h-4"></i>
             </div>
             <p class="text-xs font-semibold text-gray-500">Pending</p>
-            <p class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-0.5">{{ $stats['pending'] }}</p>
+            <p class="text-xl sm:text-xl font-bold text-gray-900 mt-0.5">{{ $stats['pending'] }}</p>
             <p class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center">
                 <span>↑ 5%</span><span class="text-gray-400 font-normal ml-1">vs. last month</span>
             </p>
@@ -60,7 +61,7 @@
                 <i data-lucide="washing-machine" class="w-4 h-4"></i>
             </div>
             <p class="text-xs font-semibold text-gray-500">Washing</p>
-            <p class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-0.5">{{ $stats['washing'] }}</p>
+            <p class="text-xl sm:text-xl font-bold text-gray-900 mt-0.5">{{ $stats['washing'] }}</p>
             <p class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center">
                 <span>↑ 6%</span><span class="text-gray-400 font-normal ml-1">vs. last month</span>
             </p>
@@ -72,7 +73,7 @@
                 <i data-lucide="shirt" class="w-4 h-4"></i>
             </div>
             <p class="text-xs font-semibold text-gray-500">Ready for Pickup</p>
-            <p class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-0.5">{{ $stats['ready_pickup'] }}</p>
+            <p class="text-xl sm:text-xl font-bold text-gray-900 mt-0.5">{{ $stats['ready_pickup'] }}</p>
             <p class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center">
                 <span>↑ 10%</span><span class="text-gray-400 font-normal ml-1">vs. last month</span>
             </p>
@@ -84,7 +85,7 @@
                 <i data-lucide="truck" class="w-4 h-4"></i>
             </div>
             <p class="text-xs font-semibold text-gray-500">Out for Delivery</p>
-            <p class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-0.5">{{ $stats['out_delivery'] }}</p>
+            <p class="text-xl sm:text-xl font-bold text-gray-900 mt-0.5">{{ $stats['out_delivery'] }}</p>
             <p class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center">
                 <span>↑ 8%</span><span class="text-gray-400 font-normal ml-1">vs. last month</span>
             </p>
@@ -96,7 +97,7 @@
                 <i data-lucide="check-circle-2" class="w-4 h-4"></i>
             </div>
             <p class="text-xs font-semibold text-gray-500">Completed</p>
-            <p class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-0.5">{{ $stats['completed'] }}</p>
+            <p class="text-xl sm:text-xl font-bold text-gray-900 mt-0.5">{{ $stats['completed'] }}</p>
             <p class="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center">
                 <span>↑ 15%</span><span class="text-gray-400 font-normal ml-1">vs. last month</span>
             </p>
@@ -108,7 +109,7 @@
         <form method="GET" action="{{ route('orders.index') }}" class="flex flex-wrap items-center gap-3">
             
             <!-- Search Text Input -->
-            <div class="flex-1 min-w-[260px] relative">
+            <div class="flex-1 min-w-0 relative" style="min-width: 260px;">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <i data-lucide="search" class="w-4 h-4"></i>
                 </div>
@@ -232,7 +233,7 @@
                             </td>
 
                             <!-- Order Number -->
-                            <td class="py-3 px-3 font-bold text-gray-900 whitespace-nowrap cursor-pointer hover:text-blue-600 transition" onclick="viewOrderDetails('{{ $ordId }}')">
+                            <td class="py-3 px-3 font-bold text-gray-900 whitespace-nowrap cursor-pointer hover:text-blue-600 transition" data-id="{{ $ordId }}" onclick="handleViewOrderClick(this)">
                                 {{ $ordNum }}
                             </td>
 
@@ -287,17 +288,17 @@
                             <td class="py-3 px-3 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center space-x-1.5">
                                     <!-- Eye icon: View Details (Cyan/Sky blue button) -->
-                                    <button type="button" onclick="viewOrderDetails('{{ $ordId }}')" title="View Order Details" class="w-7 h-7 rounded-lg bg-[#00A5EC] hover:bg-sky-600 text-white flex items-center justify-center transition shadow-sm cursor-pointer">
+                                    <button type="button" data-id="{{ $ordId }}" onclick="handleViewOrderClick(this)" title="View Order Details" class="w-7 h-7 rounded-lg bg-[#00A5EC] hover:bg-sky-600 text-white flex items-center justify-center transition shadow-sm cursor-pointer">
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                     </button>
 
                                     <!-- Pencil icon: Edit Order (Emerald green button) -->
-                                    <button type="button" onclick="editOrder('{{ $ordId }}')" title="Update Order" class="w-7 h-7 rounded-lg bg-[#10B981] hover:bg-emerald-600 text-white flex items-center justify-center transition shadow-sm cursor-pointer">
+                                    <button type="button" data-id="{{ $ordId }}" onclick="handleEditOrderClick(this)" title="Update Order" class="w-7 h-7 rounded-lg bg-[#10B981] hover:bg-emerald-600 text-white flex items-center justify-center transition shadow-sm cursor-pointer">
                                         <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                                     </button>
 
                                     <!-- Trash icon: Cancel / Delete (Rose/Red button) -->
-                                    <button type="button" onclick="confirmCancelOrder('{{ $ordId }}', '{{ $ordNum }}')" title="Cancel Order" class="w-7 h-7 rounded-lg bg-[#EF4444] hover:bg-rose-600 text-white flex items-center justify-center transition shadow-sm cursor-pointer">
+                                    <button type="button" data-id="{{ $ordId }}" data-num="{{ $ordNum }}" onclick="handleCancelOrderClick(this)" title="Cancel Order" class="w-7 h-7 rounded-lg bg-[#EF4444] hover:bg-rose-600 text-white flex items-center justify-center transition shadow-sm cursor-pointer">
                                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </div>
@@ -351,7 +352,7 @@
 <!-- MODAL 1: VIEW ORDER DETAILS (MATCHING SCREENSHOT 2)      -->
 <!-- ======================================================== -->
 <div id="viewOrderModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-gray-100 transform transition-all relative">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-2 shadow-2xl border border-gray-100 transform transition-all relative">
         
         <!-- Modal Top Title & Close Button -->
         <div class="flex items-center justify-between pb-3">
@@ -387,7 +388,7 @@
 
                 <div class="flex items-center space-x-3.5">
                     <!-- Dark Avatar Circle -->
-                    <div class="w-12 h-12 rounded-full bg-[#1e293b] text-white flex items-center justify-center flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full bg-[#1e293b] text-white flex items-center justify-center shrink-0">
                         <i data-lucide="user" class="w-6 h-6 text-gray-300"></i>
                     </div>
                     <div class="space-y-1">
@@ -1036,6 +1037,22 @@
         if (!currentActiveOrder) return;
         closeOrderModal('viewOrderModal');
         confirmCancelOrder(currentActiveOrder.id, currentActiveOrder.order_number);
+    }
+
+    function handleViewOrderClick(el) {
+        const id = el.getAttribute('data-id');
+        if (id) viewOrderDetails(id);
+    }
+
+    function handleEditOrderClick(el) {
+        const id = el.getAttribute('data-id');
+        if (id) editOrder(id);
+    }
+
+    function handleCancelOrderClick(el) {
+        const id = el.getAttribute('data-id');
+        const num = el.getAttribute('data-num') || '';
+        if (id) confirmCancelOrder(id, num);
     }
 
     // Open Edit Order Modal

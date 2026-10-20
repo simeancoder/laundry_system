@@ -1,1079 +1,962 @@
-<?php $__env->startSection('content'); ?>
-<div class="space-y-6 max-w-[1600px] mx-auto pb-10">
+@extends('layouts.navbar')
 
-    <!-- Top Navigation & Controls Row -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <!-- Search machines bar -->
-        <div class="relative w-full md:w-[480px]">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-500">
-                <i class="fa-solid fa-magnifying-glass text-sm"></i>
-            </span>
-            <input type="text" 
-                   id="machineSearchInput" 
-                   value="<?php echo e(request('search')); ?>"
-                   placeholder="Search machines" 
-                   class="w-full bg-[#E3E4E8] text-gray-800 placeholder-gray-500 text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 border border-transparent transition">
+@section('title', 'Notification Management - Laundry 6 Plus')
+
+@section('content')
+<div class="space-y-6 w-full mx-auto">
+
+    <!-- Flash Notifications -->
+    @if(session('success'))
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-xs animate-fade-in">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                <span class="font-medium">{{ session('success') }}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between shadow-xs animate-fade-in">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-circle-exclamation text-rose-600 text-base"></i>
+                <span class="font-medium">{{ session('error') }}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 hover:text-rose-800 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+    @endif
+
+    <!-- Top Action Bar: Create Notification Button (Matching media_1791125092242.png) -->
+    <div class="flex items-center justify-end">
+        <button type="button" onclick="openCreateNotificationModal()" class="bg-[#2563EB] hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-xs text-sm flex items-center space-x-2 transition cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span>Create Notification</span>
+        </button>
+    </div>
+
+    <!-- 5 STATS CARDS (Matching media_1791125092242.png exactly) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- Card 1: Order Ready -->
+        <div class="bg-[#F0F5FF] border border-blue-100/70 rounded-2xl p-5 flex flex-col justify-between shadow-[0_2px_10px_rgba(37,99,235,0.03)] hover:shadow-md transition">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                </div>
+                <span class="text-sm font-semibold text-gray-800">Order Ready</span>
+            </div>
+            <div class="mt-4">
+                <h3 class="text-xl sm:text-xl font-bold text-gray-900 leading-none" id="stat-order-ready">{{ $stats['order_ready'] ?? 12 }}</h3>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs pt-1 border-t border-blue-100/40">
+                <span class="text-gray-400 font-medium">Today's notifications</span>
+                <span class="font-semibold text-emerald-600">&uarr; 20%</span>
+            </div>
         </div>
 
-        <!-- Top Right Header: Bell, Admin, and Action Buttons -->
-        <div class="flex flex-col items-end space-y-2.5">
-            <?php if(request()->has('standalone')): ?>
-            <!-- Row 1: Notification Bell & Admin Profile Indicator (Standalone Only) -->
-            <div class="flex items-center space-x-3 select-none">
-                <!-- Blue Notification Bell with Notification Dot -->
-                <button onclick="toggleQuickAlerts()" class="relative p-1 text-[#2563EB] hover:text-blue-700 transition cursor-pointer" title="Notifications">
-                    <i data-lucide="bell" class="w-6 h-6 stroke-[2.2]"></i>
-                    <span class="absolute 1.5 top-0.5 right-0.5 w-2.5 h-2.5 bg-[#2563EB] rounded-full ring-2 ring-white"></span>
-                </button>
-
-                <!-- Admin Profile Indicator -->
-                <div class="flex items-center space-x-1.5 text-[#2563EB]">
-                    <i data-lucide="user-circle-2" class="w-6 h-6 stroke-[2.2]"></i>
-                    <span class="text-gray-900 font-semibold text-base tracking-tight"><?php echo e(Auth::check() ? Auth::user()->name : 'Admin'); ?></span>
+        <!-- Card 2: Pickup Reminder -->
+        <div class="bg-[#F0FDF4] border border-emerald-100/70 rounded-2xl p-5 flex flex-col justify-between shadow-[0_2px_10px_rgba(16,185,129,0.03)] hover:shadow-md transition">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
                 </div>
+                <span class="text-sm font-semibold text-gray-800">Pickup Reminder</span>
             </div>
-            <?php endif; ?>
-
-
-            <!-- Row 2: + Send Broadcast Notification button -->
-            <div>
-                <button onclick="openBroadcastModal()" 
-                        class="bg-[#5B46F6] hover:bg-[#4E39E6] text-white px-4 py-2 rounded-lg font-medium text-xs flex items-center space-x-1.5 shadow-sm transition active:scale-[0.98] cursor-pointer">
-                    <span class="text-base font-bold leading-none">+</span>
-                    <span class="font-semibold tracking-wide">Send Broadcast Notification</span>
-                </button>
+            <div class="mt-4">
+                <h3 class="text-xl sm:text-xl font-bold text-gray-900 leading-none" id="stat-pickup">{{ $stats['pickup_reminder'] ?? 8 }}</h3>
             </div>
+            <div class="mt-3 flex items-center justify-between text-xs pt-1 border-t border-emerald-100/40">
+                <span class="text-gray-400 font-medium">Today's notifications</span>
+                <span class="font-semibold text-emerald-600">&uarr; 14%</span>
+            </div>
+        </div>
 
-            <!-- Row 3: Filter Logs button -->
-            <div>
-                <button onclick="openFilterModal()" 
-                        class="bg-[#F89E97] hover:bg-[#F38981] text-[#7F1D1D] px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 shadow-xs transition active:scale-[0.98] cursor-pointer">
-                    <i class="fa-regular fa-calendar-days text-sm"></i>
-                    <span>Filter Logs</span>
-                </button>
+        <!-- Card 3: Delivery Reminder -->
+        <div class="bg-[#FFFBEB] border border-amber-100/70 rounded-2xl p-5 flex flex-col justify-between shadow-[0_2px_10px_rgba(245,158,11,0.03)] hover:shadow-md transition">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75" />
+                    </svg>
+                </div>
+                <span class="text-sm font-semibold text-gray-800">Delivery Reminder</span>
+            </div>
+            <div class="mt-4">
+                <h3 class="text-xl sm:text-xl font-bold text-gray-900 leading-none" id="stat-delivery">{{ $stats['delivery_reminder'] ?? 6 }}</h3>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs pt-1 border-t border-amber-100/40">
+                <span class="text-gray-400 font-medium">Today's notifications</span>
+                <span class="font-semibold text-emerald-600">&uarr; 50%</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Payment Reminder -->
+        <div class="bg-[#FAF5FF] border border-purple-100/70 rounded-2xl p-5 flex flex-col justify-between shadow-[0_2px_10px_rgba(168,85,247,0.03)] hover:shadow-md transition">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                    </svg>
+                </div>
+                <span class="text-sm font-semibold text-gray-800">Payment Reminder</span>
+            </div>
+            <div class="mt-4">
+                <h3 class="text-xl sm:text-xl font-bold text-gray-900 leading-none" id="stat-payment">{{ $stats['payment_reminder'] ?? 4 }}</h3>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs pt-1 border-t border-purple-100/40">
+                <span class="text-gray-400 font-medium">Today's notifications</span>
+                <span class="font-semibold text-emerald-600">&uarr; 33%</span>
+            </div>
+        </div>
+
+        <!-- Card 5: Promotion Notification -->
+        <div class="bg-[#FFF1F2] border border-rose-100/70 rounded-2xl p-5 flex flex-col justify-between shadow-[0_2px_10px_rgba(244,63,94,0.03)] hover:shadow-md transition">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.111-1.53-.435a18.064 18.064 0 01-1.425-4.239m3.09-9.18c.253-.962.584-1.892.985-2.783.247-.55.06-1.21-.463-1.511l-.657-.38c-.551-.318-1.26-.111-1.53.435a18.064 18.064 0 00-1.425 4.239m3.09 9.18a44.603 44.603 0 010-9.18m0 9.18c2.81 0 5.49-.408 8.01-1.168.653-.197 1.15-.724 1.233-1.398a18.52 18.52 0 000-4.068c-.083-.674-.58-1.201-1.233-1.398A28.435 28.435 0 0010.34 6.66" />
+                    </svg>
+                </div>
+                <span class="text-sm font-semibold text-gray-800">Promotion Notification</span>
+            </div>
+            <div class="mt-4">
+                <h3 class="text-xl sm:text-xl font-bold text-gray-900 leading-none" id="stat-promotion">{{ $stats['promotion'] ?? 3 }}</h3>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs pt-1 border-t border-rose-100/40">
+                <span class="text-gray-400 font-medium">Today's notifications</span>
+                <span class="font-semibold text-gray-500">&uarr; 0%</span>
             </div>
         </div>
     </div>
 
-    <!-- Title & Subtitle Section -->
-    <div class="-mt-8 md:-mt-12">
-        <h1 class="text-2xl md:text-3xl font-bold text-[#1E1B4B] tracking-tight">Notification Management</h1>
-        <p class="text-gray-500 text-xs md:text-sm mt-1 leading-relaxed">
-            Configure and manage automated customer<br class="hidden sm:inline"> alerts and reminders
-        </p>
-    </div>
-
-    <!-- 4 KPI Summary Cards Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-        
-        <!-- Card 1: NOTIFICATIONS SENT -->
-        <div class="bg-[#BCE3DE] rounded-2xl p-5 shadow-xs border border-[#A7D9D3] flex flex-col justify-between transition hover:shadow-md">
-            <div>
-                <div class="flex items-start justify-between">
-                    <span class="text-[11px] font-bold text-[#144E49] tracking-wider uppercase font-mono">NOTIFICATIONS SENT</span>
-                    <div class="w-8 h-8 rounded-lg bg-[#EBE4FC] flex items-center justify-center text-[#635BFF] flex-shrink-0 shadow-xs">
-                        <i class="fa-solid fa-paper-plane text-xs"></i>
-                    </div>
-                </div>
-                <div class="text-3xl font-extrabold text-[#0D3833] mt-2 tracking-tight">
-                    <?php echo e($stats['notifications_sent'] ?? '3,890'); ?>
-
-                </div>
+    <!-- SEARCH & FILTER TOOLBAR (Matching media_1791125092242.png) -->
+    <form id="filterForm" method="GET" action="{{ route('notifications.index') }}" class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+        <!-- Search Input with Magnifier -->
+        <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
             </div>
-            <div class="mt-3 flex items-center space-x-1 text-xs font-semibold text-[#144E49]">
-                <i class="fa-solid fa-arrow-trend-up text-xs"></i>
-                <span>This month (<?php echo e($stats['sent_change'] ?? '+14.2%'); ?>)</span>
+            <input 
+                type="text" 
+                name="search" 
+                id="searchInput"
+                value="{{ $search ?? '' }}"
+                placeholder="Search by title, type, customer name, or message..." 
+                class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-gray-800"
+            >
+        </div>
+
+        <!-- Filter: All Types -->
+        <div class="relative w-full lg:w-48">
+            <select 
+                name="type" 
+                id="typeFilter" 
+                class="w-full appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2.5 pr-9 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition cursor-pointer"
+            >
+                <option value="All Types" {{ ($typeFilter ?? '') === 'All Types' ? 'selected' : '' }}>All Types</option>
+                <option value="Order Ready" {{ ($typeFilter ?? '') === 'Order Ready' ? 'selected' : '' }}>Order Ready</option>
+                <option value="Pickup Reminder" {{ ($typeFilter ?? '') === 'Pickup Reminder' ? 'selected' : '' }}>Pickup Reminder</option>
+                <option value="Delivery Reminder" {{ ($typeFilter ?? '') === 'Delivery Reminder' ? 'selected' : '' }}>Delivery Reminder</option>
+                <option value="Payment Reminder" {{ ($typeFilter ?? '') === 'Payment Reminder' ? 'selected' : '' }}>Payment Reminder</option>
+                <option value="Promotion" {{ in_array(($typeFilter ?? ''), ['Promotion', 'Promotion Notification']) ? 'selected' : '' }}>Promotion</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                <i class="fa-solid fa-chevron-down text-xs"></i>
             </div>
         </div>
 
-        <!-- Card 2: DELIVERY RATE -->
-        <div class="bg-[#BCE3DE] rounded-2xl p-5 shadow-xs border border-[#A7D9D3] flex flex-col justify-between transition hover:shadow-md">
-            <div>
-                <div class="flex items-start justify-between">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-[11px] font-bold text-[#144E49] tracking-wider uppercase font-mono">DELIVERY RATE</span>
-                        <span class="bg-[#A3E6D2] text-[#065F46] font-mono font-bold text-[10px] px-2 py-0.5 rounded-full">
-                            <?php echo e($stats['delivery_status'] ?? 'Optimal'); ?>
-
-                        </span>
-                    </div>
-                    <div class="w-8 h-8 rounded-lg bg-[#A4E3D8] flex items-center justify-center text-[#0E5B50] flex-shrink-0 shadow-xs">
-                        <i class="fa-solid fa-tower-broadcast text-xs"></i>
-                    </div>
-                </div>
-                <div class="text-3xl font-extrabold text-[#0D3833] mt-2 tracking-tight">
-                    <?php echo e($stats['delivery_rate'] ?? '99.2%'); ?>
-
-                </div>
-            </div>
-            <div class="mt-3 flex items-center space-x-1.5 text-xs font-semibold text-[#144E49]">
-                <i class="fa-solid fa-chart-line text-xs"></i>
-                <span>Avg Latency <?php echo e($stats['delivery_latency'] ?? '1.1s'); ?></span>
+        <!-- Filter: All Status -->
+        <div class="relative w-full lg:w-40">
+            <select 
+                name="status" 
+                id="statusFilter" 
+                class="w-full appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2.5 pr-9 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition cursor-pointer"
+            >
+                <option value="All Status" {{ ($statusFilter ?? '') === 'All Status' ? 'selected' : '' }}>All Status</option>
+                <option value="Sent" {{ ($statusFilter ?? '') === 'Sent' ? 'selected' : '' }}>Sent</option>
+                <option value="Pending" {{ ($statusFilter ?? '') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                <option value="Scheduled" {{ ($statusFilter ?? '') === 'Scheduled' ? 'selected' : '' }}>Scheduled</option>
+                <option value="Failed" {{ ($statusFilter ?? '') === 'Failed' ? 'selected' : '' }}>Failed</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                <i class="fa-solid fa-chevron-down text-xs"></i>
             </div>
         </div>
 
-        <!-- Card 3: PENDING PICKUP ALERTS -->
-        <div class="bg-[#BDE4EC] rounded-2xl p-5 shadow-xs border border-[#A7D9E4] flex flex-col justify-between transition hover:shadow-md">
-            <div>
-                <div class="flex items-start justify-between">
-                    <div class="flex items-center space-x-2">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-[#154652] tracking-wider uppercase font-mono leading-tight">PENDING PICKUP ALERTS</span>
-                        </div>
-                        <span class="bg-[#D7D8FA] text-[#3730A3] font-medium text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap">
-                            <?php echo e($stats['pickup_status'] ?? 'Attention needed'); ?>
+        <!-- Buttons: Search & Reset -->
+        <div class="flex items-center space-x-2">
+            <button type="submit" class="bg-[#2563EB] hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-xs flex-1 lg:flex-initial">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span>Search</span>
+            </button>
 
-                        </span>
-                    </div>
-                    <div class="w-8 h-8 rounded-lg bg-[#A9DEE7] flex items-center justify-center text-[#155A68] flex-shrink-0 shadow-xs">
-                        <i class="fa-solid fa-shirt text-xs"></i>
-                    </div>
-                </div>
-                <div class="text-3xl font-extrabold text-[#0E353F] mt-2 tracking-tight">
-                    <?php echo e($stats['pending_pickup_alerts'] ?? '14'); ?>
-
-                </div>
-            </div>
-            <div class="mt-3 flex items-center space-x-1.5 text-xs font-semibold text-[#154652]">
-                <i class="fa-solid fa-box-archive text-purple-600 text-xs"></i>
-                <span>Holding rack load <?php echo e($stats['rack_load'] ?? '78%'); ?></span>
-            </div>
-        </div>
-
-        <!-- Card 4: UNPAID REMINDERS -->
-        <div class="bg-[#BDE4EC] rounded-2xl p-5 shadow-xs border border-[#A7D9E4] flex flex-col justify-between transition hover:shadow-md">
-            <div>
-                <div class="flex items-start justify-between">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-[11px] font-bold text-[#154652] tracking-wider uppercase font-mono">UNPAID REMINDERS</span>
-                        <span class="bg-[#C6E6E4] text-[#144E49] font-medium text-[10px] px-2 py-0.5 rounded-full">
-                            <?php echo e($stats['unpaid_period'] ?? 'This week'); ?>
-
-                        </span>
-                    </div>
-                    <div class="w-8 h-8 rounded-lg bg-[#A9DEE7] flex items-center justify-center text-[#155A68] flex-shrink-0 shadow-xs">
-                        <i class="fa-solid fa-file-invoice-dollar text-xs"></i>
-                    </div>
-                </div>
-                <div class="text-3xl font-extrabold text-[#0E353F] mt-2 tracking-tight">
-                    <?php echo e($stats['unpaid_reminders'] ?? '28'); ?>
-
-                </div>
-            </div>
-            <div class="mt-3 flex items-center space-x-1.5 text-xs font-semibold text-[#154652]">
-                <i class="fa-solid fa-arrow-trend-up text-xs"></i>
-                <span><?php echo e($stats['payment_recovery'] ?? '84%'); ?> payment recovery</span>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Main Content Area: 2 Columns Side-by-Side -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-1">
-        
-        <!-- Left Column: Automated Triggers (5 rules) -->
-        <div class="lg:col-span-5 bg-[#EDE4DC] rounded-2xl p-4 sm:p-5 border border-[#E0D5CC] shadow-xs flex flex-col justify-between">
-            <div>
-                <!-- Column Header -->
-                <div class="flex items-center justify-between pb-3 border-b border-[#DFD3C8]">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-lg bg-[#DED7FC] text-[#635BFF] flex items-center justify-center shadow-xs">
-                            <i class="fa-solid fa-bolt text-sm"></i>
-                        </div>
-                        <div>
-                            <h2 class="font-bold text-gray-900 text-base leading-tight">Automated Triggers</h2>
-                            <p class="text-xs text-gray-500 mt-0.5">Manage lifecycle automated notifications</p>
-                        </div>
-                    </div>
-                    <span class="bg-white/80 border border-purple-200/80 text-[#5B46F6] font-mono font-bold text-xs px-2.5 py-1 rounded-md shadow-xs">
-                        5 Rules
-                    </span>
-                </div>
-
-                <!-- 5 Trigger Cards -->
-                <div class="space-y-3 mt-4" id="triggersContainer">
-                    
-                    <!-- Trigger 1: Order Ready Notification -->
-                    <div class="bg-white rounded-xl p-3.5 shadow-xs border border-gray-100/80 transition hover:border-purple-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                                <span class="font-bold text-gray-900 text-sm">Order Ready Notification</span>
-                            </div>
-                            <!-- Toggle switch -->
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked onchange="handleTriggerToggle(1, this.checked)" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5B46F6]"></div>
-                            </label>
-                        </div>
-
-                        <div class="flex items-center space-x-2 mt-2">
-                            <span class="bg-[#EBE6FF] text-[#635BFF] font-mono font-bold text-[10px] px-2 py-0.5 rounded">
-                                SMS / App Alert
-                            </span>
-                            <span class="text-[11px] text-gray-500">Twilio & FCM synced</span>
-                        </div>
-
-                        <p class="text-[11px] text-gray-500 mt-2 leading-tight">
-                            Dispatched immediately once garments are dried, folded, and placed on rack or locker.
-                        </p>
-
-                        <div class="mt-2 bg-gray-50 text-gray-600 font-mono text-[11px] p-2 rounded-lg border border-gray-200/60 truncate">
-                            "Your laundry #{order_id} is ready for pickup! Locker: #
-                        </div>
-                    </div>
-
-                    <!-- Trigger 2: Pickup Reminder -->
-                    <div class="bg-white rounded-xl p-3.5 shadow-xs border border-gray-100/80 transition hover:border-purple-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                                <span class="font-bold text-gray-900 text-sm">Pickup Reminder</span>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked onchange="handleTriggerToggle(2, this.checked)" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5B46F6]"></div>
-                            </label>
-                        </div>
-
-                        <div class="flex items-center space-x-2 mt-2">
-                            <span class="bg-[#E2E8F0] text-gray-700 font-mono font-bold text-[10px] px-2 py-0.5 rounded">
-                                SMS Direct
-                            </span>
-                            <span class="text-[11px] text-gray-500">Auto-trigger after 24 hours</span>
-                        </div>
-
-                        <p class="text-[11px] text-gray-500 mt-2 leading-tight">
-                            Gentle nudge to free up storage racks before overflow holding fees apply.
-                        </p>
-                    </div>
-
-                    <!-- Trigger 3: Delivery Reminder -->
-                    <div class="bg-white rounded-xl p-3.5 shadow-xs border border-gray-100/80 transition hover:border-purple-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                                <span class="font-bold text-gray-900 text-sm">Delivery Reminder</span>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked onchange="handleTriggerToggle(3, this.checked)" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5B46F6]"></div>
-                            </label>
-                        </div>
-
-                        <div class="flex items-center space-x-2 mt-2">
-                            <span class="bg-[#E0F2FE] text-[#0284C7] font-mono font-bold text-[10px] px-2 py-0.5 rounded">
-                                Live GPS Link + Push
-                            </span>
-                            <span class="text-[11px] text-gray-500">Driver dispatch alert</span>
-                        </div>
-
-                        <p class="text-[11px] text-gray-500 mt-2 leading-tight">
-                            Dispatches live route map tracking and ETA countdown when delivery van departs.
-                        </p>
-                    </div>
-
-                    <!-- Trigger 4: Payment Reminder -->
-                    <div class="bg-white rounded-xl p-3.5 shadow-xs border border-gray-100/80 transition hover:border-purple-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                                <span class="font-bold text-gray-900 text-sm">Payment Reminder</span>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked onchange="handleTriggerToggle(4, this.checked)" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5B46F6]"></div>
-                            </label>
-                        </div>
-
-                        <div class="flex items-center space-x-2 mt-2">
-                            <span class="bg-[#EDE9FE] text-[#7C3AED] font-mono font-bold text-[10px] px-2 py-0.5 rounded">
-                                SMS & Email Dunning
-                            </span>
-                            <span class="text-[11px] text-gray-500">Digital invoice alert</span>
-                        </div>
-
-                        <p class="text-[11px] text-gray-500 mt-2 leading-tight">
-                            Sends 1-click mobile payment link for commercial accounts & unpaid drop-offs.
-                        </p>
-                    </div>
-
-                    <!-- Trigger 5: Promotion Broadcast -->
-                    <div class="bg-white rounded-xl p-3.5 shadow-xs border border-gray-100/80 transition hover:border-purple-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="w-2 h-2 rounded-full bg-gray-400 inline-block"></span>
-                                <span class="font-bold text-gray-800 text-sm">Promotion Broadcast</span>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" onchange="handleTriggerToggle(5, this.checked)" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5B46F6]"></div>
-                            </label>
-                        </div>
-
-                        <div class="flex items-center space-x-2 mt-2">
-                            <span class="bg-[#DBEAFE] text-[#1D4ED8] font-mono font-bold text-[10px] px-2 py-0.5 rounded">
-                                Push & Geofence
-                            </span>
-                            <span class="text-[11px] text-gray-500">Manual / Scheduled</span>
-                        </div>
-
-                        <p class="text-[11px] text-gray-500 mt-2 leading-tight">
-                            Blast seasonal discounts to inactive customers and VIP segments.
-                        </p>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Bottom Button: Dry Run Sandbox Test -->
-            <div class="mt-4 pt-2">
-                <button onclick="runDryRunTest()" 
-                        id="dryRunBtn"
-                        class="w-full bg-[#E0D7FC] hover:bg-[#D5C9FA] text-[#5B46F6] font-semibold text-xs py-2.5 rounded-xl border border-purple-200/80 shadow-xs flex items-center justify-center space-x-2 transition active:scale-[0.99] cursor-pointer">
-                    <i class="fa-regular fa-circle-play text-sm"></i>
-                    <span>Dry Run Sandbox Test</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Right Column: Recent System Notifications -->
-        <div class="lg:col-span-7 bg-[#EDE4DC] rounded-2xl p-4 sm:p-5 border border-[#E0D5CC] shadow-xs flex flex-col justify-between">
-            <div>
-                <!-- Column Header with Live Stream & Dropdown Filter -->
-                <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#DFD3C8]">
-                    <div class="flex items-center space-x-2.5">
-                        <h2 class="font-bold text-gray-900 text-base">Recent System Notifications</h2>
-                        <span class="bg-[#99F6E4] text-[#065F46] font-mono font-bold text-[11px] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 shadow-2xs">
-                            <span class="w-1.5 h-1.5 rounded-full bg-[#059669] animate-pulse"></span>
-                            <span>Live Stream</span>
-                        </span>
-                    </div>
-
-                    <div class="flex items-center space-x-2">
-                        <!-- All Statuses Dropdown -->
-                        <div class="relative">
-                            <select id="statusFilterSelect" 
-                                    onchange="filterNotificationsByStatus(this.value)"
-                                    class="appearance-none bg-white border border-gray-200 text-xs text-gray-700 font-medium pl-3 pr-8 py-1.5 rounded-lg shadow-xs focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer">
-                                <option value="all" <?php echo e(($statusFilter ?? 'all') == 'all' ? 'selected' : ''); ?>>All Statuses</option>
-                                <option value="Order Ready" <?php echo e(($statusFilter ?? '') == 'Order Ready' ? 'selected' : ''); ?>>Order Ready</option>
-                                <option value="Payment Reminder" <?php echo e(($statusFilter ?? '') == 'Payment Reminder' ? 'selected' : ''); ?>>Payment Reminder</option>
-                                <option value="Pickup Reminder" <?php echo e(($statusFilter ?? '') == 'Pickup Reminder' ? 'selected' : ''); ?>>Pickup Reminder</option>
-                                <option value="Delivery Reminder" <?php echo e(($statusFilter ?? '') == 'Delivery Reminder' ? 'selected' : ''); ?>>Delivery Reminder</option>
-                                <option value="Promotion Broadcast" <?php echo e(($statusFilter ?? '') == 'Promotion Broadcast' ? 'selected' : ''); ?>>Promotion Broadcast</option>
-                            </select>
-                            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs">
-                                <i class="fa-solid fa-chevron-down"></i>
-                            </span>
-                        </div>
-
-                        <!-- Refresh Button -->
-                        <button onclick="refreshNotificationLogs()" 
-                                id="refreshBtn"
-                                class="bg-white border border-gray-200 text-gray-600 hover:text-gray-900 p-1.5 rounded-lg shadow-xs hover:bg-gray-50 transition cursor-pointer" 
-                                title="Refresh notification logs">
-                            <i class="fa-solid fa-rotate-right text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Table Header -->
-                <div class="grid grid-cols-12 text-[10px] font-bold text-gray-500 tracking-wider uppercase mt-4 mb-2 px-2 font-mono">
-                    <div class="col-span-4">CUSTOMER</div>
-                    <div class="col-span-3">TYPE</div>
-                    <div class="col-span-5">MESSAGE</div>
-                </div>
-
-                <!-- Notification Rows Container -->
-                <div class="space-y-3.5 mt-1" id="notificationsListContainer">
-                    <?php $__empty_1 = true; $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <div onclick="openNotificationDetail(<?php echo e(json_encode($item)); ?>)" 
-                             class="notification-row grid grid-cols-12 items-center px-2 py-1.5 transition hover:bg-white/70 rounded-xl cursor-pointer" 
-                             data-type="<?php echo e($item['type']); ?>">
-                            <!-- Customer Info (Avatar, Name, Phone) -->
-                            <div class="col-span-4 flex items-center space-x-2.5 pr-2">
-                                <div class="w-8 h-8 rounded-lg <?php echo e($item['avatar_bg']); ?> <?php echo e($item['avatar_text']); ?> font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
-                                    <?php echo e($item['initials']); ?>
-
-                                </div>
-                                <div class="min-w-0">
-                                    <h4 class="font-bold text-gray-900 text-xs leading-tight truncate"><?php echo e($item['name']); ?></h4>
-                                    <p class="text-[11px] text-gray-500 font-mono mt-0.5"><?php echo e($item['phone']); ?></p>
-                                </div>
-                            </div>
-
-                            <!-- Notification Type Badge -->
-                            <div class="col-span-3 pr-2">
-                                <span class="<?php echo e($item['type_bg']); ?> <?php echo e($item['type_text']); ?> font-mono font-semibold text-[10.5px] px-2 py-0.5 rounded-md inline-block shadow-2xs whitespace-nowrap">
-                                    <?php echo e($item['type']); ?>
-
-                                </span>
-                            </div>
-
-                            <!-- Message Snippet -->
-                            <div class="col-span-5 flex items-center justify-between">
-                                <p class="text-[11px] text-gray-600 font-mono truncate mr-1" title="<?php echo e($item['message']); ?>">
-                                    <?php echo e($item['short_message'] ?? $item['message']); ?>
-
-                                </p>
-                                <span class="text-gray-400 hover:text-blue-600 flex-shrink-0 text-xs" title="View details">
-                                    <i class="fa-regular fa-eye text-[11px]"></i>
-                                </span>
-                            </div>
-                        </div>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                        <div class="text-center py-8 text-gray-500 text-xs bg-white/50 rounded-xl">
-                            No notifications found matching your search.
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- Footer: Showing Count & Pagination Matching Previous UIs (Report / Employee) -->
-            <div class="pt-4 mt-6 border-t border-[#DFD3C8] flex flex-wrap items-center justify-between gap-4">
-                <!-- Dynamic items count indicator matching previous UI -->
-                <div class="text-blue-600 font-medium text-xs sm:text-sm" id="paginationInfo">
-                    Showing <span id="pag-from"><?php echo e($from ?? 1); ?></span> to <span id="pag-to"><?php echo e($to ?? 5); ?></span> of <span id="pag-total"><?php echo e($totalItems ?? 25); ?></span> items
-                </div>
-
-                <!-- Page Nav Buttons matching previous UI design -->
-                <div class="flex items-center space-x-1.5" id="paginationNav">
-                    <!-- Previous Button -->
-                    <button onclick="changePage('prev')" 
-                            id="btn-prev" 
-                            class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 transition shadow-2xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                        <i class="fa-solid fa-angle-left text-[11px]"></i>
-                        <span>Previous</span>
-                    </button>
-
-                    <!-- Page Number Buttons (1 to 5) -->
-                    <button onclick="changePage(1)" id="page-btn-1" class="page-num-btn w-8 h-8 rounded-lg bg-[#4F39F6] text-white font-bold text-xs flex items-center justify-center shadow-xs transition cursor-pointer">1</button>
-                    <button onclick="changePage(2)" id="page-btn-2" class="page-num-btn w-8 h-8 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 flex items-center justify-center transition shadow-2xs cursor-pointer">2</button>
-                    <button onclick="changePage(3)" id="page-btn-3" class="page-num-btn w-8 h-8 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 flex items-center justify-center transition shadow-2xs cursor-pointer">3</button>
-                    <button onclick="changePage(4)" id="page-btn-4" class="page-num-btn w-8 h-8 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 flex items-center justify-center transition shadow-2xs cursor-pointer">4</button>
-                    <button onclick="changePage(5)" id="page-btn-5" class="page-num-btn w-8 h-8 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 flex items-center justify-center transition shadow-2xs cursor-pointer">5</button>
-
-                    <!-- Next Button -->
-                    <button onclick="changePage('next')" 
-                            id="btn-next" 
-                            class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 transition shadow-2xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                        <span>Next</span>
-                        <i class="fa-solid fa-angle-right text-[11px]"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Bottom Telemetry & Status Row -->
-    <div class="pt-4 border-t border-gray-200/80 space-y-2">
-        <div class="flex flex-wrap items-center gap-6 text-xs text-gray-700 font-mono">
-            <div class="flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-[#0F5A50] inline-block"></span>
-                <span class="font-bold text-gray-900">Twilio SMS:</span>
-                <span class="text-gray-600">99.9% Uptime (112ms)</span>
-            </div>
-            <div class="flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-[#0F5A50] inline-block"></span>
-                <span class="font-bold text-gray-900">Firebase Cloud Messaging:</span>
-                <span class="text-gray-600">Zero Queued Drops</span>
-            </div>
-            <div class="flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-[#4F39F6] inline-block"></span>
-                <span class="font-bold text-gray-900">Driver GPS Telemetry:</span>
-                <span class="text-gray-600">4 Vans Active Streaming</span>
-            </div>
-        </div>
-
-        <div class="flex items-center space-x-1.5 text-xs text-gray-700 font-mono">
-            <i class="fa-regular fa-circle-check text-[#0F5A50] text-sm"></i>
-            <span class="font-semibold text-gray-800">All Gateways Nominal</span>
-        </div>
-    </div>
-
-</div>
-
-<!-- Modal 1: Send Broadcast Notification -->
-<div id="broadcastModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 transform transition-all">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-xl bg-[#EBE4FC] text-[#5B46F6] flex items-center justify-center">
-                    <i class="fa-solid fa-bullhorn text-sm"></i>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Send Broadcast Notification</h3>
-                    <p class="text-xs text-gray-500">Dispatch message to active customers across channels</p>
-                </div>
-            </div>
-            <button onclick="closeBroadcastModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <i class="fa-solid fa-xmark text-lg"></i>
+            <button type="button" onclick="resetFilters()" class="bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 font-medium px-4 py-2.5 rounded-xl text-sm flex items-center justify-center space-x-1.5 transition cursor-pointer flex-1 lg:flex-initial">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Reset</span>
             </button>
         </div>
+    </form>
 
-        <form id="broadcastForm" onsubmit="submitBroadcast(event)" class="space-y-4 mt-4">
-            <?php echo csrf_field(); ?>
+    <!-- NOTIFICATION LIST CARD (Matching media_1791125092242.png) -->
+    <div class="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] overflow-hidden">
+        <!-- Card Header -->
+        <div class="p-5 sm:p-6 border-b border-gray-100 flex items-center space-x-3">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900">Notification List</h2>
+            <span id="notificationsCountBadge" class="bg-blue-50 text-blue-600 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                {{ $filteredCount ?? count($notifications) }} notifications
+            </span>
+        </div>
+
+        <!-- Table Container -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse" id="notificationsTable">
+                <thead>
+                    <tr class="bg-[#F8FAFC] border-b border-gray-100 text-[11px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        <th class="py-3.5 px-4 text-center w-12">#</th>
+                        <th class="py-3.5 px-4 text-left">TYPE</th>
+                        <th class="py-3.5 px-4 text-left">TITLE</th>
+                        <th class="py-3.5 px-4 text-left">MESSAGE</th>
+                        <th class="py-3.5 px-4 text-left">TARGET</th>
+                        <th class="py-3.5 px-4 text-left">SCHEDULED DATE</th>
+                        <th class="py-3.5 px-4 text-center">STATUS</th>
+                        <th class="py-3.5 px-4 text-center w-28">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-sm" id="notificationsTableBody">
+                    @forelse($notifications as $index => $notif)
+                        @php
+                            $rowNum = ($page - 1) * $perPage + $index + 1;
+
+                            // Icon and color badge per type
+                            $typeIconClass = 'bg-blue-100 text-blue-600';
+                            $typeSvg = 'file';
+                            if ($notif->type === 'Pickup Reminder') {
+                                $typeIconClass = 'bg-emerald-100 text-emerald-600';
+                                $typeSvg = 'bag';
+                            } elseif ($notif->type === 'Delivery Reminder') {
+                                $typeIconClass = 'bg-amber-100 text-amber-600';
+                                $typeSvg = 'truck';
+                            } elseif ($notif->type === 'Payment Reminder') {
+                                $typeIconClass = 'bg-purple-100 text-purple-600';
+                                $typeSvg = 'card';
+                            } elseif ($notif->type === 'Promotion' || $notif->type === 'Promotion Notification') {
+                                $typeIconClass = 'bg-rose-100 text-rose-600';
+                                $typeSvg = 'bullhorn';
+                            }
+
+                            // Status pill class
+                            $statusClass = 'bg-emerald-50 text-emerald-600';
+                            if ($notif->status === 'Pending') {
+                                $statusClass = 'bg-amber-50 text-amber-600';
+                            } elseif ($notif->status === 'Scheduled') {
+                                $statusClass = 'bg-blue-50 text-blue-600';
+                            } elseif ($notif->status === 'Failed') {
+                                $statusClass = 'bg-rose-50 text-rose-600';
+                            }
+                        @endphp
+                        <tr class="hover:bg-gray-50/70 transition-colors notif-row" data-id="{{ $notif->id }}">
+                            <!-- Index -->
+                            <td class="py-4 px-4 text-center text-gray-500 font-medium">
+                                {{ $rowNum }}
+                            </td>
+
+                            <!-- Type with Icon -->
+                            <td class="py-4 px-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 rounded-md {{ $typeIconClass }} flex items-center justify-center shrink-0 text-xs">
+                                        @if($typeSvg === 'file')
+                                            <i class="fa-regular fa-file-lines text-[11px]"></i>
+                                        @elseif($typeSvg === 'bag')
+                                            <i class="fa-solid fa-bag-shopping text-[11px]"></i>
+                                        @elseif($typeSvg === 'truck')
+                                            <i class="fa-solid fa-truck-fast text-[11px]"></i>
+                                        @elseif($typeSvg === 'card')
+                                            <i class="fa-solid fa-credit-card text-[11px]"></i>
+                                        @else
+                                            <i class="fa-solid fa-bullhorn text-[11px]"></i>
+                                        @endif
+                                    </div>
+                                    <span class="font-medium text-gray-800 text-xs sm:text-sm whitespace-nowrap">{{ $notif->type }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Title -->
+                            <td class="py-4 px-4 font-semibold text-gray-900 text-xs sm:text-sm whitespace-nowrap">
+                                {{ $notif->title }}
+                            </td>
+
+                            <!-- Message -->
+                            <td class="py-4 px-4 text-xs sm:text-sm text-gray-600 max-w-xs truncate" title="{{ $notif->message }}">
+                                {{ $notif->message }}
+                            </td>
+
+                            <!-- Target -->
+                            <td class="py-4 px-4 font-semibold text-gray-900 text-xs sm:text-sm whitespace-nowrap">
+                                {{ $notif->target }}
+                            </td>
+
+                            <!-- Scheduled Date -->
+                            <td class="py-4 px-4 text-xs text-gray-500 font-medium whitespace-nowrap">
+                                {{ $notif->scheduled_date }}
+                            </td>
+
+                            <!-- Status -->
+                            <td class="py-4 px-4 text-center whitespace-nowrap">
+                                <span class="{{ $statusClass }} px-3 py-1 rounded-full text-xs font-semibold inline-block">
+                                    {{ $notif->status }}
+                                </span>
+                            </td>
+
+                            <!-- Action (View Eye + Delete Trash) -->
+                            <td class="py-4 px-4 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <!-- View/Details Button (Blue) -->
+                                    <button 
+                                        type="button" 
+                                        data-notif="{{ base64_encode(json_encode($notif)) }}" 
+                                        onclick="handleViewNotificationClick(this)" 
+                                        class="w-8 h-8 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white flex items-center justify-center transition shadow-xs cursor-pointer"
+                                        title="View Details"
+                                    >
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </button>
+
+                                    <!-- Delete Button (Red) -->
+                                    <button 
+                                        type="button" 
+                                        data-id="{{ $notif->id }}" 
+                                        data-title="{{ $notif->title }}" 
+                                        onclick="handleDeleteNotificationClick(this)" 
+                                        class="w-8 h-8 rounded-lg bg-[#EF4444] hover:bg-rose-600 text-white flex items-center justify-center transition shadow-xs cursor-pointer"
+                                        title="Delete Notification"
+                                    >
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="py-12 text-center text-gray-400">
+                                <div class="flex flex-col items-center justify-center space-y-2">
+                                    <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                                    </svg>
+                                    <p class="text-sm font-medium">No notifications found matching your filter.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer (Matching media_1791125092242.png: ← 1 2 3 4 →) -->
+        <div class="p-4 sm:p-5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
             <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Target Audience</label>
-                <select name="audience" required class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
-                    <option value="all">All Active Customers (3,890)</option>
-                    <option value="vip">VIP Loyalty Club (420)</option>
-                    <option value="pending">Pending Pickup Customers (14)</option>
-                    <option value="unpaid">Unpaid Invoices (28)</option>
-                    <option value="inactive">Inactive Customers (&gt; 30 Days)</option>
-                </select>
+                Showing {{ ($page - 1) * $perPage + 1 }} - {{ min($page * $perPage, $filteredCount) }} of {{ $filteredCount }} notifications
+            </div>
+            <div class="flex items-center space-x-1.5">
+                <!-- Prev Button -->
+                @if($page > 1)
+                    <a href="{{ route('notifications.index', array_merge(request()->query(), ['page' => $page - 1])) }}" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center transition">
+                        &larr;
+                    </a>
+                @else
+                    <button type="button" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-300 flex items-center justify-center transition cursor-not-allowed" disabled>
+                        &larr;
+                    </button>
+                @endif
+
+                <!-- Page numbers -->
+                @for($p = 1; $p <= $totalPages; $p++)
+                    @if($p == $page)
+                        <button type="button" class="w-8 h-8 rounded-lg bg-[#2563EB] text-white font-bold flex items-center justify-center shadow-xs">
+                            {{ $p }}
+                        </button>
+                    @else
+                        <a href="{{ route('notifications.index', array_merge(request()->query(), ['page' => $p])) }}" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center transition font-medium">
+                            {{ $p }}
+                        </a>
+                    @endif
+                @endfor
+
+                <!-- Next Button -->
+                @if($page < $totalPages)
+                    <a href="{{ route('notifications.index', array_merge(request()->query(), ['page' => $page + 1])) }}" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center transition">
+                        &rarr;
+                    </a>
+                @else
+                    <button type="button" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-300 flex items-center justify-center transition cursor-not-allowed" disabled>
+                        &rarr;
+                    </button>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- CREATE NOTIFICATION MODAL (Matching media_1791125150907.png) -->
+<!-- ========================================== -->
+<div id="createNotificationModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 sm:p-7 relative max-h-[92vh] overflow-y-auto">
+        <!-- Close Button -->
+        <button type="button" onclick="closeCreateNotificationModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <!-- Title -->
+        <h2 class="text-xl font-bold text-gray-900 mb-5">Create Notification</h2>
+
+        <!-- Form -->
+        <form id="createNotificationForm" action="{{ route('notifications.store') }}" method="POST" class="space-y-4">
+            @csrf
+
+            <!-- 1. Notification Type * -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-800 mb-1.5">
+                    Notification Type <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                        </svg>
+                    </div>
+                    <select 
+                        name="type" 
+                        id="newNotifType" 
+                        required 
+                        class="w-full appearance-none pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition cursor-pointer"
+                        onchange="handleTypeChange(this.value)"
+                    >
+                        <option value="" disabled selected>Select notification type</option>
+                        <option value="Order Ready Notification">Order Ready Notification</option>
+                        <option value="Pickup Reminder">Pickup Reminder</option>
+                        <option value="Delivery Reminder">Delivery Reminder</option>
+                        <option value="Payment Reminder">Payment Reminder</option>
+                        <option value="Promotion Notification">Promotion Notification</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-3.5 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
             </div>
 
+            <!-- 2. Title * -->
             <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Dispatch Channels</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <label class="flex items-center space-x-2 border border-gray-200 rounded-lg p-2 cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="channel" value="sms" checked class="text-purple-600 focus:ring-purple-500">
-                        <span class="text-xs font-medium text-gray-700">Twilio SMS</span>
+                <label class="block text-sm font-semibold text-gray-800 mb-1.5">
+                    Title <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 font-bold text-sm">
+                        A
+                    </div>
+                    <input 
+                        type="text" 
+                        name="title" 
+                        id="newNotifTitle" 
+                        required 
+                        placeholder="Enter notification title" 
+                        class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                    >
+                </div>
+            </div>
+
+            <!-- 3. Message * -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-800 mb-1.5">
+                    Message <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <textarea 
+                        name="message" 
+                        id="newNotifMessage" 
+                        required 
+                        maxlength="500" 
+                        rows="3" 
+                        placeholder="Enter message content..." 
+                        class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition resize-none"
+                        oninput="document.getElementById('createCharCount').innerText = this.value.length"
+                    ></textarea>
+                </div>
+                <div class="text-right text-xs text-gray-400 mt-1">
+                    <span id="createCharCount">0</span>/500
+                </div>
+            </div>
+
+            <!-- 4. Target Audience * -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-800 mb-1.5">
+                    Target Audience <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                        </svg>
+                    </div>
+                    <select 
+                        name="target" 
+                        id="newNotifTarget" 
+                        required 
+                        class="w-full appearance-none pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition cursor-pointer"
+                    >
+                        <option value="" disabled selected>Select target audience</option>
+                        <option value="All Customers">All Customers</option>
+                        <option value="Sokha Dara">Sokha Dara (#ORD-0010)</option>
+                        <option value="Chan Sreyneath">Chan Sreyneath (#ORD-0009)</option>
+                        <option value="Heng Channa">Heng Channa (#ORD-0008)</option>
+                        <option value="Lim Vannak">Lim Vannak (#ORD-0007)</option>
+                        <option value="Kim Sovannary">Kim Sovannary (#ORD-0006)</option>
+                        <option value="Thon Sreynich">Thon Sreynich (#ORD-0005)</option>
+                        <option value="Pich Sothey">Pich Sothey (#ORD-0004)</option>
+                        <option value="Va Sovan">Va Sovan (#ORD-0003)</option>
+                        <option value="Meng Chhay">Meng Chhay (#ORD-0002)</option>
+                        <option value="Keo Pisey">Keo Pisey (#ORD-0001)</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-3.5 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Scheduled Date & Time -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-800 mb-1.5">
+                    Scheduled Date & Time
+                </label>
+                <div class="flex items-center space-x-2.5">
+                    <!-- Date Input -->
+                    <div class="relative flex-1">
+                        <input 
+                            type="date" 
+                            name="scheduled_date" 
+                            id="newNotifDate" 
+                            value="{{ date('Y-m-d') }}" 
+                            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                        >
+                    </div>
+                    <!-- Time Input -->
+                    <div class="relative flex-1">
+                        <input 
+                            type="text" 
+                            name="scheduled_time" 
+                            id="newNotifTime" 
+                            value="10:00 AM" 
+                            placeholder="10:00 AM"
+                            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Status (Send Now / Schedule Later) -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-800 mb-2">
+                    Status
+                </label>
+                <div class="flex items-center space-x-6">
+                    <label class="inline-flex items-center space-x-2.5 cursor-pointer">
+                        <input type="radio" name="status" value="Send Now" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                        <span class="text-sm font-medium text-gray-700">Send Now</span>
                     </label>
-                    <label class="flex items-center space-x-2 border border-gray-200 rounded-lg p-2 cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="channel" value="push" class="text-purple-600 focus:ring-purple-500">
-                        <span class="text-xs font-medium text-gray-700">App Push</span>
-                    </label>
-                    <label class="flex items-center space-x-2 border border-gray-200 rounded-lg p-2 cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="channel" value="both" class="text-purple-600 focus:ring-purple-500">
-                        <span class="text-xs font-medium text-gray-700">Both</span>
+                    <label class="inline-flex items-center space-x-2.5 cursor-pointer">
+                        <input type="radio" name="status" value="Schedule Later" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                        <span class="text-sm font-medium text-gray-700">Schedule Later</span>
                     </label>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Broadcast Title / Campaign</label>
-                <input type="text" name="title" required placeholder="e.g. Weekend Special 20% Off" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
-            </div>
-
-            <div>
-                <div class="flex justify-between items-center mb-1">
-                    <label class="block text-xs font-semibold text-gray-700">Message Content</label>
-                    <span id="charCounter" class="text-[10px] text-gray-400 font-mono">0 / 160</span>
+            <!-- 7. Automatic Event Notice Box (Matching media_1791125150907.png) -->
+            <div class="bg-blue-50/70 border border-blue-100 rounded-2xl p-4 text-xs text-blue-900 flex items-start space-x-3">
+                <div class="text-[#2563EB] shrink-0 mt-0.5">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
                 </div>
-                <textarea name="message" id="broadcastMessage" required rows="3" oninput="updateCharCount(this)" placeholder="Type your broadcast message here..." class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none"></textarea>
+                <div class="leading-relaxed">
+                    You can also send <strong class="font-bold">notifications automatically</strong> based on <strong class="font-bold">specific events</strong> (e.g., order status changes, payment received, etc.).
+                </div>
             </div>
 
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
-                <button type="button" onclick="closeBroadcastModal()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer">
+            <!-- 8. Actions: Cancel & Send Notification -->
+            <div class="flex items-center space-x-3 pt-2">
+                <button 
+                    type="button" 
+                    onclick="closeCreateNotificationModal()" 
+                    class="flex-1 py-3 px-5 border border-gray-200 rounded-xl text-blue-600 font-semibold text-sm hover:bg-gray-50 transition cursor-pointer text-center"
+                >
                     Cancel
                 </button>
-                <button type="submit" id="broadcastSubmitBtn" class="bg-[#5B46F6] hover:bg-[#4E39E6] text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-sm flex items-center space-x-1.5 transition cursor-pointer">
-                    <i class="fa-solid fa-paper-plane text-xs"></i>
-                    <span>Dispatch Now</span>
+                <button 
+                    type="submit" 
+                    class="flex-1 py-3 px-5 bg-[#2563EB] hover:bg-blue-700 text-white font-semibold text-sm rounded-xl flex items-center justify-center space-x-2 shadow-xs transition cursor-pointer"
+                >
+                    <svg class="w-4 h-4 transform rotate-45 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                    </svg>
+                    <span>Send Notification</span>
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal 2: Filter Logs Modal -->
-<div id="filterModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-9 h-9 rounded-xl bg-[#FED7D7] text-[#C53030] flex items-center justify-center">
-                    <i class="fa-solid fa-filter text-sm"></i>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900">Filter Notification Logs</h3>
-                    <p class="text-xs text-gray-500">Refine system logs by type and date</p>
-                </div>
-            </div>
-            <button onclick="closeFilterModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
+<!-- ========================================== -->
+<!-- VIEW DETAILS MODAL -->
+<!-- ========================================== -->
+<div id="viewNotificationModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 relative animate-scale-up">
+        <button type="button" onclick="closeViewNotificationModal()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
 
-        <form id="filterForm" onsubmit="applyLogFilters(event)" class="space-y-4 mt-4">
+        <div class="flex items-center space-x-3 mb-4">
+            <div id="viewNotifIconContainer" class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                <i id="viewNotifIcon" class="fa-regular fa-file-lines text-base"></i>
+            </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Notification Category</label>
-                <select id="modalFilterType" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-purple-400">
-                    <option value="all">All Categories</option>
-                    <option value="Order Ready">Order Ready Notification</option>
-                    <option value="Payment Reminder">Payment Reminder</option>
-                    <option value="Pickup Reminder">Pickup Reminder</option>
-                    <option value="Delivery Reminder">Delivery Reminder</option>
-                    <option value="Promotion Broadcast">Promotion Broadcast</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Time Range</label>
-                <select id="modalFilterRange" class="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-purple-400">
-                    <option value="today">Today (Last 24 hours)</option>
-                    <option value="week">Past 7 Days</option>
-                    <option value="month">This Month</option>
-                    <option value="all">All History</option>
-                </select>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-gray-100">
-                <button type="button" onclick="resetLogFilters()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer">
-                    Reset
-                </button>
-                <button type="submit" class="bg-[#F89E97] hover:bg-[#F38981] text-[#7F1D1D] px-5 py-2 rounded-lg text-xs font-bold shadow-xs transition cursor-pointer">
-                    Apply Filter
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal 3: View Notification Detail Modal (Matching Previous UI viewReport pattern) -->
-<div id="viewNotificationModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 transform transition-all animate-in fade-in zoom-in duration-200">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <div class="flex items-center space-x-3">
-                <div id="detailAvatar" class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 font-bold text-sm flex items-center justify-center shadow-xs">
-                    JD
-                </div>
-                <div>
-                    <h3 id="detailName" class="text-base font-bold text-gray-900">John Doe</h3>
-                    <p id="detailPhone" class="text-xs text-gray-500 font-mono">+1 (555) 234-8901</p>
-                </div>
-            </div>
-            <button onclick="closeNotificationDetail()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
-
-        <div class="space-y-4 mt-4 text-xs">
-            <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-200/60">
-                <div>
-                    <span class="text-gray-400 font-semibold block uppercase text-[10px]">Notification Type</span>
-                    <span id="detailType" class="inline-block mt-1 font-bold text-gray-800">Order Ready</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 font-semibold block uppercase text-[10px]">Delivery Status</span>
-                    <span id="detailStatus" class="inline-flex items-center text-emerald-600 font-bold mt-1">
-                        <i class="fa-solid fa-circle-check text-xs mr-1"></i> Delivered (94ms)
-                    </span>
-                </div>
-                <div>
-                    <span class="text-gray-400 font-semibold block uppercase text-[10px]">Channel & Gateway</span>
-                    <span id="detailChannel" class="font-medium text-gray-700 block mt-1">Twilio SMS & FCM</span>
-                </div>
-                <div>
-                    <span class="text-gray-400 font-semibold block uppercase text-[10px]">Dispatched At</span>
-                    <span id="detailTime" class="font-medium text-gray-700 block mt-1">2 mins ago</span>
-                </div>
-            </div>
-
-            <div>
-                <span class="text-gray-500 font-semibold block mb-1 uppercase text-[10px]">Full Message Content</span>
-                <div id="detailMessage" class="bg-gray-50 rounded-xl p-3.5 border border-gray-200 text-gray-700 leading-relaxed font-sans text-xs">
-                    "Your laundry #WM-101 is ready for pickup! Locker: #12, PIN: 4821."
-                </div>
+                <h3 class="text-lg font-bold text-gray-900 leading-tight" id="viewNotifTitle">Notification Details</h3>
+                <span id="viewNotifType" class="text-xs font-semibold text-gray-500">Order Ready</span>
             </div>
         </div>
 
-        <div class="flex items-center justify-end space-x-2 pt-4 border-t border-gray-100 mt-5">
-            <button onclick="resendNotification()" class="px-3.5 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5">
-                <i class="fa-solid fa-rotate text-xs"></i>
-                <span>Resend Notification</span>
-            </button>
-            <button onclick="closeNotificationDetail()" class="px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition cursor-pointer">
+        <div class="space-y-3.5 text-sm bg-gray-50/70 p-4 rounded-2xl border border-gray-100">
+            <div>
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">Message</span>
+                <p id="viewNotifMessage" class="text-gray-800 leading-relaxed font-medium">Your order #ORD-0010 is ready for pickup.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200/50">
+                <div>
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">Target Audience</span>
+                    <span id="viewNotifTarget" class="font-bold text-gray-800 text-xs">Sokha Dara</span>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">Status</span>
+                    <span id="viewNotifStatus" class="bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full text-xs font-semibold inline-block">Sent</span>
+                </div>
+            </div>
+            <div class="pt-2 border-t border-gray-200/50">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-0.5">Scheduled Date & Time</span>
+                <span id="viewNotifDate" class="text-gray-600 text-xs font-medium">2025-09-15 10:24 AM</span>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <button type="button" onclick="closeViewNotificationModal()" class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-sm rounded-xl transition cursor-pointer">
                 Close
             </button>
         </div>
     </div>
 </div>
 
-<!-- Toast Container -->
-<div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden max-w-md bg-white border border-gray-200 rounded-xl p-4 shadow-2xl transition-all duration-300 transform translate-y-2">
-    <div class="flex items-start space-x-3">
-        <div id="toastIcon" class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-check text-sm"></i>
+<!-- ========================================== -->
+<!-- DELETE CONFIRMATION MODAL -->
+<!-- ========================================== -->
+<div id="deleteNotificationModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center relative animate-scale-up">
+        <div class="w-14 h-14 rounded-full bg-rose-50 text-rose-500 mx-auto flex items-center justify-center mb-4">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+            </svg>
         </div>
-        <div class="flex-1 min-w-0">
-            <h4 id="toastTitle" class="text-xs font-bold text-gray-900 leading-tight">Notification</h4>
-            <p id="toastMessage" class="text-[11px] text-gray-600 mt-0.5 leading-tight"></p>
-        </div>
-        <button onclick="hideToast()" class="text-gray-400 hover:text-gray-600">
-            <i class="fa-solid fa-xmark text-xs"></i>
-        </button>
+
+        <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Notification</h3>
+        <p class="text-sm text-gray-500 mb-4">
+            Are you sure you want to delete <span id="deleteNotifTitleSpan" class="font-bold text-gray-800"></span>? This action cannot be undone.
+        </p>
+
+        <form id="deleteNotificationForm" method="POST" action="">
+            @csrf
+            @method('DELETE')
+            <div class="flex items-center space-x-3">
+                <button 
+                    type="button" 
+                    onclick="closeDeleteNotificationModal()" 
+                    class="flex-1 py-2.5 px-4 border border-gray-200 rounded-xl text-gray-600 font-semibold text-sm hover:bg-gray-50 transition cursor-pointer"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="submit" 
+                    class="flex-1 py-2.5 px-4 bg-[#EF4444] hover:bg-rose-600 text-white font-semibold text-sm rounded-xl transition cursor-pointer shadow-xs"
+                >
+                    Delete Notification
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
-<?php $__env->startPush('scripts'); ?>
-<script id="all-notifications-data" type="application/json"><?php echo json_encode($allNotifications ?? [], 15, 512) ?></script>
+<!-- ========================================== -->
+<!-- JAVASCRIPT LOGIC -->
+<!-- ========================================== -->
 <script>
-    // Master Dataset of Notifications for Smooth Interactive Pagination
-    const allNotificationRecords = JSON.parse(document.getElementById('all-notifications-data').textContent || '[]');
-    let currentFilteredRecords = [...allNotificationRecords];
-    let activePage = <?php echo e($currentPage ?? 1); ?>;
-    const perPageCount = 5;
-    const maxPages = 5;
+    const NOTIFICATIONS_BASE_URL = "{{ url('/notifications') }}";
 
-    // 1. Live Search Machines / Customer Logs Filter
-    const machineSearchInput = document.getElementById('machineSearchInput');
-    if (machineSearchInput) {
-        machineSearchInput.addEventListener('input', function(e) {
-            const query = e.target.value.toLowerCase().trim();
-            const statusSelect = document.getElementById('statusFilterSelect');
-            const selectedStatus = statusSelect ? statusSelect.value : 'all';
-
-            applyCombinedFilter(query, selectedStatus);
-        });
+    // 1. Create Modal Handlers
+    function openCreateNotificationModal() {
+        document.getElementById('createNotificationForm').reset();
+        document.getElementById('createCharCount').innerText = '0';
+        document.getElementById('createNotificationModal').classList.remove('hidden');
     }
 
-    // 2. Status Dropdown Filter
-    function filterNotificationsByStatus(status) {
-        const query = machineSearchInput ? machineSearchInput.value.toLowerCase().trim() : '';
-        applyCombinedFilter(query, status);
+    function closeCreateNotificationModal() {
+        document.getElementById('createNotificationModal').classList.add('hidden');
     }
 
-    function applyCombinedFilter(query, status) {
-        currentFilteredRecords = allNotificationRecords.filter(item => {
-            const matchesStatus = (status === 'all' || item.type.toLowerCase() === status.toLowerCase());
-            const textMatch = !query || (
-                item.name.toLowerCase().includes(query) ||
-                item.phone.toLowerCase().includes(query) ||
-                item.type.toLowerCase().includes(query) ||
-                item.message.toLowerCase().includes(query)
-            );
-            return matchesStatus && textMatch;
-        });
+    // Auto-fill template when Type changes
+    function handleTypeChange(val) {
+        const titleInput = document.getElementById('newNotifTitle');
+        const messageInput = document.getElementById('newNotifMessage');
 
-        activePage = 1;
-        renderCurrentPageRows();
+        if (val === 'Order Ready Notification' || val === 'Order Ready') {
+            titleInput.value = 'Order Ready';
+            messageInput.value = 'Your laundry order is ready for pickup! Please bring your order receipt.';
+        } else if (val === 'Pickup Reminder') {
+            titleInput.value = 'Pickup Reminder';
+            messageInput.value = 'Friendly reminder: Please pick up your ready laundry order today.';
+        } else if (val === 'Delivery Reminder') {
+            titleInput.value = 'Delivery Reminder';
+            messageInput.value = 'Your clean laundry is out for delivery. Our driver will arrive shortly!';
+        } else if (val === 'Payment Reminder') {
+            titleInput.value = 'Payment Reminder';
+            messageInput.value = 'Your invoice payment is currently pending. Please click or visit the counter to settle.';
+        } else if (val === 'Promotion Notification' || val === 'Promotion') {
+            titleInput.value = 'Promotion';
+            messageInput.value = 'Special offer: Enjoy 20% OFF on all laundry and washing services this week!';
+        }
+        document.getElementById('createCharCount').innerText = messageInput.value.length;
     }
 
-    // 3. Dynamic Page Navigation (Matching Report & Employee UIs)
-    function changePage(page) {
-        const totalAvailablePages = Math.max(1, Math.ceil(currentFilteredRecords.length / perPageCount));
+    // 2. View Modal Handlers
+    function openViewNotificationModal(notif) {
+        if (!notif) return;
 
-        if (page === 'prev') {
-            if (activePage > 1) {
-                activePage--;
-            }
-        } else if (page === 'next') {
-            if (activePage < totalAvailablePages) {
-                activePage++;
-            }
+        document.getElementById('viewNotifTitle').innerText = notif.title || 'Notification';
+        document.getElementById('viewNotifType').innerText = notif.type || 'System';
+        document.getElementById('viewNotifMessage').innerText = notif.message || '';
+        document.getElementById('viewNotifTarget').innerText = notif.target || 'All Customers';
+        document.getElementById('viewNotifDate').innerText = notif.scheduled_date || 'N/A';
+
+        // Status badge
+        const statusSpan = document.getElementById('viewNotifStatus');
+        statusSpan.innerText = notif.status || 'Sent';
+        if (notif.status === 'Sent') {
+            statusSpan.className = 'bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full text-xs font-semibold inline-block';
+        } else if (notif.status === 'Pending') {
+            statusSpan.className = 'bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full text-xs font-semibold inline-block';
+        } else if (notif.status === 'Scheduled') {
+            statusSpan.className = 'bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full text-xs font-semibold inline-block';
         } else {
-            activePage = parseInt(page);
+            statusSpan.className = 'bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full text-xs font-semibold inline-block';
         }
 
-        renderCurrentPageRows();
-    }
-
-    // Render Table Rows for Current Active Page
-    function renderCurrentPageRows() {
-        const container = document.getElementById('notificationsListContainer');
-        const totalItems = currentFilteredRecords.length;
-        const totalPages = Math.max(1, Math.ceil(totalItems / perPageCount));
-        
-        if (activePage > totalPages) activePage = totalPages;
-        if (activePage < 1) activePage = 1;
-
-        const startIndex = (activePage - 1) * perPageCount;
-        const pageItems = currentFilteredRecords.slice(startIndex, startIndex + perPageCount);
-
-        container.innerHTML = '';
-
-        if (pageItems.length === 0) {
-            container.innerHTML = `<div class="text-center py-8 text-gray-500 text-xs bg-white/50 rounded-xl">No notifications found matching your search.</div>`;
+        // Icon
+        const iconElem = document.getElementById('viewNotifIcon');
+        const iconCont = document.getElementById('viewNotifIconContainer');
+        if (notif.type === 'Pickup Reminder') {
+            iconCont.className = 'w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0';
+            iconElem.className = 'fa-solid fa-bag-shopping text-base';
+        } else if (notif.type === 'Delivery Reminder') {
+            iconCont.className = 'w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0';
+            iconElem.className = 'fa-solid fa-truck-fast text-base';
+        } else if (notif.type === 'Payment Reminder') {
+            iconCont.className = 'w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0';
+            iconElem.className = 'fa-solid fa-credit-card text-base';
+        } else if (notif.type === 'Promotion' || notif.type === 'Promotion Notification') {
+            iconCont.className = 'w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0';
+            iconElem.className = 'fa-solid fa-bullhorn text-base';
         } else {
-            pageItems.forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'notification-row grid grid-cols-12 items-center px-2 py-1.5 transition hover:bg-white/70 rounded-xl cursor-pointer';
-                row.setAttribute('data-type', item.type);
-                row.onclick = () => openNotificationDetail(item);
-
-                row.innerHTML = `
-                    <div class="col-span-4 flex items-center space-x-2.5 pr-2">
-                        <div class="w-8 h-8 rounded-lg ${item.avatar_bg} ${item.avatar_text} font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
-                            ${item.initials}
-                        </div>
-                        <div class="min-w-0">
-                            <h4 class="font-bold text-gray-900 text-xs leading-tight truncate">${escapeHtml(item.name)}</h4>
-                            <p class="text-[11px] text-gray-500 font-mono mt-0.5">${escapeHtml(item.phone)}</p>
-                        </div>
-                    </div>
-                    <div class="col-span-3 pr-2">
-                        <span class="${item.type_bg} ${item.type_text} font-mono font-semibold text-[10.5px] px-2 py-0.5 rounded-md inline-block shadow-2xs whitespace-nowrap">
-                            ${escapeHtml(item.type)}
-                        </span>
-                    </div>
-                    <div class="col-span-5 flex items-center justify-between">
-                        <p class="text-[11px] text-gray-600 font-mono truncate mr-1" title="${escapeHtml(item.message)}">
-                            ${escapeHtml(item.short_message || item.message)}
-                        </p>
-                        <span class="text-gray-400 hover:text-blue-600 flex-shrink-0 text-xs" title="View details">
-                            <i class="fa-regular fa-eye text-[11px]"></i>
-                        </span>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
+            iconCont.className = 'w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0';
+            iconElem.className = 'fa-regular fa-file-lines text-base';
         }
-
-        // Update Pagination Info
-        const fromNum = totalItems > 0 ? startIndex + 1 : 0;
-        const toNum = Math.min(startIndex + perPageCount, totalItems);
-        document.getElementById('pag-from').innerText = fromNum;
-        document.getElementById('pag-to').innerText = toNum;
-        const totalSpan = document.getElementById('pag-total');
-        if (totalSpan) totalSpan.innerText = totalItems;
-
-        // Update Pagination Buttons
-        const prevBtn = document.getElementById('btn-prev');
-        const nextBtn = document.getElementById('btn-next');
-
-        if (prevBtn) prevBtn.disabled = (activePage <= 1);
-        if (nextBtn) nextBtn.disabled = (activePage >= totalPages);
-
-        for (let i = 1; i <= 5; i++) {
-            const btn = document.getElementById(`page-btn-${i}`);
-            if (btn) {
-                if (i === activePage) {
-                    btn.className = "page-num-btn w-8 h-8 rounded-lg bg-[#4F39F6] text-white font-bold text-xs flex items-center justify-center shadow-xs transition cursor-pointer";
-                } else {
-                    btn.className = "page-num-btn w-8 h-8 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 flex items-center justify-center transition shadow-2xs cursor-pointer";
-                }
-            }
-        }
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        return String(text)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-
-    // 4. View Notification Detail Modal
-    let selectedItemForResend = null;
-    function openNotificationDetail(item) {
-        selectedItemForResend = item;
-        document.getElementById('detailAvatar').innerText = item.initials;
-        document.getElementById('detailAvatar').className = `w-10 h-10 rounded-xl ${item.avatar_bg} ${item.avatar_text} font-bold text-sm flex items-center justify-center shadow-xs`;
-        document.getElementById('detailName').innerText = item.name;
-        document.getElementById('detailPhone').innerText = item.phone;
-        document.getElementById('detailType').innerText = item.type;
-        document.getElementById('detailStatus').innerHTML = `<i class="fa-solid fa-circle-check text-xs mr-1 text-emerald-600"></i> ${item.status || 'Delivered'} (${item.latency || '94ms'})`;
-        document.getElementById('detailChannel').innerText = item.channel || 'Twilio SMS & FCM Synced';
-        document.getElementById('detailTime').innerText = item.time || 'Just now';
-        document.getElementById('detailMessage').innerText = item.message;
 
         document.getElementById('viewNotificationModal').classList.remove('hidden');
     }
 
-    function closeNotificationDetail() {
+    function closeViewNotificationModal() {
         document.getElementById('viewNotificationModal').classList.add('hidden');
     }
 
-    function resendNotification() {
-        if (selectedItemForResend) {
-            closeNotificationDetail();
-            showToast('Notification Resent', `Dispatched duplicate ${selectedItemForResend.type} to ${selectedItemForResend.name}`, 'success');
-        }
-    }
-
-    // 5. Refresh Notification Logs
-    function refreshNotificationLogs() {
-        const refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) {
-            refreshBtn.querySelector('i').classList.add('fa-spin');
-        }
-
-        setTimeout(() => {
-            if (refreshBtn) {
-                refreshBtn.querySelector('i').classList.remove('fa-spin');
+    function handleViewNotificationClick(btn) {
+        try {
+            const raw = btn.getAttribute('data-notif');
+            if (raw) {
+                const notif = JSON.parse(atob(raw));
+                openViewNotificationModal(notif);
             }
-            renderCurrentPageRows();
-            showToast('Logs Updated', 'Recent notifications live stream synchronized with SMS & Push gateways.', 'success');
-        }, 500);
+        } catch (e) {
+            console.error('Error parsing notification:', e);
+        }
     }
 
-    // 6. Trigger Toggle Switch Handler
-    function handleTriggerToggle(triggerId, isActive) {
-        fetch("<?php echo e(route('notifications.toggle')); ?>", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
-            },
-            body: JSON.stringify({ id: triggerId, active: isActive })
-        })
-        .then(res => res.json())
-        .then(data => {
-            showToast('Rule Status Changed', data.message || 'Trigger rule updated successfully', isActive ? 'success' : 'info');
-        })
-        .catch(() => {
-            showToast('Rule Status Changed', 'Trigger rule #' + triggerId + ' set to ' + (isActive ? 'Active' : 'Paused'), isActive ? 'success' : 'info');
-        });
+    // 3. Delete Modal Handlers
+    function openDeleteNotificationModal(id, title) {
+        const form = document.getElementById('deleteNotificationForm');
+        form.action = `${NOTIFICATIONS_BASE_URL}/${id}`;
+        document.getElementById('deleteNotifTitleSpan').innerText = `"${title}"`;
+        document.getElementById('deleteNotificationModal').classList.remove('hidden');
     }
 
-    // 7. Dry Run Sandbox Test Handler
-    function runDryRunTest() {
-        const btn = document.getElementById('dryRunBtn');
-        const originalContent = btn.innerHTML;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-sm"></i><span>Simulating Gateways...</span>`;
-        btn.disabled = true;
+    function handleDeleteNotificationClick(btn) {
+        const id = btn.getAttribute('data-id');
+        const title = btn.getAttribute('data-title');
+        openDeleteNotificationModal(id, title);
+    }
 
-        fetch("<?php echo e(route('notifications.sandbox')); ?>", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
+    function closeDeleteNotificationModal() {
+        document.getElementById('deleteNotificationModal').classList.add('hidden');
+    }
+
+    // 4. Reset Filters
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('typeFilter').value = 'All Types';
+        document.getElementById('statusFilter').value = 'All Status';
+        window.location.href = "{{ route('notifications.index') }}";
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Live client-side instant filtering as user types
+        const searchInput = document.getElementById('searchInput');
+        const typeFilter = document.getElementById('typeFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const tableBody = document.getElementById('notificationsTableBody');
+
+        function applyClientFilter() {
+            const query = (searchInput.value || '').toLowerCase().trim();
+            const type = typeFilter.value;
+            const status = statusFilter.value;
+
+            const rows = tableBody.querySelectorAll('tr.notif-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                const matchesQuery = !query || text.includes(query);
+                
+                let matchesType = true;
+                if (type !== 'All Types') {
+                    matchesType = text.includes(type.toLowerCase());
+                }
+
+                let matchesStatus = true;
+                if (status !== 'All Status') {
+                    matchesStatus = text.includes(status.toLowerCase());
+                }
+
+                if (matchesQuery && matchesType && matchesStatus) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            const badge = document.getElementById('notificationsCountBadge');
+            if (badge) {
+                badge.innerText = `${visibleCount} notifications`;
             }
-        })
-        .then(res => res.json())
-        .then(data => {
-            btn.innerHTML = originalContent;
-            btn.disabled = false;
-            showToast('Sandbox Dry Run Passed', 'Twilio (98ms) • FCM Push (5 Sent) • 4 Vans Live Stream. All nominal.', 'success');
-        })
-        .catch(() => {
-            btn.innerHTML = originalContent;
-            btn.disabled = false;
-            showToast('Sandbox Dry Run Passed', 'Simulated 5 active triggers: Twilio 200 OK, FCM 200 OK. 0 drops.', 'success');
+        }
+
+        if (searchInput) searchInput.addEventListener('input', applyClientFilter);
+        if (typeFilter) typeFilter.addEventListener('change', applyClientFilter);
+        if (statusFilter) statusFilter.addEventListener('change', applyClientFilter);
+
+        // AJAX submit for Create Form
+        const createForm = document.getElementById('createNotificationForm');
+        if (createForm) {
+            createForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Sending...</span>';
+                }
+                const formData = new FormData(this);
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    closeCreateNotificationModal();
+                    window.location.reload();
+                })
+                .catch(err => {
+                    createForm.submit();
+                });
+            });
+        }
+
+        // AJAX submit for Delete Form
+        const deleteForm = document.getElementById('deleteNotificationForm');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Deleting...</span>';
+                }
+                const formData = new FormData(this);
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    closeDeleteNotificationModal();
+                    window.location.reload();
+                })
+                .catch(err => {
+                    deleteForm.submit();
+                });
+            });
+        }
+
+        // Close modal when clicking outside
+        ['createNotificationModal', 'viewNotificationModal', 'deleteNotificationModal'].forEach(id => {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.classList.add('hidden');
+                    }
+                });
+            }
         });
-    }
-
-    // 8. Broadcast Modal Functions
-    function openBroadcastModal() {
-        document.getElementById('broadcastModal').classList.remove('hidden');
-    }
-
-    function closeBroadcastModal() {
-        document.getElementById('broadcastModal').classList.add('hidden');
-    }
-
-    function updateCharCount(el) {
-        const counter = document.getElementById('charCounter');
-        if (counter) {
-            counter.innerText = el.value.length + ' / 160';
-        }
-    }
-
-    function submitBroadcast(e) {
-        e.preventDefault();
-        const form = document.getElementById('broadcastForm');
-        const submitBtn = document.getElementById('broadcastSubmitBtn');
-        const originalText = submitBtn.innerHTML;
-
-        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Dispatching...</span>`;
-        submitBtn.disabled = true;
-
-        const formData = new FormData(form);
-
-        fetch("<?php echo e(route('notifications.broadcast')); ?>", {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
-            },
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-            closeBroadcastModal();
-            form.reset();
-            updateCharCount(document.getElementById('broadcastMessage'));
-            showToast('Broadcast Dispatched', data.message || 'Notification broadcast sent successfully to customers!', 'success');
-        })
-        .catch(() => {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-            closeBroadcastModal();
-            showToast('Broadcast Dispatched', 'Broadcast notification dispatched to 3,890 customers via selected gateway!', 'success');
-        });
-    }
-
-    // 9. Filter Modal Functions
-    function openFilterModal() {
-        document.getElementById('filterModal').classList.remove('hidden');
-    }
-
-    function closeFilterModal() {
-        document.getElementById('filterModal').classList.add('hidden');
-    }
-
-    function applyLogFilters(e) {
-        e.preventDefault();
-        const selectedType = document.getElementById('modalFilterType').value;
-        const statusSelect = document.getElementById('statusFilterSelect');
-        if (statusSelect) {
-            statusSelect.value = selectedType;
-        }
-        filterNotificationsByStatus(selectedType);
-        closeFilterModal();
-        showToast('Filter Applied', 'Filtered notification logs by ' + (selectedType === 'all' ? 'All Categories' : selectedType), 'info');
-    }
-
-    function resetLogFilters() {
-        document.getElementById('modalFilterType').value = 'all';
-        const statusSelect = document.getElementById('statusFilterSelect');
-        if (statusSelect) {
-            statusSelect.value = 'all';
-        }
-        filterNotificationsByStatus('all');
-        closeFilterModal();
-        showToast('Filter Reset', 'Displaying all system notification records.', 'info');
-    }
-
-    // 10. Quick Alerts Bell Toggle
-    function toggleQuickAlerts() {
-        showToast('Gateway Status', 'All 3 gateways (Twilio, FCM, GPS Telemetry) active and operating normally.', 'info');
-    }
-
-    // 11. Toast Notification Helper
-    let toastTimeout;
-    function showToast(title, message, type = 'success') {
-        const toast = document.getElementById('toastNotification');
-        const toastTitle = document.getElementById('toastTitle');
-        const toastMessage = document.getElementById('toastMessage');
-        const toastIcon = document.getElementById('toastIcon');
-
-        if (!toast || !toastTitle || !toastMessage || !toastIcon) return;
-
-        toastTitle.innerText = title;
-        toastMessage.innerText = message;
-
-        if (type === 'success') {
-            toastIcon.className = 'w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0';
-            toastIcon.innerHTML = '<i class="fa-solid fa-check text-sm"></i>';
-        } else if (type === 'info') {
-            toastIcon.className = 'w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0';
-            toastIcon.innerHTML = '<i class="fa-solid fa-circle-info text-sm"></i>';
-        } else {
-            toastIcon.className = 'w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0';
-            toastIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-sm"></i>';
-        }
-
-        toast.classList.remove('hidden');
-        toast.classList.remove('translate-y-2');
-        toast.classList.add('translate-y-0');
-
-        clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => {
-            hideToast();
-        }, 4500);
-    }
-
-    function hideToast() {
-        const toast = document.getElementById('toastNotification');
-        if (toast) {
-            toast.classList.add('translate-y-2');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 250);
-        }
-    }
+    });
 </script>
-<?php $__env->stopPush(); ?>
-<?php $__env->stopSection(); ?>
-
-<?php echo $__env->make('layouts.navbar', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/Laundry_Managerment_System/laundry_system/resources/views/pages/notification.blade.php ENDPATH**/ ?>
+@endsection

@@ -11,22 +11,15 @@ class Payment extends Model
 
     protected $table = 'payments';
 
-    protected $fillable = [
-        'payment_id',
-        'order_number',
-        'customer_name',
-        'customer_initials',
-        'avatar_color',
-        'amount',
-        'payment_method',
-        'status',
-        'payment_date',
-        'reference_no',
-        'notes',
-    ];
+    protected $primaryKey = 'payment_id';
+
+    public $incrementing = true;
+
+    public $timestamps = false;
+
+    protected $guarded = [];
 
     protected $casts = [
-        'amount' => 'decimal:2',
         'payment_date' => 'datetime',
     ];
 
@@ -40,6 +33,10 @@ class Payment extends Model
 
     /**
      * Scope: Filter by status.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string|null $status
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeStatus($query, $status)
     {
@@ -51,6 +48,10 @@ class Payment extends Model
 
     /**
      * Scope: Filter by payment method.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string|null $method
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeMethod($query, $method)
     {
@@ -62,6 +63,10 @@ class Payment extends Model
 
     /**
      * Scope: Search by keyword.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string|null $term
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeSearch($query, $term)
     {

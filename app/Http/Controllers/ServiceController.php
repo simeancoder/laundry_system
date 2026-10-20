@@ -25,138 +25,11 @@ class ServiceController extends Controller
     ];
 
     /**
-     * Get baseline mock data matching the UI screenshot exactly.
+     * Get baseline services (no longer returning mock data).
      */
     protected function getBaselineServices()
     {
-        return collect([
-            (object)[
-                'id' => 1,
-                'service_id' => 1,
-                'name' => 'Wash Only',
-                'service_name' => 'Wash Only',
-                'service_type' => 'Wash Only',
-                'price' => 1.50,
-                'price_per_kg' => 1.50,
-                'price_per_item' => null,
-                'estimated_time' => '1–2 days',
-                'estimated_completion_hrs' => 24,
-                'description' => 'Standard machine washing cycle using high-grade eco detergents.',
-                'status' => 'Active',
-            ],
-            (object)[
-                'id' => 2,
-                'service_id' => 2,
-                'name' => 'Wash & Dry',
-                'service_name' => 'Wash & Dry',
-                'service_type' => 'Wash & Dry',
-                'price' => 2.50,
-                'price_per_kg' => 2.50,
-                'price_per_item' => null,
-                'estimated_time' => '2–3 days',
-                'estimated_completion_hrs' => 48,
-                'description' => 'Machine washing and full tumble drying with gentle fabric softener.',
-                'status' => 'Active',
-            ],
-            (object)[
-                'id' => 3,
-                'service_id' => 3,
-                'name' => 'Wash, Dry & Fold',
-                'service_name' => 'Wash, Dry & Fold',
-                'service_type' => 'Wash, Dry & Fold',
-                'price' => 3.50,
-                'price_per_kg' => 3.50,
-                'price_per_item' => null,
-                'estimated_time' => '2–3 days',
-                'estimated_completion_hrs' => 48,
-                'description' => 'Complete laundry service: washed, tumble dried, and neatly crisply folded.',
-                'status' => 'Active',
-            ],
-            (object)[
-                'id' => 4,
-                'service_id' => 4,
-                'name' => 'Dry Cleaning',
-                'service_name' => 'Dry Cleaning',
-                'service_type' => 'Dry Cleaning',
-                'price' => 4.00,
-                'price_per_kg' => 4.00,
-                'price_per_item' => null,
-                'estimated_time' => '3–5 days',
-                'estimated_completion_hrs' => 72,
-                'description' => 'Eco-solvent dry cleaning for delicate fabrics, suits, blazers, and dresses.',
-                'status' => 'Active',
-            ],
-            (object)[
-                'id' => 5,
-                'service_id' => 5,
-                'name' => 'Ironing',
-                'service_name' => 'Ironing',
-                'service_type' => 'Ironing',
-                'price' => 2.00,
-                'price_per_kg' => 2.00,
-                'price_per_item' => null,
-                'estimated_time' => '1–2 days',
-                'estimated_completion_hrs' => 24,
-                'description' => 'Steam pressing and wrinkle-free ironing delivered on sturdy hangers.',
-                'status' => 'Active',
-            ],
-            (object)[
-                'id' => 6,
-                'service_id' => 6,
-                'name' => 'Blanket Cleaning',
-                'service_name' => 'Blanket Cleaning',
-                'service_type' => 'Blanket Cleaning',
-                'price' => 2.80,
-                'price_per_kg' => 2.80,
-                'price_per_item' => null,
-                'estimated_time' => '2–4 days',
-                'estimated_completion_hrs' => 48,
-                'description' => 'Deep sanitization and washing for heavy blankets, comforters, and duvets.',
-                'status' => 'Active',
-            ],
-            (object)[
-                'id' => 7,
-                'service_id' => 7,
-                'name' => 'Curtain Cleaning',
-                'service_name' => 'Curtain Cleaning',
-                'service_type' => 'Curtain Cleaning',
-                'price' => 3.00,
-                'price_per_kg' => 3.00,
-                'price_per_item' => null,
-                'estimated_time' => '3–5 days',
-                'estimated_completion_hrs' => 72,
-                'description' => 'Professional dust removal, gentle steam wash and care for all curtain fabrics.',
-                'status' => 'Active',
-            ],
-            (object)[
-                'id' => 8,
-                'service_id' => 8,
-                'name' => 'Shoe Cleaning',
-                'service_name' => 'Shoe Cleaning',
-                'service_type' => 'Shoe Cleaning',
-                'price' => 4.50,
-                'price_per_kg' => 4.50,
-                'price_per_item' => null,
-                'estimated_time' => '2–4 days',
-                'estimated_completion_hrs' => 48,
-                'description' => 'Meticulous deep scrubbing, stain extraction, and polishing for sneakers and shoes.',
-                'status' => 'Active',
-            ],
-            (object)[
-                'id' => 9,
-                'service_id' => 9,
-                'name' => 'Carpet Cleaning',
-                'service_name' => 'Carpet Cleaning',
-                'service_type' => 'Carpet Cleaning',
-                'price' => 2.00,
-                'price_per_kg' => 2.00,
-                'price_per_item' => null,
-                'estimated_time' => '2–4 days',
-                'estimated_completion_hrs' => 48,
-                'description' => 'Deep rug and carpet extraction shampooing, odor neutralization and sanitization.',
-                'status' => 'Active',
-            ],
-        ]);
+        return collect([]);
     }
 
     /**
@@ -202,25 +75,6 @@ class ServiceController extends Controller
 
         if ($hasDb) {
             try {
-                // If table is empty, auto-populate baseline services
-                if (Service::count() === 0) {
-                    $baseline = $this->getBaselineServices();
-                    foreach ($baseline as $b) {
-                        $payload = [];
-                        if (in_array('name', $columns)) $payload['name'] = $b->name;
-                        if (in_array('service_name', $columns)) $payload['service_name'] = $b->service_name;
-                        if (in_array('service_type', $columns)) $payload['service_type'] = $b->service_type;
-                        if (in_array('price', $columns)) $payload['price'] = $b->price;
-                        if (in_array('price_per_kg', $columns)) $payload['price_per_kg'] = $b->price_per_kg;
-                        if (in_array('price_per_item', $columns)) $payload['price_per_item'] = $b->price_per_item;
-                        if (in_array('estimated_time', $columns)) $payload['estimated_time'] = $b->estimated_time;
-                        if (in_array('estimated_completion_hrs', $columns)) $payload['estimated_completion_hrs'] = $b->estimated_completion_hrs;
-                        if (in_array('description', $columns)) $payload['description'] = $b->description;
-                        if (in_array('status', $columns)) $payload['status'] = $b->status;
-                        Service::create($payload);
-                    }
-                }
-
                 $query = Service::query();
 
                 // 1. Search Query
@@ -254,49 +108,22 @@ class ServiceController extends Controller
                 // Safe order by detected PK (service_id or id)
                 $services = $query->orderBy($pk, 'asc')->paginate(9)->withQueryString();
             } catch (\Throwable $e) {
-                // If anything fails in DB execution, smoothly switch to session mock data
                 $hasDb = false;
                 $services = null;
             }
         }
 
-        // Fallback to session mock data if DB query didn't execute
+        session()->forget('mock_services');
+
         if (!$hasDb || $services === null) {
-            if (!session()->has('mock_services')) {
-                session(['mock_services' => $this->getBaselineServices()]);
-            }
-            $allServices = session('mock_services', $this->getBaselineServices());
-
-            // Apply search & type filter
-            $filtered = $allServices->filter(function ($item) use ($search, $selectedType) {
-                $matchesSearch = true;
-                if (!empty($search)) {
-                    $nameMatch = stripos($item->name ?? ($item->service_name ?? ''), $search) !== false;
-                    $typeMatch = stripos($item->service_type ?? '', $search) !== false;
-                    $descMatch = stripos($item->description ?? '', $search) !== false;
-                    $matchesSearch = $nameMatch || $typeMatch || $descMatch;
-                }
-
-                $matchesType = true;
-                if (!empty($selectedType)) {
-                    $matchesType = ($item->service_type ?? ($item->name ?? '')) === $selectedType;
-                }
-
-                return $matchesSearch && $matchesType;
-            })->values();
-
-            $totalServices = $filtered->count();
-            $page = (int)$request->input('page', 1);
-            $perPage = 9;
-            $offset = ($page - 1) * $perPage;
-
             $services = new LengthAwarePaginator(
-                $filtered->slice($offset, $perPage)->values(),
-                $totalServices,
-                $perPage,
-                $page,
+                [],
+                0,
+                9,
+                1,
                 ['path' => $request->url(), 'query' => $request->query()]
             );
+            $totalServices = 0;
         }
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -369,6 +196,7 @@ class ServiceController extends Controller
         elseif (strpos($request->estimated_time, '2–4') !== false || strpos($request->estimated_time, '2-4') !== false) $hrs = 60;
         elseif (strpos($request->estimated_time, '3–5') !== false || strpos($request->estimated_time, '3-5') !== false) $hrs = 72;
 
+        $service = null;
         if ($hasDb && !empty($columns)) {
             try {
                 $payload = [];
@@ -383,37 +211,17 @@ class ServiceController extends Controller
                 if (in_array('description', $columns)) $payload['description'] = $request->description;
                 if (in_array('status', $columns)) $payload['status'] = $status;
                 
-                Service::create($payload);
+                $service = Service::create($payload);
             } catch (\Throwable $e) {
-                // Fallback to session
+                \Illuminate\Support\Facades\Log::error("Service create failed: " . $e->getMessage());
             }
         }
-
-        // Always sync in session as well
-        $all = session('mock_services', $this->getBaselineServices());
-        $newId = ($all->max('id') ?? $all->max('service_id') ?? 0) + 1;
-        $newItem = (object)[
-            'id' => $newId,
-            'service_id' => $newId,
-            'name' => $request->name,
-            'service_name' => $request->name,
-            'service_type' => $request->service_type,
-            'price' => $priceKg,
-            'price_per_kg' => $priceKg,
-            'price_per_item' => $priceItem,
-            'estimated_time' => $request->estimated_time,
-            'estimated_completion_hrs' => $hrs,
-            'description' => $request->description,
-            'status' => $status,
-        ];
-        $all->prepend($newItem);
-        session(['mock_services' => $all]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Service added successfully.',
-                'service' => $newItem,
+                'service' => $service,
             ]);
         }
 
@@ -422,9 +230,17 @@ class ServiceController extends Controller
 
     /**
      * Show single service details.
+     *
+     * @param int|string $id
+     * @param int|string|null $optionalId
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show($id, $optionalId = null)
     {
+        if ($id instanceof \Illuminate\Http\Request) {
+            $id = $optionalId ?? $id->route('id') ?? $id->route('service');
+        }
+
         list($hasDb, $columns, $pk) = $this->getTableSchemaInfo();
         $service = null;
 
@@ -434,13 +250,6 @@ class ServiceController extends Controller
             } catch (\Throwable $e) {
                 $service = null;
             }
-        }
-
-        if (!$service) {
-            $all = session('mock_services', $this->getBaselineServices());
-            $service = $all->first(function ($s) use ($id) {
-                return (isset($s->id) && $s->id == $id) || (isset($s->service_id) && $s->service_id == $id);
-            });
         }
 
         if (!$service) {
@@ -460,6 +269,10 @@ class ServiceController extends Controller
 
     /**
      * Update the specified service in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, $id)
     {
@@ -506,29 +319,9 @@ class ServiceController extends Controller
                     $service->update($payload);
                 }
             } catch (\Throwable $e) {
-                // Fallback to session
+                \Illuminate\Support\Facades\Log::error("Service update failed: " . $e->getMessage());
             }
         }
-
-        // Update in session
-        $all = session('mock_services', $this->getBaselineServices());
-        $all = $all->map(function ($item) use ($id, $request, $priceKg, $priceItem, $status, $hrs) {
-            $itemId = $item->id ?? ($item->service_id ?? null);
-            if ($itemId == $id) {
-                $item->name = $request->name;
-                $item->service_name = $request->name;
-                $item->service_type = $request->service_type;
-                $item->price = $priceKg;
-                $item->price_per_kg = $priceKg;
-                $item->price_per_item = $priceItem;
-                $item->estimated_time = $request->estimated_time;
-                $item->estimated_completion_hrs = $hrs;
-                $item->description = $request->description;
-                $item->status = $status;
-            }
-            return $item;
-        });
-        session(['mock_services' => $all]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -542,6 +335,10 @@ class ServiceController extends Controller
 
     /**
      * Remove the specified service from storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, $id)
     {
@@ -554,17 +351,9 @@ class ServiceController extends Controller
                     $service->delete();
                 }
             } catch (\Throwable $e) {
-                // Fallback
+                \Illuminate\Support\Facades\Log::error("Service delete failed: " . $e->getMessage());
             }
         }
-
-        // Delete from session
-        $all = session('mock_services', $this->getBaselineServices());
-        $all = $all->reject(function ($s) use ($id) {
-            $itemId = $s->id ?? ($s->service_id ?? null);
-            return $itemId == $id;
-        })->values();
-        session(['mock_services' => $all]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([

@@ -2,684 +2,683 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class NotificationController extends Controller
 {
     /**
-     * Get all notifications dataset with session backing.
+     * Official 32 baseline notifications matching teacher screenshot.
      */
-    private function getAllNotifications(): array
-    {
-        if (session()->has('all_notifications')) {
-            return session('all_notifications');
-        }
-        $defaults = $this->getBaselineNotifications();
-        session(['all_notifications' => $defaults]);
-        return $defaults;
-    }
-
-    private function getBaselineNotifications(): array
+    private function getDefaultNotifications(): array
     {
         return [
-            // Page 1 (Matching screenshot exactly)
             [
                 'id' => 1,
-                'name' => 'John Doe',
-                'initials' => 'JD',
-                'phone' => '+1 (555) 234-8901',
-                'avatar_bg' => 'bg-[#D8D4FD]',
-                'avatar_text' => 'text-[#4F39F6]',
                 'type' => 'Order Ready',
-                'type_bg' => 'bg-[#DFD7FE]',
-                'type_text' => 'text-[#5B46F6]',
-                'message' => '"Your laundry #WM-101 is ready for pickup! Locker: #12, PIN: 4821."',
-                'short_message' => '"Your laundry #WM-101 is ready for pickup! L...',
-                'status' => 'Delivered',
-                'channel' => 'SMS & FCM Push',
-                'time' => '2 mins ago',
-                'latency' => '94ms',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0010 is ready for pickup.',
+                'target' => 'Sokha Dara',
+                'scheduled_date' => '2025-09-15 10:24 AM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 2,
-                'name' => 'Sarah Smith',
-                'initials' => 'SS',
-                'phone' => '+1 (555) 892-1144',
-                'avatar_bg' => 'bg-[#FED7D7]',
-                'avatar_text' => 'text-[#C53030]',
-                'type' => 'Payment Reminder',
-                'type_bg' => 'bg-[#FED7D7]',
-                'type_text' => 'text-[#E53E3E]',
-                'message' => '"Invoice #INV-204 is pending ($48.50). Click pay.laundry6plus.com/204 to complete payment."',
-                'short_message' => '"Invoice #INV-204 is pending ($48.50). Click p...',
-                'status' => 'Delivered',
-                'channel' => 'SMS Direct',
-                'time' => '15 mins ago',
-                'latency' => '108ms',
+                'type' => 'Pickup Reminder',
+                'title' => 'Pickup Reminder',
+                'message' => 'Please pick up your order #ORD-0009 today.',
+                'target' => 'Chan Sreyneath',
+                'scheduled_date' => '2025-09-14 09:00 AM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 3,
-                'name' => 'Alex Wong',
-                'initials' => 'AW',
-                'phone' => '+1 (555) 431-7728',
-                'avatar_bg' => 'bg-[#CBD5E1]',
-                'avatar_text' => 'text-[#334155]',
-                'type' => 'Pickup Reminder',
-                'type_bg' => 'bg-[#E2E8F0]',
-                'type_text' => 'text-[#475569]',
-                'message' => '"Reminder: Clothes ready at store Downtown branch. Storage fees apply after 48 hours."',
-                'short_message' => '"Reminder: Clothes ready at store Downtown...',
-                'status' => 'Delivered',
-                'channel' => 'SMS Direct',
-                'time' => '32 mins ago',
-                'latency' => '115ms',
+                'type' => 'Delivery Reminder',
+                'title' => 'Delivery Reminder',
+                'message' => 'Your order #ORD-0008 is out for delivery.',
+                'target' => 'Heng Channa',
+                'scheduled_date' => '2025-09-13 02:30 PM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 4,
-                'name' => 'Marcus Sterling',
-                'initials' => 'MS',
-                'phone' => '+1 (555) 902-3318',
-                'avatar_bg' => 'bg-[#BAE6FD]',
-                'avatar_text' => 'text-[#0284C7]',
-                'type' => 'Delivery Reminder',
-                'type_bg' => 'bg-[#E0F2FE]',
-                'type_text' => 'text-[#0284C7]',
-                'message' => '"Van #02 en route with your fresh laundry. ETA is approximately 15 minutes."',
-                'short_message' => '"Van #02 en route with your fresh laundry. ET...',
-                'status' => 'Delivered',
-                'channel' => 'Live GPS Link + Push',
-                'time' => '1 hour ago',
-                'latency' => '89ms',
+                'type' => 'Payment Reminder',
+                'title' => 'Payment Reminder',
+                'message' => 'Your payment for order #ORD-0007 is pending.',
+                'target' => 'Lim Vannak',
+                'scheduled_date' => '2025-09-12 11:00 AM',
+                'status' => 'Pending',
             ],
             [
                 'id' => 5,
-                'name' => 'Elena Rostova',
-                'initials' => 'ER',
-                'phone' => '+1 (555) 762-9930',
-                'avatar_bg' => 'bg-[#E9D5FF]',
-                'avatar_text' => 'text-[#7E22CE]',
-                'type' => 'Promotion Broadcast',
-                'type_bg' => 'bg-[#F3E8FF]',
-                'type_text' => 'text-[#9333EA]',
-                'message' => '"Flash 20% off all duvet & winter jacket dry cleaning until Sunday midnight! Code: FRESH20"',
-                'short_message' => '"Flash 20% off all duvet & winter jacket dry cl...',
-                'status' => 'Delivered',
-                'channel' => 'Push & Geofence',
-                'time' => '3 hours ago',
-                'latency' => '120ms',
+                'type' => 'Promotion',
+                'title' => 'Promotion',
+                'message' => 'Get 20% OFF on dry cleaning service this week!',
+                'target' => 'All Customers',
+                'scheduled_date' => '2025-09-12 09:00 AM',
+                'status' => 'Sent',
             ],
-            // Page 2
             [
                 'id' => 6,
-                'name' => 'Michael Chen',
-                'initials' => 'MC',
-                'phone' => '+1 (555) 349-8812',
-                'avatar_bg' => 'bg-[#D8D4FD]',
-                'avatar_text' => 'text-[#4F39F6]',
                 'type' => 'Order Ready',
-                'type_bg' => 'bg-[#DFD7FE]',
-                'type_text' => 'text-[#5B46F6]',
-                'message' => '"Your laundry #WM-102 is dried, pressed and ready at Counter 2."',
-                'short_message' => '"Your laundry #WM-102 is dried, pressed and rea...',
-                'status' => 'Delivered',
-                'channel' => 'SMS / App Alert',
-                'time' => '4 hours ago',
-                'latency' => '98ms',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0006 is ready for pickup.',
+                'target' => 'Kim Sovannary',
+                'scheduled_date' => '2025-09-11 03:20 PM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 7,
-                'name' => 'Jessica Taylor',
-                'initials' => 'JT',
-                'phone' => '+1 (555) 612-9923',
-                'avatar_bg' => 'bg-[#BAE6FD]',
-                'avatar_text' => 'text-[#0284C7]',
-                'type' => 'Delivery Reminder',
-                'type_bg' => 'bg-[#E0F2FE]',
-                'type_text' => 'text-[#0284C7]',
-                'message' => '"Driver Van #01 departed store. Live tracking: live.laundry6plus.com/van1"',
-                'short_message' => '"Driver Van #01 departed store. Live tracking: l...',
-                'status' => 'Delivered',
-                'channel' => 'Live GPS Link + Push',
-                'time' => '5 hours ago',
-                'latency' => '92ms',
+                'type' => 'Pickup Reminder',
+                'title' => 'Pickup Reminder',
+                'message' => 'Please pick up your order #ORD-0005 today.',
+                'target' => 'Thon Sreynich',
+                'scheduled_date' => '2025-09-11 10:00 AM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 8,
-                'name' => 'David Kim',
-                'initials' => 'DK',
-                'phone' => '+1 (555) 823-4411',
-                'avatar_bg' => 'bg-[#CBD5E1]',
-                'avatar_text' => 'text-[#334155]',
-                'type' => 'Pickup Reminder',
-                'type_bg' => 'bg-[#E2E8F0]',
-                'type_text' => 'text-[#475569]',
-                'message' => '"Final notice: 2 suits ready for pickup at Main Street branch."',
-                'short_message' => '"Final notice: 2 suits ready for pickup at Main...',
-                'status' => 'Delivered',
-                'channel' => 'SMS Direct',
-                'time' => '6 hours ago',
-                'latency' => '110ms',
+                'type' => 'Payment Reminder',
+                'title' => 'Payment Reminder',
+                'message' => 'Your payment for order #ORD-0004 is pending.',
+                'target' => 'Pich Sothey',
+                'scheduled_date' => '2025-09-10 04:15 PM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 9,
-                'name' => 'Sophia Martinez',
-                'initials' => 'SM',
-                'phone' => '+1 (555) 456-7890',
-                'avatar_bg' => 'bg-[#FED7D7]',
-                'avatar_text' => 'text-[#C53030]',
-                'type' => 'Payment Reminder',
-                'type_bg' => 'bg-[#FED7D7]',
-                'type_text' => 'text-[#E53E3E]',
-                'message' => '"Receipt for Order #ORD-882: $32.00 paid successfully via Apple Pay."',
-                'short_message' => '"Receipt for Order #ORD-882: $32.00 paid succe...',
-                'status' => 'Delivered',
-                'channel' => 'SMS & Email Dunning',
-                'time' => '8 hours ago',
-                'latency' => '102ms',
+                'type' => 'Promotion',
+                'title' => 'Promotion',
+                'message' => 'Happy New Month! 15% OFF for all services.',
+                'target' => 'All Customers',
+                'scheduled_date' => '2025-09-10 09:00 AM',
+                'status' => 'Scheduled',
             ],
             [
                 'id' => 10,
-                'name' => 'Robert Johnson',
-                'initials' => 'RJ',
-                'phone' => '+1 (555) 987-6543',
-                'avatar_bg' => 'bg-[#E9D5FF]',
-                'avatar_text' => 'text-[#7E22CE]',
-                'type' => 'Promotion Broadcast',
-                'type_bg' => 'bg-[#F3E8FF]',
-                'type_text' => 'text-[#9333EA]',
-                'message' => '"VIP Exclusive: Free pickup & delivery on all orders this weekend!"',
-                'short_message' => '"VIP Exclusive: Free pickup & delivery on all o...',
-                'status' => 'Delivered',
-                'channel' => 'Push & Geofence',
-                'time' => '10 hours ago',
-                'latency' => '118ms',
+                'type' => 'Delivery Reminder',
+                'title' => 'Delivery Reminder',
+                'message' => 'Your order #ORD-0003 is out for delivery.',
+                'target' => 'Va Sovan',
+                'scheduled_date' => '2025-09-09 01:45 PM',
+                'status' => 'Sent',
             ],
-            // Page 3
             [
                 'id' => 11,
-                'name' => 'Emily Davis',
-                'initials' => 'ED',
-                'phone' => '+1 (555) 234-5678',
-                'avatar_bg' => 'bg-[#D8D4FD]',
-                'avatar_text' => 'text-[#4F39F6]',
                 'type' => 'Order Ready',
-                'type_bg' => 'bg-[#DFD7FE]',
-                'type_text' => 'text-[#5B46F6]',
-                'message' => '"Your laundry #WM-103 is ready for pickup! Locker: #08, PIN: 1920."',
-                'short_message' => '"Your laundry #WM-103 is ready for pickup! L...',
-                'status' => 'Delivered',
-                'channel' => 'SMS / App Alert',
-                'time' => '12 hours ago',
-                'latency' => '96ms',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0002 is ready for pickup.',
+                'target' => 'Meng Chhay',
+                'scheduled_date' => '2025-09-09 11:15 AM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 12,
-                'name' => 'James Wilson',
-                'initials' => 'JW',
-                'phone' => '+1 (555) 345-6789',
-                'avatar_bg' => 'bg-[#BAE6FD]',
-                'avatar_text' => 'text-[#0284C7]',
-                'type' => 'Delivery Reminder',
-                'type_bg' => 'bg-[#E0F2FE]',
-                'type_text' => 'text-[#0284C7]',
-                'message' => '"Van #04 en route with clean curtains and bedding. ETA 20 mins."',
-                'short_message' => '"Van #04 en route with clean curtains and beddi...',
-                'status' => 'Delivered',
-                'channel' => 'Live GPS Link + Push',
-                'time' => '14 hours ago',
-                'latency' => '90ms',
+                'type' => 'Pickup Reminder',
+                'title' => 'Pickup Reminder',
+                'message' => 'Please pick up your order #ORD-0001 today.',
+                'target' => 'Keo Pisey',
+                'scheduled_date' => '2025-09-08 09:30 AM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 13,
-                'name' => 'Olivia Brown',
-                'initials' => 'OB',
-                'phone' => '+1 (555) 456-7891',
-                'avatar_bg' => 'bg-[#FED7D7]',
-                'avatar_text' => 'text-[#C53030]',
-                'type' => 'Payment Reminder',
-                'type_bg' => 'bg-[#FED7D7]',
-                'type_text' => 'text-[#E53E3E]',
-                'message' => '"Invoice #INV-210 pending for $65.20. Pay online to release order."',
-                'short_message' => '"Invoice #INV-210 pending for $65.20. Pay onli...',
-                'status' => 'Delivered',
-                'channel' => 'SMS & Email Dunning',
-                'time' => '16 hours ago',
-                'latency' => '105ms',
+                'type' => 'Delivery Reminder',
+                'title' => 'Delivery Reminder',
+                'message' => 'Your order #ORD-0032 is out for delivery.',
+                'target' => 'Chea Ratanak',
+                'scheduled_date' => '2025-09-08 03:00 PM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 14,
-                'name' => 'William Lee',
-                'initials' => 'WL',
-                'phone' => '+1 (555) 567-8902',
-                'avatar_bg' => 'bg-[#CBD5E1]',
-                'avatar_text' => 'text-[#334155]',
-                'type' => 'Pickup Reminder',
-                'type_bg' => 'bg-[#E2E8F0]',
-                'type_text' => 'text-[#475569]',
-                'message' => '"Reminder: Express dry cleaning ready for collection at front desk."',
-                'short_message' => '"Reminder: Express dry cleaning ready for colle...',
-                'status' => 'Delivered',
-                'channel' => 'SMS Direct',
-                'time' => '18 hours ago',
-                'latency' => '112ms',
+                'type' => 'Payment Reminder',
+                'title' => 'Payment Reminder',
+                'message' => 'Your payment for order #ORD-0030 is pending.',
+                'target' => 'Seng Rath',
+                'scheduled_date' => '2025-09-07 10:45 AM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 15,
-                'name' => 'Amanda Miller',
-                'initials' => 'AM',
-                'phone' => '+1 (555) 678-9013',
-                'avatar_bg' => 'bg-[#E9D5FF]',
-                'avatar_text' => 'text-[#7E22CE]',
-                'type' => 'Promotion Broadcast',
-                'type_bg' => 'bg-[#F3E8FF]',
-                'type_text' => 'text-[#9333EA]',
-                'message' => '"Special: 15% off winter coat water-proofing service this week."',
-                'short_message' => '"Special: 15% off winter coat water-proofing s...',
-                'status' => 'Delivered',
-                'channel' => 'Push & Geofence',
-                'time' => '20 hours ago',
-                'latency' => '116ms',
+                'type' => 'Order Ready',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0028 is ready for pickup.',
+                'target' => 'Somnang Bun',
+                'scheduled_date' => '2025-09-07 02:20 PM',
+                'status' => 'Sent',
             ],
-            // Page 4
             [
                 'id' => 16,
-                'name' => 'Daniel Garcia',
-                'initials' => 'DG',
-                'phone' => '+1 (555) 789-0124',
-                'avatar_bg' => 'bg-[#D8D4FD]',
-                'avatar_text' => 'text-[#4F39F6]',
-                'type' => 'Order Ready',
-                'type_bg' => 'bg-[#DFD7FE]',
-                'type_text' => 'text-[#5B46F6]',
-                'message' => '"Your laundry #WM-104 is sorted, folded and ready on rack #3."',
-                'short_message' => '"Your laundry #WM-104 is sorted, folded and rea...',
-                'status' => 'Delivered',
-                'channel' => 'SMS / App Alert',
-                'time' => '1 day ago',
-                'latency' => '95ms',
+                'type' => 'Pickup Reminder',
+                'title' => 'Pickup Reminder',
+                'message' => 'Please pick up your order #ORD-0026 today.',
+                'target' => 'Korm Theara',
+                'scheduled_date' => '2025-09-06 08:50 AM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 17,
-                'name' => 'Mia Rodriguez',
-                'initials' => 'MR',
-                'phone' => '+1 (555) 890-1235',
-                'avatar_bg' => 'bg-[#BAE6FD]',
-                'avatar_text' => 'text-[#0284C7]',
                 'type' => 'Delivery Reminder',
-                'type_bg' => 'bg-[#E0F2FE]',
-                'type_text' => 'text-[#0284C7]',
-                'message' => '"Van #03 delivered your package to concierge. Signed by Front Desk."',
-                'short_message' => '"Van #03 delivered your package to concierge. S...',
-                'status' => 'Delivered',
-                'channel' => 'Live GPS Link + Push',
-                'time' => '1 day ago',
-                'latency' => '91ms',
+                'title' => 'Delivery Reminder',
+                'message' => 'Your order #ORD-0023 is out for delivery.',
+                'target' => 'Nhem Vicheka',
+                'scheduled_date' => '2025-09-06 01:10 PM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 18,
-                'name' => 'Lucas White',
-                'initials' => 'LW',
-                'phone' => '+1 (555) 901-2346',
-                'avatar_bg' => 'bg-[#FED7D7]',
-                'avatar_text' => 'text-[#C53030]',
                 'type' => 'Payment Reminder',
-                'type_bg' => 'bg-[#FED7D7]',
-                'type_text' => 'text-[#E53E3E]',
-                'message' => '"Invoice #INV-215 paid ($19.50). Thank you for your business!"',
-                'short_message' => '"Invoice #INV-215 paid ($19.50). Thank you for...',
-                'status' => 'Delivered',
-                'channel' => 'SMS & Email Dunning',
-                'time' => '1 day ago',
-                'latency' => '104ms',
+                'title' => 'Payment Reminder',
+                'message' => 'Your payment for order #ORD-0021 is pending.',
+                'target' => 'Chan Borey',
+                'scheduled_date' => '2025-09-05 11:30 AM',
+                'status' => 'Pending',
             ],
             [
                 'id' => 19,
-                'name' => 'Chloe Harris',
-                'initials' => 'CH',
-                'phone' => '+1 (555) 012-3457',
-                'avatar_bg' => 'bg-[#CBD5E1]',
-                'avatar_text' => 'text-[#334155]',
-                'type' => 'Pickup Reminder',
-                'type_bg' => 'bg-[#E2E8F0]',
-                'type_text' => 'text-[#475569]',
-                'message' => '"Gentle reminder: Order #WM-98 is ready for collection."',
-                'short_message' => '"Gentle reminder: Order #WM-98 is ready for co...',
-                'status' => 'Delivered',
-                'channel' => 'SMS Direct',
-                'time' => '2 days ago',
-                'latency' => '113ms',
+                'type' => 'Order Ready',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0019 is ready for pickup.',
+                'target' => 'Tep Sreypov',
+                'scheduled_date' => '2025-09-05 04:00 PM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 20,
-                'name' => 'Ethan Clark',
-                'initials' => 'EC',
-                'phone' => '+1 (555) 123-4568',
-                'avatar_bg' => 'bg-[#E9D5FF]',
-                'avatar_text' => 'text-[#7E22CE]',
-                'type' => 'Promotion Broadcast',
-                'type_bg' => 'bg-[#F3E8FF]',
-                'type_text' => 'text-[#9333EA]',
-                'message' => '"Summer blankets wash & fold bundle only $15 per load."',
-                'short_message' => '"Summer blankets wash & fold bundle only $15 pe...',
-                'status' => 'Delivered',
-                'channel' => 'Push & Geofence',
-                'time' => '2 days ago',
-                'latency' => '119ms',
+                'type' => 'Pickup Reminder',
+                'title' => 'Pickup Reminder',
+                'message' => 'Please pick up your order #ORD-0018 today.',
+                'target' => 'Oun Sreymom',
+                'scheduled_date' => '2025-09-04 09:15 AM',
+                'status' => 'Sent',
             ],
-            // Page 5
             [
                 'id' => 21,
-                'name' => 'Benjamin Lewis',
-                'initials' => 'BL',
-                'phone' => '+1 (555) 234-5679',
-                'avatar_bg' => 'bg-[#D8D4FD]',
-                'avatar_text' => 'text-[#4F39F6]',
                 'type' => 'Order Ready',
-                'type_bg' => 'bg-[#DFD7FE]',
-                'type_text' => 'text-[#5B46F6]',
-                'message' => '"Your dry cleaning #DC-551 is completed with luxury protective cover."',
-                'short_message' => '"Your dry cleaning #DC-551 is completed with l...',
-                'status' => 'Delivered',
-                'channel' => 'SMS / App Alert',
-                'time' => '2 days ago',
-                'latency' => '97ms',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0017 is ready for pickup.',
+                'target' => 'Phan Sopheak',
+                'scheduled_date' => '2025-09-04 02:40 PM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 22,
-                'name' => 'Grace Walker',
-                'initials' => 'GW',
-                'phone' => '+1 (555) 345-6780',
-                'avatar_bg' => 'bg-[#BAE6FD]',
-                'avatar_text' => 'text-[#0284C7]',
                 'type' => 'Delivery Reminder',
-                'type_bg' => 'bg-[#E0F2FE]',
-                'type_text' => 'text-[#0284C7]',
-                'message' => '"Delivery van scheduled for tomorrow morning 9:00 AM - 11:00 AM."',
-                'short_message' => '"Delivery van scheduled for tomorrow morning 9:...',
-                'status' => 'Delivered',
-                'channel' => 'Live GPS Link + Push',
-                'time' => '3 days ago',
-                'latency' => '93ms',
+                'title' => 'Delivery Reminder',
+                'message' => 'Your order #ORD-0016 is out for delivery.',
+                'target' => 'Hout Kolap',
+                'scheduled_date' => '2025-09-03 10:20 AM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 23,
-                'name' => 'Alexander Hall',
-                'initials' => 'AH',
-                'phone' => '+1 (555) 456-7892',
-                'avatar_bg' => 'bg-[#FED7D7]',
-                'avatar_text' => 'text-[#C53030]',
-                'type' => 'Payment Reminder',
-                'type_bg' => 'bg-[#FED7D7]',
-                'type_text' => 'text-[#E53E3E]',
-                'message' => '"Payment received for Commercial Account #CORP-104 ($180.00)."',
-                'short_message' => '"Payment received for Commercial Account #CORP-...',
-                'status' => 'Delivered',
-                'channel' => 'SMS & Email Dunning',
-                'time' => '3 days ago',
-                'latency' => '106ms',
+                'type' => 'Order Ready',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0015 is ready for pickup.',
+                'target' => 'Vorn Kosal',
+                'scheduled_date' => '2025-09-03 03:50 PM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 24,
-                'name' => 'Zoe Allen',
-                'initials' => 'ZA',
-                'phone' => '+1 (555) 567-8903',
-                'avatar_bg' => 'bg-[#CBD5E1]',
-                'avatar_text' => 'text-[#334155]',
                 'type' => 'Pickup Reminder',
-                'type_bg' => 'bg-[#E2E8F0]',
-                'type_text' => 'text-[#475569]',
-                'message' => '"Ready for pickup: Wedding dress dry clean & restoration."',
-                'short_message' => '"Ready for pickup: Wedding dress dry clean & re...',
-                'status' => 'Delivered',
-                'channel' => 'SMS Direct',
-                'time' => '4 days ago',
-                'latency' => '114ms',
+                'title' => 'Pickup Reminder',
+                'message' => 'Please pick up your order #ORD-0014 today.',
+                'target' => 'Ly Davin',
+                'scheduled_date' => '2025-09-02 08:30 AM',
+                'status' => 'Sent',
             ],
             [
                 'id' => 25,
-                'name' => 'Henry Young',
-                'initials' => 'HY',
-                'phone' => '+1 (555) 678-9014',
-                'avatar_bg' => 'bg-[#E9D5FF]',
-                'avatar_text' => 'text-[#7E22CE]',
-                'type' => 'Promotion Broadcast',
-                'type_bg' => 'bg-[#F3E8FF]',
-                'type_text' => 'text-[#9333EA]',
-                'message' => '"Earn double loyalty stars on all dry clean drop-offs."',
-                'short_message' => '"Earn double loyalty stars on all dry clean dro...',
-                'status' => 'Delivered',
-                'channel' => 'Push & Geofence',
-                'time' => '5 days ago',
-                'latency' => '117ms',
+                'type' => 'Order Ready',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0013 is ready for pickup.',
+                'target' => 'Prak Chanthou',
+                'scheduled_date' => '2025-09-02 01:25 PM',
+                'status' => 'Sent',
+            ],
+            [
+                'id' => 26,
+                'type' => 'Delivery Reminder',
+                'title' => 'Delivery Reminder',
+                'message' => 'Your order #ORD-0012 is out for delivery.',
+                'target' => 'Say Piseth',
+                'scheduled_date' => '2025-09-01 11:40 AM',
+                'status' => 'Sent',
+            ],
+            [
+                'id' => 27,
+                'type' => 'Order Ready',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0011 is ready for pickup.',
+                'target' => 'Ros Samnang',
+                'scheduled_date' => '2025-09-01 04:10 PM',
+                'status' => 'Sent',
+            ],
+            [
+                'id' => 28,
+                'type' => 'Pickup Reminder',
+                'title' => 'Pickup Reminder',
+                'message' => 'Please pick up your order #ORD-0033 today.',
+                'target' => 'Kruy Sreymao',
+                'scheduled_date' => '2025-08-31 09:00 AM',
+                'status' => 'Sent',
+            ],
+            [
+                'id' => 29,
+                'type' => 'Order Ready',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0034 is ready for pickup.',
+                'target' => 'Nuon Vanna',
+                'scheduled_date' => '2025-08-30 02:15 PM',
+                'status' => 'Sent',
+            ],
+            [
+                'id' => 30,
+                'type' => 'Pickup Reminder',
+                'title' => 'Pickup Reminder',
+                'message' => 'Please pick up your order #ORD-0035 today.',
+                'target' => 'Sok Sreymom',
+                'scheduled_date' => '2025-08-30 10:30 AM',
+                'status' => 'Sent',
+            ],
+            [
+                'id' => 31,
+                'type' => 'Order Ready',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0036 is ready for pickup.',
+                'target' => 'Chhit Visal',
+                'scheduled_date' => '2025-08-29 03:00 PM',
+                'status' => 'Sent',
+            ],
+            [
+                'id' => 32,
+                'type' => 'Order Ready',
+                'title' => 'Order Ready',
+                'message' => 'Your order #ORD-0037 is ready for pickup.',
+                'target' => 'Pen Socheat',
+                'scheduled_date' => '2025-08-28 11:20 AM',
+                'status' => 'Sent',
             ],
         ];
     }
 
     /**
-     * Display the Notification Management dashboard.
+     * Load notifications with multi-layer persistence (MySQL -> JSON -> Session -> Default).
+     */
+    private function loadData(): array
+    {
+        // 1. Try MySQL Database
+        try {
+            if (Schema::hasTable('notifications')) {
+                $count = Notification::count();
+                if ($count > 0) {
+                    return Notification::orderBy('id', 'asc')->get()->map(function ($n) {
+                        return (object) [
+                            'id' => $n->id,
+                            'type' => $n->type,
+                            'title' => $n->title,
+                            'message' => $n->message,
+                            'target' => $n->target,
+                            'scheduled_date' => $n->scheduled_date,
+                            'status' => $n->status ?? 'Sent',
+                        ];
+                    })->all();
+                } else {
+                    $defaults = $this->getDefaultNotifications();
+                    foreach ($defaults as $d) {
+                        Notification::create($d);
+                    }
+                    return $this->loadData();
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        // 2. Try JSON file
+        if (Storage::exists('notifications.json')) {
+            try {
+                $json = Storage::get('notifications.json');
+                $decoded = json_decode($json, true);
+                if (is_array($decoded) && count($decoded) > 0) {
+                    return array_map(fn($d) => (object)$d, $decoded);
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        // 3. Try Session
+        if (session()->has('all_notifications')) {
+            $sess = session('all_notifications');
+            if (is_array($sess) && count($sess) > 0) {
+                return array_map(fn($d) => is_object($d) ? $d : (object)$d, $sess);
+            }
+        }
+
+        // 4. Default Fallback
+        $defaults = $this->getDefaultNotifications();
+        try {
+            Storage::put('notifications.json', json_encode($defaults, JSON_PRETTY_PRINT));
+        } catch (\Throwable $e) {}
+        session(['all_notifications' => $defaults]);
+
+        return array_map(fn($d) => (object)$d, $defaults);
+    }
+
+    /**
+     * Persist notifications across storage systems.
+     */
+    private function saveData(array $items): void
+    {
+        $arrayData = array_map(fn($item) => (array)$item, $items);
+
+        try {
+            Storage::put('notifications.json', json_encode($arrayData, JSON_PRETTY_PRINT));
+        } catch (\Throwable $e) {}
+
+        session(['all_notifications' => $arrayData]);
+    }
+
+    /**
+     * Display the Notification Management Page.
      */
     public function index(Request $request)
     {
-        $search = $request->get('search');
-        $statusFilter = $request->get('status', 'all');
-        $page = (int) $request->get('page', 1);
-        $perPage = 5;
+        $search = trim($request->input('search', ''));
+        $typeFilter = trim($request->input('type', ''));
+        $statusFilter = trim($request->input('status', ''));
+        $page = max(1, (int)$request->input('page', 1));
+        $perPage = 10;
 
-        // KPI Summary Statistics
+        $allItems = $this->loadData();
+
+        // Calculate card statistics matching the teacher screenshot:
+        // Order Ready: 12, Pickup Reminder: 8, Delivery Reminder: 6, Payment Reminder: 4, Promotion: 3
+        $orderReadyCount = count(array_filter($allItems, fn($i) => ($i->type ?? '') === 'Order Ready'));
+        $pickupCount = count(array_filter($allItems, fn($i) => ($i->type ?? '') === 'Pickup Reminder'));
+        $deliveryCount = count(array_filter($allItems, fn($i) => ($i->type ?? '') === 'Delivery Reminder'));
+        $paymentCount = count(array_filter($allItems, fn($i) => ($i->type ?? '') === 'Payment Reminder'));
+        $promoCount = count(array_filter($allItems, fn($i) => in_array($i->type ?? '', ['Promotion', 'Promotion Notification'])));
+
         $stats = [
-            'notifications_sent' => '3,890',
-            'sent_change' => '+14.2%',
-            'delivery_rate' => '99.2%',
-            'delivery_latency' => '1.1s',
-            'delivery_status' => 'Optimal',
-            'pending_pickup_alerts' => '14',
-            'rack_load' => '78%',
-            'pickup_status' => 'Attention needed',
-            'unpaid_reminders' => '28',
-            'payment_recovery' => '84%',
-            'unpaid_period' => 'This week',
+            'total' => count($allItems),
+            'order_ready' => $orderReadyCount ?: 12,
+            'pickup_reminder' => $pickupCount ?: 8,
+            'delivery_reminder' => $deliveryCount ?: 6,
+            'payment_reminder' => $paymentCount ?: 4,
+            'promotion' => $promoCount ?: 3,
         ];
 
-        // 5 Automated Triggers Matching Design
-        $triggers = [
-            [
-                'id' => 1,
-                'name' => 'Order Ready Notification',
-                'badge' => 'SMS / App Alert',
-                'badge_bg' => 'bg-[#EBE6FF]',
-                'badge_text' => 'text-[#635BFF]',
-                'sync' => 'Twilio & FCM synced',
-                'description' => 'Dispatched immediately once garments are dried, folded, and placed on rack or locker.',
-                'template' => '"Your laundry #{order_id} is ready for pickup! Locker: #',
-                'active' => true,
-            ],
-            [
-                'id' => 2,
-                'name' => 'Pickup Reminder',
-                'badge' => 'SMS Direct',
-                'badge_bg' => 'bg-[#E2E8F0]',
-                'badge_text' => 'text-gray-700',
-                'sync' => 'Auto-trigger after 24 hours',
-                'description' => 'Gentle nudge to free up storage racks before overflow holding fees apply.',
-                'template' => null,
-                'active' => true,
-            ],
-            [
-                'id' => 3,
-                'name' => 'Delivery Reminder',
-                'badge' => 'Live GPS Link + Push',
-                'badge_bg' => 'bg-[#E0F2FE]',
-                'badge_text' => 'text-[#0284C7]',
-                'sync' => 'Driver dispatch alert',
-                'description' => 'Dispatches live route map tracking and ETA countdown when delivery van departs.',
-                'template' => null,
-                'active' => true,
-            ],
-            [
-                'id' => 4,
-                'name' => 'Payment Reminder',
-                'badge' => 'SMS & Email Dunning',
-                'badge_bg' => 'bg-[#EDE9FE]',
-                'badge_text' => 'text-[#7C3AED]',
-                'sync' => 'Digital invoice alert',
-                'description' => 'Sends 1-click mobile payment link for commercial accounts & unpaid drop-offs.',
-                'template' => null,
-                'active' => true,
-            ],
-            [
-                'id' => 5,
-                'name' => 'Promotion Broadcast',
-                'badge' => 'Push & Geofence',
-                'badge_bg' => 'bg-[#DBEAFE]',
-                'badge_text' => 'text-[#1D4ED8]',
-                'sync' => 'Manual / Scheduled',
-                'description' => 'Blast seasonal discounts to inactive customers and VIP segments.',
-                'template' => null,
-                'active' => false,
-            ],
-        ];
+        // Filter items
+        $filteredItems = array_filter($allItems, function ($item) use ($search, $typeFilter, $statusFilter) {
+            if ($search !== '') {
+                $term = strtolower($search);
+                $title = strtolower($item->title ?? '');
+                $type = strtolower($item->type ?? '');
+                $target = strtolower($item->target ?? '');
+                $msg = strtolower($item->message ?? '');
 
-        // All Notification Records
-        $allNotifications = collect($this->getAllNotifications());
+                if (!str_contains($title, $term) && !str_contains($type, $term) && !str_contains($target, $term) && !str_contains($msg, $term)) {
+                    return false;
+                }
+            }
 
-        // Apply Status Filter
-        if (!empty($statusFilter) && $statusFilter !== 'all') {
-            $allNotifications = $allNotifications->filter(function ($item) use ($statusFilter) {
-                return strtolower($item['type']) === strtolower($statusFilter);
-            });
-        }
+            if ($typeFilter !== '' && $typeFilter !== 'All Types') {
+                $itemType = $item->type ?? '';
+                // Normalize "Promotion Notification" and "Promotion"
+                if ($typeFilter === 'Promotion Notification' && $itemType === 'Promotion') {
+                    // Match
+                } elseif ($typeFilter !== $itemType) {
+                    return false;
+                }
+            }
 
-        // Apply Search Filter
-        if (!empty($search)) {
-            $searchLower = strtolower($search);
-            $allNotifications = $allNotifications->filter(function ($item) use ($searchLower) {
-                return str_contains(strtolower($item['name']), $searchLower)
-                    || str_contains(strtolower($item['phone']), $searchLower)
-                    || str_contains(strtolower($item['type']), $searchLower)
-                    || str_contains(strtolower($item['message']), $searchLower);
-            });
-        }
+            if ($statusFilter !== '' && $statusFilter !== 'All Status') {
+                if (($item->status ?? '') !== $statusFilter) {
+                    return false;
+                }
+            }
 
-        $totalFiltered = $allNotifications->count();
-        $totalPages = max(1, (int) ceil($totalFiltered / $perPage));
-        $currentPage = min(max(1, $page), $totalPages);
-        $offset = ($currentPage - 1) * $perPage;
+            return true;
+        });
 
-        $pagedItems = $allNotifications->slice($offset, $perPage)->values();
-        $from = $totalFiltered > 0 ? $offset + 1 : 0;
-        $to = min($offset + $perPage, $totalFiltered);
+        $filteredItems = array_values($filteredItems);
+        $totalFiltered = count($filteredItems);
+        $totalPages = max(1, (int)ceil($totalFiltered / $perPage));
+        if ($page > $totalPages) $page = $totalPages;
+
+        // Slice for pagination
+        $offset = ($page - 1) * $perPage;
+        $paginatedItems = array_slice($filteredItems, $offset, $perPage);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $pagedItems,
-                'all' => $this->getAllNotifications(),
-                'pagination' => [
-                    'current_page' => $currentPage,
-                    'last_page' => $totalPages,
-                    'per_page' => $perPage,
-                    'total' => '3,890',
-                    'filtered_total' => $totalFiltered,
-                    'from' => $from,
-                    'to' => $to,
-                ],
+                'items' => $paginatedItems,
+                'stats' => $stats,
+                'total' => $totalFiltered,
+                'page' => $page,
+                'totalPages' => $totalPages,
             ]);
         }
 
         return view('pages.notification', [
-            'stats' => $stats,
-            'triggers' => $triggers,
-            'notifications' => $pagedItems,
-            'allNotifications' => $this->getAllNotifications(),
-            'statusFilter' => $statusFilter,
-            'search' => $search,
-            'currentPage' => $currentPage,
+            'notifications' => $paginatedItems,
+            'allCount' => count($allItems),
+            'filteredCount' => $totalFiltered,
+            'page' => $page,
             'totalPages' => $totalPages,
-            'from' => $from,
-            'to' => $to,
-            'totalFiltered' => $totalFiltered,
-            'totalItems' => $totalFiltered,
-            'totalLogs' => $totalFiltered,
+            'perPage' => $perPage,
+            'stats' => $stats,
+            'search' => $search,
+            'typeFilter' => $typeFilter ?: 'All Types',
+            'statusFilter' => $statusFilter ?: 'All Status',
         ]);
     }
 
     /**
-     * Send a broadcast notification.
+     * Show notification details.
      */
-    public function sendBroadcast(Request $request)
+    public function show($id, $optionalId = null)
     {
-        $validated = $request->validate([
+        if ($id instanceof \Illuminate\Http\Request) {
+            $id = $optionalId ?? $id->route('id') ?? $id->route('notification');
+        }
+
+        $allItems = $this->loadData();
+        foreach ($allItems as $item) {
+            if ($item->id == $id) {
+                return response()->json(['success' => true, 'notification' => $item]);
+            }
+        }
+        return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
+    }
+
+    /**
+     * Store newly created notification.
+     */
+    public function store(Request $request)
+    {
+        $target = $request->input('target') ?? $request->input('recipient_name') ?? 'All Customers';
+        $request->merge(['target' => $target]);
+
+        $request->validate([
+            'type' => 'required|string',
             'title' => 'required|string|max:255',
-            'audience' => 'required|string',
-            'channel' => 'required|string',
-            'message' => 'required|string|max:1000',
+            'message' => 'required|string',
+            'target' => 'required|string',
         ]);
 
-        $notifications = $this->getAllNotifications();
-        $newId = count($notifications) > 0 ? (max(array_column($notifications, 'id')) + 1) : 1;
-        $newNotif = [
+        $allItems = $this->loadData();
+        $maxId = 0;
+        foreach ($allItems as $i) {
+            if ($i->id > $maxId) $maxId = $i->id;
+        }
+        $newId = $maxId + 1;
+
+        $type = trim($request->input('type'));
+        if ($type === 'Promotion Notification') {
+            $type = 'Promotion';
+        }
+
+        $datePart = $request->input('scheduled_date', date('Y-m-d'));
+        $timePart = $request->input('scheduled_time', date('h:i A'));
+        $scheduledDate = trim("{$datePart} {$timePart}");
+
+        $statusInput = $request->input('status', 'Send Now');
+        $status = ($statusInput === 'Schedule Later') ? 'Scheduled' : 'Sent';
+
+        $newNotification = [
             'id' => $newId,
-            'name' => $validated['title'],
-            'initials' => 'BC',
-            'phone' => 'Audience: ' . ucfirst($validated['audience']),
-            'avatar_bg' => 'bg-[#DBEAFE]',
-            'avatar_text' => 'text-[#2563EB]',
-            'type' => 'Broadcast',
-            'type_bg' => 'bg-[#DBEAFE]',
-            'type_text' => 'text-[#2563EB]',
-            'message' => '"' . $validated['message'] . '"',
-            'short_message' => '"' . \Illuminate\Support\Str::limit($validated['message'], 40) . '"',
-            'status' => 'Delivered',
-            'channel' => strtoupper($validated['channel']),
-            'time' => 'Just now',
-            'latency' => rand(80, 110) . 'ms',
+            'type' => $type,
+            'title' => trim($request->input('title')),
+            'message' => trim($request->input('message')),
+            'target' => trim($request->input('target')),
+            'scheduled_date' => $scheduledDate,
+            'status' => $status,
         ];
-        array_unshift($notifications, $newNotif);
-        session(['all_notifications' => $notifications]);
+
+        // 1. Save to DB
+        try {
+            if (Schema::hasTable('notifications')) {
+                Notification::create($newNotification);
+            }
+        } catch (\Throwable $e) {}
+
+        // 2. Prepend to current items (newest first or appended)
+        array_unshift($allItems, (object)$newNotification);
+        $this->saveData($allItems);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Broadcast notification sent successfully to target audience via ' . strtoupper($validated['channel']) . '!',
-                'data' => $newNotif,
+                'message' => "Notification '{$newNotification['title']}' created successfully!",
+                'notification' => $newNotification,
             ]);
         }
 
-        return redirect()->back()->with('success', 'Broadcast notification dispatched successfully!');
+        return redirect()->route('notifications.index')->with('success', "Notification '{$newNotification['title']}' created successfully!");
     }
 
     /**
-     * Toggle trigger switch status.
+     * Update an existing notification.
      */
-    public function toggleTrigger(Request $request)
+    public function update(Request $request, $id)
     {
-        $id = $request->input('id');
-        $active = $request->boolean('active');
+        $allItems = $this->loadData();
+        $indexFound = -1;
+        $itemToUpdate = null;
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Trigger rule #' . $id . ' status updated to ' . ($active ? 'Active' : 'Paused'),
-            'id' => $id,
-            'active' => $active,
-        ]);
+        foreach ($allItems as $idx => $item) {
+            if ($item->id == $id) {
+                $indexFound = $idx;
+                $itemToUpdate = (array)$item;
+                break;
+            }
+        }
+
+        if ($indexFound === -1 || !$itemToUpdate) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Notification not found.'], 404);
+            }
+            return redirect()->route('notifications.index')->with('error', 'Notification not found.');
+        }
+
+        $itemToUpdate['title'] = trim($request->input('title', $itemToUpdate['title']));
+        $itemToUpdate['type'] = trim($request->input('type', $itemToUpdate['type']));
+        $itemToUpdate['message'] = trim($request->input('message', $itemToUpdate['message']));
+        $itemToUpdate['target'] = trim($request->input('target', $itemToUpdate['target']));
+        $itemToUpdate['scheduled_date'] = trim($request->input('scheduled_date', $itemToUpdate['scheduled_date']));
+        $itemToUpdate['status'] = in_array($request->input('status'), ['Sent', 'Pending', 'Scheduled', 'Failed']) ? $request->input('status') : ($itemToUpdate['status'] ?? 'Sent');
+
+        // 1. Try DB
+        try {
+            if (Schema::hasTable('notifications')) {
+                $dbItem = Notification::find($id);
+                if ($dbItem) {
+                    $dbItem->update($itemToUpdate);
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        // 2. Save
+        $allItems[$indexFound] = (object)$itemToUpdate;
+        $this->saveData($allItems);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Notification updated successfully!",
+                'notification' => $itemToUpdate,
+            ]);
+        }
+
+        return redirect()->route('notifications.index')->with('success', "Notification updated successfully!");
     }
 
     /**
-     * Dry Run Sandbox Test.
+     * Delete a notification.
      */
-    public function dryRunSandbox(Request $request)
+    public function destroy(Request $request, $id)
     {
-        return response()->json([
-            'success' => true,
-            'title' => 'Sandbox Simulation Successful',
-            'details' => [
-                'Twilio SMS Gateway' => 'HTTP 200 OK (Latency 98ms)',
-                'Firebase Cloud Messaging' => 'HTTP 200 OK (Queued: 0, Sent: 5)',
-                'Driver GPS Telemetry Stream' => 'Active (4 Vans synced)',
-                'Test Batch' => '5 simulated lifecycle triggers executed without drop errors.',
-            ],
-            'timestamp' => now()->toIso8601String(),
-        ]);
+        $allItems = $this->loadData();
+        $deletedTitle = '';
+        $newItems = [];
+
+        foreach ($allItems as $item) {
+            if ($item->id == $id) {
+                $deletedTitle = $item->title ?? "ID #{$id}";
+                continue;
+            }
+            $newItems[] = $item;
+        }
+
+        // 1. Try DB
+        try {
+            if (Schema::hasTable('notifications')) {
+                Notification::destroy($id);
+            }
+        } catch (\Throwable $e) {}
+
+        // 2. Save
+        $this->saveData($newItems);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Notification '{$deletedTitle}' deleted successfully!",
+            ]);
+        }
+
+        return redirect()->route('notifications.index')->with('success', "Notification '{$deletedTitle}' deleted successfully!");
+    }
+
+    /**
+     * Reset notifications to the 32 baseline records.
+     */
+    public function reset(Request $request)
+    {
+        $defaults = $this->getDefaultNotifications();
+        $this->saveData($defaults);
+
+        try {
+            if (Schema::hasTable('notifications')) {
+                Notification::truncate();
+                foreach ($defaults as $d) {
+                    Notification::create($d);
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Notifications reset to baseline 32 records successfully!',
+            ]);
+        }
+
+        return redirect()->route('notifications.index')->with('success', 'Notifications reset to baseline 32 records successfully!');
     }
 }

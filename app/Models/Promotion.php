@@ -12,28 +12,33 @@ class Promotion extends Model
     protected $table = 'promotions';
 
     protected $fillable = [
-        'code',
-        'title',
-        'description',
-        'discount_type',
+        'name',
+        'type',
         'discount_value',
-        'applies_to',
-        'min_spend',
-        'max_discount',
+        'discount_unit',
         'start_date',
         'end_date',
-        'usage_limit',
-        'used_count',
+        'coupon_code',
+        'description',
         'status',
     ];
 
-    protected $casts = [
-        'discount_value' => 'decimal:2',
-        'min_spend' => 'decimal:2',
-        'max_discount' => 'decimal:2',
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'usage_limit' => 'integer',
-        'used_count' => 'integer',
-    ];
+    /**
+     * Formatted discount display e.g. "20% OFF" or "$5.00 OFF"
+     */
+    public function getFormattedDiscountAttribute(): string
+    {
+        if ($this->discount_unit === '$') {
+            return '$' . number_format((float)$this->discount_value, 2) . ' OFF';
+        }
+        return rtrim(rtrim((string)$this->discount_value, '0'), '.') . '% OFF';
+    }
+
+    /**
+     * Formatted period display e.g. "2025-09-01 → 2025-09-30"
+     */
+    public function getFormattedPeriodAttribute(): string
+    {
+        return ($this->start_date ?? '-') . ' → ' . ($this->end_date ?? '-');
+    }
 }

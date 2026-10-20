@@ -7,6 +7,7 @@ use App\Models\OrderItem;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class OrderController extends Controller
@@ -16,266 +17,7 @@ class OrderController extends Controller
      */
     protected function getBaselineOrders()
     {
-        return [
-            [
-                'id' => 1,
-                'order_number' => 'ORD-0001',
-                'customer_id' => 1,
-                'customer_name' => 'Sokha Dara',
-                'customer_phone' => '012 345 678',
-                'customer_email' => 'sokha@example.com',
-                'customer_address' => 'Svay Dongkum, Siem Reap',
-                'service_type' => 'Wash & Fold',
-                'weight' => 5.0,
-                'items_count' => 3,
-                'order_date' => '2025-09-15 10:24 AM',
-                'pickup_date' => '2025-09-16',
-                'delivery_date' => '2025-09-17',
-                'total_price' => 12.50,
-                'status' => 'Washing',
-                'notes' => 'Customer requested hypoallergenic detergent.',
-                'items' => [
-                    ['id' => 1, 'service_name' => 'Wash & Fold', 'quantity' => '1.0 kg', 'unit_price' => 2.50, 'subtotal' => 2.50],
-                    ['id' => 2, 'service_name' => 'Wash & Fold', 'quantity' => '2.0 kg', 'unit_price' => 2.50, 'subtotal' => 5.00],
-                    ['id' => 3, 'service_name' => 'Wash & Fold (Delicate)', 'quantity' => '2.0 kg', 'unit_price' => 2.50, 'subtotal' => 5.00],
-                ]
-            ],
-            [
-                'id' => 2,
-                'order_number' => 'ORD-0002',
-                'customer_id' => 2,
-                'customer_name' => 'Chan Sreyneath',
-                'customer_phone' => '011 234 567',
-                'customer_email' => 'sreyneath@example.com',
-                'customer_address' => 'Taphul, Siem Reap',
-                'service_type' => 'Dry Cleaning',
-                'weight' => 2.0,
-                'items_count' => 1,
-                'order_date' => '2025-09-15',
-                'pickup_date' => '2025-09-16',
-                'delivery_date' => '2025-09-17',
-                'total_price' => 18.00,
-                'status' => 'Drying',
-                'notes' => 'Handle silk dress with extra care.',
-                'items' => [
-                    ['id' => 4, 'service_name' => 'Silk Dress Dry Cleaning', 'quantity' => '2.0 kg', 'unit_price' => 9.00, 'subtotal' => 18.00],
-                ]
-            ],
-            [
-                'id' => 3,
-                'order_number' => 'ORD-0003',
-                'customer_id' => 3,
-                'customer_name' => 'Heng Channa',
-                'customer_phone' => '017 890 123',
-                'customer_email' => 'channa@example.com',
-                'customer_address' => 'Sala Kamreuk, Siem Reap',
-                'service_type' => 'Wash Only',
-                'weight' => 8.0,
-                'items_count' => 4,
-                'order_date' => '2025-09-14',
-                'pickup_date' => '2025-09-15',
-                'delivery_date' => '2025-09-16',
-                'total_price' => 16.00,
-                'status' => 'Ready for Pickup',
-                'notes' => 'Hung on hangers, no fold.',
-                'items' => [
-                    ['id' => 5, 'service_name' => 'Machine Wash Only', 'quantity' => '8.0 kg', 'unit_price' => 2.00, 'subtotal' => 16.00],
-                ]
-            ],
-            [
-                'id' => 4,
-                'order_number' => 'ORD-0004',
-                'customer_id' => 4,
-                'customer_name' => 'Kim Sovannary',
-                'customer_phone' => '015 678 901',
-                'customer_email' => 'sovannary@example.com',
-                'customer_address' => 'Svay Dangkum, Siem Reap',
-                'service_type' => 'Ironing',
-                'weight' => 3.5,
-                'items_count' => 2,
-                'order_date' => '2025-09-14',
-                'pickup_date' => '2025-09-15',
-                'delivery_date' => '2025-09-16',
-                'total_price' => 10.50,
-                'status' => 'Out for Delivery',
-                'notes' => 'Deliver between 2 PM and 5 PM.',
-                'items' => [
-                    ['id' => 6, 'service_name' => 'Steam Ironing & Pressing', 'quantity' => '3.5 kg', 'unit_price' => 3.00, 'subtotal' => 10.50],
-                ]
-            ],
-            [
-                'id' => 5,
-                'order_number' => 'ORD-0005',
-                'customer_id' => 5,
-                'customer_name' => 'Neang Pheaktra',
-                'customer_phone' => '010 555 888',
-                'customer_email' => 'pheaktra@example.com',
-                'customer_address' => 'Kok Chork, Siem Reap',
-                'service_type' => 'Wash & Dry',
-                'weight' => 7.0,
-                'items_count' => 3,
-                'order_date' => '2025-09-13',
-                'pickup_date' => '2025-09-14',
-                'delivery_date' => '2025-09-15',
-                'total_price' => 14.00,
-                'status' => 'Completed',
-                'notes' => 'Paid in cash upon pickup.',
-                'items' => [
-                    ['id' => 7, 'service_name' => 'Wash & Tumble Dry', 'quantity' => '7.0 kg', 'unit_price' => 2.00, 'subtotal' => 14.00],
-                ]
-            ],
-            [
-                'id' => 6,
-                'order_number' => 'ORD-0006',
-                'customer_id' => 6,
-                'customer_name' => 'Lim Vannak',
-                'customer_phone' => '016 222 333',
-                'customer_email' => 'vannak@example.com',
-                'customer_address' => 'National Road 6, Siem Reap',
-                'service_type' => 'Blanket Cleaning',
-                'weight' => 4.0,
-                'items_count' => 1,
-                'order_date' => '2025-09-12',
-                'pickup_date' => '2025-09-13',
-                'delivery_date' => '2025-09-14',
-                'total_price' => 20.00,
-                'status' => 'Received',
-                'notes' => 'King size blanket care.',
-                'items' => [
-                    ['id' => 8, 'service_name' => 'Heavy Blanket Deep Clean', 'quantity' => '4.0 kg', 'unit_price' => 5.00, 'subtotal' => 20.00],
-                ]
-            ],
-            [
-                'id' => 7,
-                'order_number' => 'ORD-0007',
-                'customer_id' => 7,
-                'customer_name' => 'Thon Sreynich',
-                'customer_phone' => '092 777 666',
-                'customer_email' => 'sreynich@example.com',
-                'customer_address' => 'Taphul, SR',
-                'service_type' => 'Wash & Fold',
-                'weight' => 3.50,
-                'items_count' => 5,
-                'order_date' => '2025-09-13 16:10:00',
-                'pickup_date' => '2025-09-14',
-                'delivery_date' => '2025-09-15',
-                'total_price' => 11.50,
-                'status' => 'Cancelled',
-                'notes' => 'Cancelled per customer phone request.',
-                'items' => [
-                    ['id' => 15, 'service_name' => 'Wash & Fold Regular', 'quantity' => '3.5 kg', 'unit_price' => 2.50, 'subtotal' => 8.75],
-                    ['id' => 16, 'service_name' => 'Fabric Softener Premium', 'quantity' => '1 pc', 'unit_price' => 2.75, 'subtotal' => 2.75],
-                ]
-            ],
-            [
-                'id' => 8,
-                'order_number' => 'ORD-0008',
-                'customer_id' => 8,
-                'customer_name' => 'Pich Sothy',
-                'customer_phone' => '012 999 444',
-                'customer_email' => 'sothy@example.com',
-                'customer_address' => 'Sla Kram, SR',
-                'service_type' => 'Wash & Fold',
-                'weight' => 7.20,
-                'items_count' => 12,
-                'order_date' => '2025-09-13 10:15:00',
-                'pickup_date' => '2025-09-14',
-                'delivery_date' => '2025-09-16',
-                'total_price' => 18.50,
-                'status' => 'Completed',
-                'notes' => 'Regular customer discount applied.',
-                'items' => [
-                    ['id' => 17, 'service_name' => 'Wash & Fold Large Load', 'quantity' => '7.2 kg', 'unit_price' => 2.50, 'subtotal' => 18.00],
-                    ['id' => 18, 'service_name' => 'Bleach Alternative', 'quantity' => '1 pc', 'unit_price' => 0.50, 'subtotal' => 0.50],
-                ]
-            ],
-            [
-                'id' => 9,
-                'order_number' => 'ORD-0009',
-                'customer_id' => 9,
-                'customer_name' => 'Chea Ratanak',
-                'customer_phone' => '097 333 222',
-                'customer_email' => 'ratanak@example.com',
-                'customer_address' => 'Bakheng, SR',
-                'service_type' => 'Ironing',
-                'weight' => 3.20,
-                'items_count' => 8,
-                'order_date' => '2025-09-12 15:40:00',
-                'pickup_date' => '2025-09-13',
-                'delivery_date' => '2025-09-14',
-                'total_price' => 12.00,
-                'status' => 'Ready for Pickup',
-                'notes' => 'Starch level: medium.',
-                'items' => [
-                    ['id' => 19, 'service_name' => 'Executive Shirt Pressing', 'quantity' => '8 pcs', 'unit_price' => 1.50, 'subtotal' => 12.00],
-                ]
-            ],
-            [
-                'id' => 10,
-                'order_number' => 'ORD-0010',
-                'customer_id' => 10,
-                'customer_name' => 'Va Sovan',
-                'customer_phone' => '099 666 777',
-                'customer_email' => 'sovan@example.com',
-                'customer_address' => 'Tor Ang, SR',
-                'service_type' => 'Wash Only',
-                'weight' => 4.50,
-                'items_count' => 6,
-                'order_date' => '2025-09-12 08:20:00',
-                'pickup_date' => '2025-09-13',
-                'delivery_date' => '2025-09-14',
-                'total_price' => 9.00,
-                'status' => 'Washing',
-                'notes' => 'Separate white linens.',
-                'items' => [
-                    ['id' => 20, 'service_name' => 'Standard Wash Cycle', 'quantity' => '4.5 kg', 'unit_price' => 2.00, 'subtotal' => 9.00],
-                ]
-            ],
-            [
-                'id' => 11,
-                'order_number' => 'ORD-0011',
-                'customer_id' => 11,
-                'customer_name' => 'Keo Bopha',
-                'customer_phone' => '070 123 456',
-                'customer_email' => 'bopha@example.com',
-                'customer_address' => 'Wat Bo, SR',
-                'service_type' => 'Dry Cleaning',
-                'weight' => 3.80,
-                'items_count' => 5,
-                'order_date' => '2025-09-11 13:00:00',
-                'pickup_date' => '2025-09-12',
-                'delivery_date' => '2025-09-15',
-                'total_price' => 28.00,
-                'status' => 'Drying',
-                'notes' => 'Curtains & tablecloths.',
-                'items' => [
-                    ['id' => 21, 'service_name' => 'Curtain Dry Cleaning', 'quantity' => '2 sets', 'unit_price' => 10.00, 'subtotal' => 20.00],
-                    ['id' => 22, 'service_name' => 'Tablecloth Pressing', 'quantity' => '2 pcs', 'unit_price' => 4.00, 'subtotal' => 8.00],
-                ]
-            ],
-            [
-                'id' => 12,
-                'order_number' => 'ORD-0012',
-                'customer_id' => 12,
-                'customer_name' => 'Seng Samnang',
-                'customer_phone' => '088 456 789',
-                'customer_email' => 'samnang@example.com',
-                'customer_address' => 'Kouk Chak, SR',
-                'service_type' => 'Wash & Fold',
-                'weight' => 5.00,
-                'items_count' => 8,
-                'order_date' => '2025-09-11 17:30:00',
-                'pickup_date' => '2025-09-12',
-                'delivery_date' => '2025-09-14',
-                'total_price' => 13.00,
-                'status' => 'Out for Delivery',
-                'notes' => 'Apartment 3B second floor.',
-                'items' => [
-                    ['id' => 23, 'service_name' => 'Wash & Fold Regular', 'quantity' => '5.0 kg', 'unit_price' => 2.20, 'subtotal' => 11.00],
-                    ['id' => 24, 'service_name' => 'Express Delivery', 'quantity' => '1 pc', 'unit_price' => 2.00, 'subtotal' => 2.00],
-                ]
-            ]
-        ];
+        return [];
     }
 
     /**
@@ -283,10 +25,8 @@ class OrderController extends Controller
      */
     protected function getSessionOrders()
     {
-        if (!session()->has('mock_orders')) {
-            session(['mock_orders' => $this->getBaselineOrders()]);
-        }
-        return session('mock_orders');
+        session()->forget('mock_orders');
+        return [];
     }
 
     /**
@@ -304,7 +44,7 @@ class OrderController extends Controller
 
         $hasDb = false;
         try {
-            $hasDb = Schema::hasTable('orders') && Order::count() > 0;
+            $hasDb = Schema::hasTable('orders');
         } catch (\Throwable $e) {
             $hasDb = false;
         }
@@ -312,7 +52,7 @@ class OrderController extends Controller
         if ($hasDb) {
             $baseQuery = Order::query();
 
-            // Total statistics (matching KPI cards in screenshot 1)
+            // Total statistics (real database counts)
             $stats = [
                 'total_orders' => Order::count(),
                 'pending' => Order::whereIn('status', ['Received', 'Pending'])->count(),
@@ -321,16 +61,6 @@ class OrderController extends Controller
                 'out_delivery' => Order::where('status', 'Out for Delivery')->count(),
                 'completed' => Order::where('status', 'Completed')->count(),
             ];
-
-            // If count is small in fresh db, augment with baseline numbers for display presentation
-            if ($stats['total_orders'] < 10) {
-                $stats['total_orders'] = max($stats['total_orders'], 245);
-                $stats['pending'] = max($stats['pending'], 32);
-                $stats['washing'] = max($stats['washing'], 78);
-                $stats['ready_pickup'] = max($stats['ready_pickup'], 45);
-                $stats['out_delivery'] = max($stats['out_delivery'], 28);
-                $stats['completed'] = max($stats['completed'], 62);
-            }
 
             $query = Order::with('items');
 
@@ -361,12 +91,12 @@ class OrderController extends Controller
             $allData = collect($this->getSessionOrders());
 
             $stats = [
-                'total_orders' => 245,
-                'pending' => 32,
-                'washing' => 78,
-                'ready_pickup' => 45,
-                'out_delivery' => 28,
-                'completed' => 62,
+                'total_orders' => 0,
+                'pending' => 0,
+                'washing' => 0,
+                'ready_pickup' => 0,
+                'out_delivery' => 0,
+                'completed' => 0,
             ];
 
             // Search filter
@@ -538,7 +268,7 @@ class OrderController extends Controller
                     ]);
                 }
             } catch (\Throwable $e) {
-                \Log::warning("Order DB store failed, continuing with session: " . $e->getMessage());
+                Log::warning("Order DB store failed, continuing with session: " . $e->getMessage());
                 $order = null;
             }
         }
@@ -596,9 +326,17 @@ class OrderController extends Controller
 
     /**
      * Show order details for modal view.
+     *
+     * @param int|string $id
+     * @param int|string|null $optionalId
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show($id, $optionalId = null)
     {
+        if ($id instanceof \Illuminate\Http\Request) {
+            $id = $optionalId ?? $id->route('id') ?? $id->route('order');
+        }
+
         $hasDb = false;
         try {
             $hasDb = Schema::hasTable('orders');
@@ -638,6 +376,10 @@ class OrderController extends Controller
 
     /**
      * Update order details & status.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, $id)
     {
@@ -705,6 +447,10 @@ class OrderController extends Controller
 
     /**
      * Cancel an order.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function cancel(Request $request, $id)
     {
@@ -746,6 +492,10 @@ class OrderController extends Controller
 
     /**
      * Delete an order.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Request $request, $id)
     {
@@ -779,6 +529,9 @@ class OrderController extends Controller
 
     /**
      * Printable Order Receipt.
+     *
+     * @param int|string $id
+     * @return \Illuminate\Contracts\View\View
      */
     public function printReceipt($id)
     {

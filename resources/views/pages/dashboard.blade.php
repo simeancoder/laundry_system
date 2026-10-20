@@ -1,112 +1,10 @@
 @extends('layouts.navbar')
 
-@section('title', 'Dashboard - Laundry 6 Plus')
+@section('title', 'Dashboard')
 
-@section('header')
-<header class="bg-white px-6 sm:px-8 py-3.5 sm:py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] rounded-b-2xl sm:rounded-b-3xl flex items-center justify-between z-30 sticky top-0 border-b border-gray-100">
-    <!-- Left: Hamburger & Page Title/Subtitle -->
-    <div class="flex items-center space-x-3 sm:space-x-4">
-        <!-- Hamburger Button -->
-        <button type="button" onclick="toggleSidebar()" class="p-1.5 -ml-1 text-gray-800 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition focus:outline-none" title="Toggle Navigation Menu" aria-label="Toggle navigation menu">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </button>
-
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight leading-tight">Dashboard</h1>
-            <p class="text-[12px] sm:text-[13px] text-gray-400 font-medium leading-none mt-1">Welcome back,Admin! Here's what's happening today.</p>
-        </div>
-    </div>
-
-    <!-- Right: Notification Bell & Role Switcher User Profile -->
-    <div class="flex items-center space-x-3 sm:space-x-5">
-        <!-- Blue Notification Bell with Solid Dot -->
-        <a href="{{ route('notifications.index') }}" class="relative p-2 text-blue-600 hover:bg-blue-50 rounded-full transition focus:outline-none" title="Notifications">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path>
-            </svg>
-            <!-- Blue dot indicator -->
-            <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#2563EB] rounded-full ring-2 ring-white"></span>
-        </a>
-
-        <!-- User Role Switcher Dropdown Trigger -->
-        <div class="relative" id="role-switcher-container">
-            <button id="role-menu-button" type="button" onclick="toggleRoleMenu()" aria-haspopup="menu" aria-expanded="false" aria-controls="role-menu" class="flex items-center space-x-2.5 pl-2 pr-2.5 py-1.5 rounded-full hover:bg-gray-100 transition focus:outline-none cursor-pointer group">
-                <!-- User Icon (matching the blue circle user in design) -->
-                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200 group-hover:border-blue-400 transition-colors">
-                    <i class="fa-solid fa-circle-user text-2xl text-[#2563EB]"></i>
-                </div>
-                <!-- Active Role Name -->
-                <span class="text-sm sm:text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{{ $activeRole ?? '' }}</span>
-                <!-- Rotating Chevron -->
-                <i id="role-chevron" class="fa-solid fa-chevron-down text-[11px] text-gray-500 transition-transform duration-200"></i>
-            </button>
-
-            <!-- Dropdown Menu -->
-            <div id="role-menu" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 transform origin-top-right transition-all duration-150" role="menu" aria-labelledby="role-menu-button" tabindex="-1">
-                <!-- Dropdown Header -->
-                <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Switch Active Role</p>
-                        <p class="text-sm font-bold text-gray-800">{{ $user->name ?? 'Demo User' }}</p>
-                    </div>
-                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-100 text-blue-700">
-                        {{ $isDemoMode ? 'Demo Mode' : 'Role-Based' }}
-                    </span>
-                </div>
-
-                <!-- Role Options List -->
-                <div class="py-1">
-                    @foreach($availableRoles as $roleKey => $roleInfo)
-                        @php
-                            $isActive = ($activeRole ?? '' === $roleKey);
-                        @endphp
-                        <a href="{{ route('dashboard.switch-role', $roleKey) }}" 
-                           role="menuitem"
-                           tabindex="0"
-                           class="role-menu-item flex items-center justify-between px-4 py-3 transition hover:bg-blue-50/60 {{ $isActive ? 'bg-blue-50/90 text-blue-700 font-semibold border-l-4 border-blue-600' : 'text-gray-700' }}">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-xl flex items-center justify-center {{ $roleInfo['badge_bg'] }} {{ $roleInfo['badge_text'] }}">
-                                    @if($roleKey === 'Admin')
-                                        <i class="fa-solid fa-shield-halved text-sm"></i>
-                                    @elseif($roleKey === 'Staff')
-                                        <i class="fa-solid fa-user-group text-sm"></i>
-                                    @elseif($roleKey === 'Delivery')
-                                        <i class="fa-solid fa-truck-fast text-sm"></i>
-                                    @elseif($roleKey === 'Receptionist')
-                                        <i class="fa-solid fa-bell-concierge text-sm"></i>
-                                    @else
-                                        <i class="fa-solid fa-user text-sm"></i>
-                                    @endif
-                                </div>
-                                <div class="text-left">
-                                    <div class="text-sm font-semibold leading-tight">{{ $roleInfo['name'] }}</div>
-                                    <div class="text-[11px] text-gray-400 font-normal leading-tight mt-0.5">{{ $roleInfo['description'] }}</div>
-                                </div>
-                            </div>
-                            @if($isActive)
-                                <i class="fa-solid fa-check text-blue-600 text-sm"></i>
-                            @endif
-                        </a>
-                    @endforeach
-                </div>
-
-                @if(!$isDemoMode && Auth::check() && Auth::user()->role_id != 1)
-                    <div class="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[11px] text-gray-400">
-                        Admin authorization required for full switcher.
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-</header>
-@endsection
 
 @section('content')
-<div class="max-w-[1600px] mx-auto space-y-6">
+<div class="w-full mx-auto space-y-6">
 
     <!-- Flash Notifications -->
     @if(session('success'))
@@ -129,24 +27,24 @@
     @endif
 
     <!-- 8 STAT CARDS GRID (4x2 layout exactly matching design) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px]">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         @foreach($statCards as $card)
-            <div class="{{ $card['card_bg'] }} rounded-[20px] p-5 sm:p-[22px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 border border-white/70 flex flex-col justify-between min-h-[114px]">
+            <div class="{{ $card['card_bg'] }} rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 border border-white/70 flex flex-col justify-between min-h-28">
                 <!-- Top Row: Icon Box + (Label & Big Bold Value) -->
                 <div class="flex items-center space-x-3.5">
                     <!-- 54px rounded icon box in solid color -->
-                    <div class="{{ $card['icon_box_bg'] }} w-[54px] h-[54px] rounded-[18px] flex items-center justify-center flex-shrink-0 shadow-sm text-white">
-                        <i class="{{ $card['icon_fa'] }} text-[23px]"></i>
+                    <div class="{{ $card['icon_box_bg'] }} w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm text-white">
+                        <i class="{{ $card['icon_fa'] }} text-2xl"></i>
                     </div>
                     <!-- Label and Metric Value -->
                     <div class="flex-1 min-w-0">
-                        <div class="text-[13px] text-gray-500 font-medium truncate leading-none">{{ $card['label'] }}</div>
-                        <div class="text-[26px] sm:text-[27px] font-bold text-gray-900 leading-tight tracking-tight mt-1.5">{{ $card['value'] }}</div>
+                        <div class="text-xs sm:text-sm text-gray-500 font-medium truncate leading-none">{{ $card['label'] }}</div>
+                        <div class="text-xl sm:text-xl font-bold text-gray-900 leading-tight tracking-tight mt-1.5">{{ $card['value'] }}</div>
                     </div>
                 </div>
 
                 <!-- Bottom Row: Trend Line with green arrow and comparison text -->
-                <div class="mt-3.5 flex items-center text-[11.5px] font-semibold text-[#10B981] leading-none">
+                <div class="mt-3.5 flex items-center text-xs font-semibold text-[#10B981] leading-none">
                     <span class="inline-flex items-center">↑ {{ $card['trend_pct'] }}</span>
                     <span class="text-gray-400 font-normal ml-1.5">{{ $card['trend_text'] }}</span>
                 </div>
@@ -158,21 +56,21 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         <!-- Left: Order Status Chart Card (lg:col-span-5) -->
-        <div class="lg:col-span-5 bg-white rounded-[22px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100 flex flex-col justify-between">
+        <div class="lg:col-span-5 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
             <!-- Header: Title & Dropdown -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2.5">
                     <div class="w-5 h-5 flex items-center justify-center text-gray-900">
                         <i class="fa-solid fa-chart-simple text-lg"></i>
                     </div>
-                    <h3 class="text-base sm:text-[17px] font-bold text-gray-900 tracking-tight">Order Status Chart</h3>
+                    <h3 class="text-base sm:text-lg font-bold text-gray-900 tracking-tight">Order Status Chart</h3>
                 </div>
 
                 <!-- This Week Dropdown -->
                 <div class="relative">
                     <button type="button" id="period-dropdown-btn" onclick="togglePeriodDropdown()" class="inline-flex items-center space-x-2 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition shadow-sm focus:outline-none">
                         <span id="selected-period-text">{{ $orderStatus['period'] ?? 'This Week' }}</span>
-                        <i id="period-chevron" class="fa-solid fa-chevron-down text-[10px] text-gray-400 transition-transform duration-150"></i>
+                        <i id="period-chevron" class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-150"></i>
                     </button>
                     <div id="period-dropdown-menu" class="hidden absolute right-0 mt-1.5 w-36 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-20 text-xs">
                         <button type="button" onclick="selectOrderPeriod('This Week')" class="w-full text-left px-3.5 py-1.5 hover:bg-blue-50 hover:text-blue-600 font-medium transition">This Week</button>
@@ -185,20 +83,20 @@
             <!-- Body: Donut Chart + Vertical Legend Alignment -->
             <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-6 flex-1">
                 <!-- Donut Chart Container with Center Total Text -->
-                <div class="relative w-[190px] h-[190px] sm:w-[205px] sm:h-[205px] flex-shrink-0 flex items-center justify-center">
+                <div class="relative w-48 h-48 sm:w-52 sm:h-52 shrink-0 flex items-center justify-center">
                     <canvas id="orderStatusChart" width="205" height="205"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                        <span id="donutCenterTotal" class="text-[26px] font-bold text-gray-900 leading-none">{{ $orderStatus['total'] }}</span>
-                        <span class="text-[11px] text-gray-400 font-medium mt-1">Total Orders</span>
+                        <span id="donutCenterTotal" class="text-2xl font-bold text-gray-900 leading-none">{{ $orderStatus['total'] }}</span>
+                        <span class="text-xs text-gray-400 font-medium mt-1">Total Orders</span>
                     </div>
                 </div>
 
                 <!-- Vertical Legend Stack with Count and Dynamic Percentage -->
-                <div id="orderStatusLegend" class="w-full sm:w-auto flex-1 max-w-[230px] space-y-3.5">
+                <div id="orderStatusLegend" class="w-full sm:w-auto flex-1 max-w-xs space-y-3.5">
                     @foreach($orderStatus['categories'] as $cat)
                         <div class="flex items-center justify-between text-xs">
                             <div class="flex items-center space-x-2.5">
-                                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" {!! 'style="background-color: ' . e($cat['color']) . ';"' !!}></span>
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" {!! 'style="background-color: ' . e($cat['color']) . ';"' !!}></span>
                                 <span class="text-gray-600 font-medium">{{ $cat['name'] }}</span>
                             </div>
                             <div class="flex items-center space-x-4">
@@ -212,7 +110,7 @@
         </div>
 
         <!-- Right: Revenue Overview Card (lg:col-span-7) -->
-        <div class="lg:col-span-7 bg-white rounded-[22px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100 flex flex-col justify-between">
+        <div class="lg:col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
             <!-- Header: Title, Pill Tabs & Series Legend -->
             <div>
                 <div class="flex items-center justify-between">
@@ -220,7 +118,7 @@
                         <div class="w-5 h-5 flex items-center justify-center text-gray-900">
                             <i class="fa-solid fa-arrow-trend-up text-lg"></i>
                         </div>
-                        <h3 class="text-base sm:text-[17px] font-bold text-gray-900 tracking-tight">Revenue Overview</h3>
+                        <h3 class="text-base sm:text-lg font-bold text-gray-900 tracking-tight">Revenue Overview</h3>
                     </div>
 
                     <!-- Daily / Weekly / Monthly Segmented Pill Tabs -->
@@ -245,7 +143,7 @@
             </div>
 
             <!-- Grouped Bar Chart Canvas Container -->
-            <div class="mt-4 relative w-full h-[225px]">
+            <div class="mt-4 relative w-full h-56">
                 <canvas id="revenueOverviewChart"></canvas>
             </div>
         </div>

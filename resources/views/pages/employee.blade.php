@@ -2,245 +2,280 @@
 
 @section('title', 'Employee Management - Laundry 6 Plus')
 
-@section('header')
-<header class="bg-white px-6 sm:px-8 py-3.5 sm:py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] rounded-b-2xl sm:rounded-b-3xl flex items-center justify-between z-30 sticky top-0 border-b border-gray-100">
-    <!-- Left: Hamburger & Page Title/Subtitle -->
-    <div class="flex items-center space-x-3 sm:space-x-4">
-        <button type="button" onclick="toggleSidebar()" class="p-1.5 -ml-1 text-gray-800 hover:text-blue-600 hover:bg-gray-100 rounded-xl transition focus:outline-none cursor-pointer" title="Toggle Navigation Menu">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </button>
-
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight leading-tight">Employee Management</h1>
-            <p class="text-[12px] sm:text-[13px] text-gray-400 font-medium leading-none mt-1">Manage staff, roles, and shift attendance.</p>
-        </div>
-    </div>
-
-    <!-- Right: Notification Bell & Admin Profile -->
-    <div class="flex items-center space-x-3 sm:space-x-5">
-        <a href="{{ route('notifications.index') }}" class="relative p-2 text-blue-600 hover:bg-blue-50 rounded-full transition focus:outline-none" title="Notifications">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path>
-            </svg>
-            <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#2563EB] rounded-full ring-2 ring-white"></span>
-        </a>
-
-        <div class="flex items-center space-x-2.5 pl-2 pr-2.5 py-1.5 rounded-full bg-gray-50 border border-gray-100">
-            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                <i class="fa-solid fa-user-tie"></i>
-            </div>
-            <span class="text-sm font-bold text-gray-800">{{ Auth::check() ? Auth::user()->name : 'Admin' }}</span>
-        </div>
-    </div>
-</header>
-@endsection
-
 @section('content')
-<div class="p-6 sm:p-8 space-y-6 max-w-[1600px] mx-auto">
-    <!-- FLASH ALERTS -->
+<div class="space-y-6 w-full mx-auto">
+
+    <!-- SUCCESS NOTIFICATION -->
     @if(session('success'))
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-sm">
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-xs">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
                 <span class="font-medium">{{ session('success') }}</span>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800">&times;</button>
+            <button onclick="this.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800 font-bold text-lg leading-none cursor-pointer">&times;</button>
         </div>
     @endif
 
-    <!-- STATS CARDS -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-                <p class="text-xs sm:text-sm font-medium text-gray-400">Total Employees</p>
-                <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">{{ $stats['total'] ?? 0 }}</h3>
+    <!-- VALIDATION ERRORS -->
+    @if(isset($errors) && $errors->any())
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm shadow-xs mb-4">
+            <div class="flex items-center space-x-2 font-bold mb-1">
+                <i class="fa-solid fa-circle-exclamation text-rose-600"></i>
+                <span>Please correct the errors below:</span>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-xl shadow-xs">
-                <i class="fa-solid fa-users"></i>
-            </div>
+            <ul class="list-disc list-inside text-xs space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
         </div>
+    @endif
 
-        <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-                <p class="text-xs sm:text-sm font-medium text-gray-400">Active Staff</p>
-                <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">{{ $stats['active'] ?? 0 }}</h3>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-xs">
-                <i class="fa-solid fa-user-check"></i>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-                <p class="text-xs sm:text-sm font-medium text-gray-400">On Leave</p>
-                <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">{{ $stats['on_leave'] ?? 0 }}</h3>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shadow-xs">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-                <p class="text-xs sm:text-sm font-medium text-gray-400">Roles / Depts</p>
-                <h3 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">{{ $stats['departments'] ?? 4 }}</h3>
-            </div>
-            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shadow-xs">
-                <i class="fa-solid fa-sitemap"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- CONTROLS & FILTER TOOLBAR -->
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <!-- Search & Filter Form -->
-        <form method="GET" action="{{ route('employees.index') }}" class="flex flex-wrap items-center gap-3 flex-1 max-w-3xl">
-            <div class="relative flex-1 min-w-[280px]">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
-                </div>
-                <input type="text" 
-                       name="search" 
-                       value="{{ $search ?? '' }}" 
-                       placeholder="Search by name, ID, phone, email..." 
-                       class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition shadow-sm">
-            </div>
-
-            <!-- Role Filter -->
-            <select name="role" onchange="this.form.submit()" class="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-700 shadow-sm focus:outline-none">
-                <option value="">All Roles</option>
-                <option value="Manager" {{ ($roleFilter ?? '') === 'Manager' ? 'selected' : '' }}>Manager</option>
-                <option value="Receptionist" {{ ($roleFilter ?? '') === 'Receptionist' ? 'selected' : '' }}>Receptionist</option>
-                <option value="Laundry Staff" {{ ($roleFilter ?? '') === 'Laundry Staff' ? 'selected' : '' }}>Laundry Staff</option>
-                <option value="Presser" {{ ($roleFilter ?? '') === 'Presser' ? 'selected' : '' }}>Presser</option>
-                <option value="Delivery Staff" {{ ($roleFilter ?? '') === 'Delivery Staff' ? 'selected' : '' }}>Delivery Staff</option>
-            </select>
-
-            <!-- Status Filter -->
-            <select name="status" onchange="this.form.submit()" class="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-700 shadow-sm focus:outline-none">
-                <option value="">All Statuses</option>
-                <option value="Active" {{ ($statusFilter ?? '') === 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="On Leave" {{ ($statusFilter ?? '') === 'On Leave' ? 'selected' : '' }}>On Leave</option>
-                <option value="Inactive" {{ ($statusFilter ?? '') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
-            </select>
-
-            <button type="submit" class="bg-[#2563EB] hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm transition flex items-center space-x-2 text-sm">
-                <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                <span>Search</span>
-            </button>
-        </form>
-
-        <!-- Add Employee Button -->
+    <!-- TOP BAR: ADD EMPLOYEE BUTTON -->
+    <div class="flex justify-end items-center">
         <button type="button" 
                 onclick="openAddEmployeeModal()" 
-                class="bg-[#2563EB] hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-sm transition flex items-center justify-center space-x-2 text-sm flex-shrink-0 cursor-pointer">
+                class="bg-[#2563EB] hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-xs transition flex items-center space-x-2 text-sm cursor-pointer active:scale-95">
             <i class="fa-solid fa-plus text-xs"></i>
             <span>Add Employee</span>
         </button>
     </div>
 
-    <!-- EMPLOYEE TABLE -->
-    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <h2 class="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">Staff Roster</h2>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
-                    Total: {{ $stats['total'] ?? (is_countable($employees) ? count($employees) : 0) }}
-                </span>
+    <!-- SUMMARY METRIC CARDS (3 CARDS EXACTLY AS SCREENSHOT) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Card 1: Total Employees -->
+        <div class="bg-[#F0F5FF]/70 border border-blue-100/70 rounded-2xl p-6 shadow-xs flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-100/80 text-[#2563EB] flex items-center justify-center text-2xl flex-shrink-0">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">Total Employees</p>
+                <h3 class="text-xl font-bold text-gray-900 mt-0.5 tracking-tight" id="cardTotalCount">{{ $stats['total'] ?? 0 }}</h3>
             </div>
         </div>
 
+        <!-- Card 2: Active -->
+        <div class="bg-[#F0FDF4]/70 border border-emerald-100/70 rounded-2xl p-6 shadow-xs flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center text-2xl flex-shrink-0">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">Active</p>
+                <h3 class="text-xl font-bold text-gray-900 mt-0.5 tracking-tight" id="cardActiveCount">{{ $stats['active'] ?? 0 }}</h3>
+            </div>
+        </div>
+
+        <!-- Card 3: Inactive -->
+        <div class="bg-gray-50/90 border border-gray-200/60 rounded-2xl p-6 shadow-xs flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-2xl bg-gray-200/80 text-gray-500 flex items-center justify-center text-2xl flex-shrink-0">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <div>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">Inactive</p>
+                <h3 class="text-xl font-bold text-gray-900 mt-0.5 tracking-tight" id="cardInactiveCount">{{ $stats['inactive'] ?? 0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CARD: SEARCH, FILTERS & TABLE -->
+    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-xs border border-gray-100 p-6 sm:p-7">
+        
+        <!-- Controls Toolbar: Search & Dropdowns -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <!-- Search Input -->
+            <div class="relative flex-1 max-w-md">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                </div>
+                <input type="text" 
+                       id="employeeSearchInput" 
+                       name="search" 
+                       value="{{ $search ?? '' }}" 
+                       placeholder="Search employee..." 
+                       oninput="filterEmployeeTable()"
+                       class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition shadow-2xs">
+            </div>
+
+            <!-- Role & Status Filters -->
+            <div class="flex items-center space-x-3">
+                <!-- Role Filter -->
+                <div class="relative min-w-[140px]">
+                    <select id="roleFilterSelect" 
+                            name="role" 
+                            onchange="filterEmployeeTable()"
+                            class="appearance-none w-full bg-white border border-gray-200 rounded-xl pl-4 pr-9 py-2.5 text-sm text-gray-700 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 cursor-pointer">
+                        <option value="All Roles" {{ ($roleFilter ?? '') === 'All Roles' || empty($roleFilter) ? 'selected' : '' }}>All Roles</option>
+                        <option value="Manager" {{ ($roleFilter ?? '') === 'Manager' ? 'selected' : '' }}>Manager</option>
+                        <option value="Receptionist" {{ ($roleFilter ?? '') === 'Receptionist' ? 'selected' : '' }}>Receptionist</option>
+                        <option value="Laundry Staff" {{ ($roleFilter ?? '') === 'Laundry Staff' ? 'selected' : '' }}>Laundry Staff</option>
+                        <option value="Ironing Staff" {{ ($roleFilter ?? '') === 'Ironing Staff' ? 'selected' : '' }}>Ironing Staff</option>
+                        <option value="Delivery Staff" {{ ($roleFilter ?? '') === 'Delivery Staff' ? 'selected' : '' }}>Delivery Staff</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                        <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="relative min-w-[130px]">
+                    <select id="statusFilterSelect" 
+                            name="status" 
+                            onchange="filterEmployeeTable()"
+                            class="appearance-none w-full bg-white border border-gray-200 rounded-xl pl-4 pr-9 py-2.5 text-sm text-gray-700 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 cursor-pointer">
+                        <option value="All Status" {{ ($statusFilter ?? '') === 'All Status' || empty($statusFilter) ? 'selected' : '' }}>All Status</option>
+                        <option value="Active" {{ ($statusFilter ?? '') === 'Active' ? 'selected' : '' }}>Active</option>
+                        <option value="Inactive" {{ ($statusFilter ?? '') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                        <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EMPLOYEE DATA TABLE -->
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse" id="employeesTable">
                 <thead>
-                    <tr class="bg-gray-50/75 border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                        <th class="py-4 px-6">Employee</th>
-                        <th class="py-4 px-6">ID</th>
-                        <th class="py-4 px-6">Role</th>
-                        <th class="py-4 px-6">Contact</th>
-                        <th class="py-4 px-6">Status</th>
-                        <th class="py-4 px-6 text-right">Actions</th>
+                    <tr class="bg-[#F8FAFC] text-[12px] font-bold text-gray-500 border-b border-gray-100">
+                        <th class="py-3.5 px-6 font-semibold w-14">#</th>
+                        <th class="py-3.5 px-6 font-semibold">Name</th>
+                        <th class="py-3.5 px-6 font-semibold">Role</th>
+                        <th class="py-3.5 px-6 font-semibold">Phone</th>
+                        <th class="py-3.5 px-6 font-semibold">Email</th>
+                        <th class="py-3.5 px-6 font-semibold">Status</th>
+                        <th class="py-3.5 px-6 font-semibold text-center w-36">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
-                    @forelse($employees as $emp)
-                    <tr class="hover:bg-blue-50/30 transition">
+                <tbody class="divide-y divide-gray-100 text-sm" id="employeeTableBody">
+                    @forelse($employees as $index => $emp)
+                    @php
+                        // Assign badges matching screenshot palette
+                        $role = $emp->role ?? 'Laundry Staff';
+                        $roleClass = 'bg-[#FEF3C7] text-[#D97706]'; // default yellow/amber for Laundry Staff
+
+                        if ($role === 'Manager' || $role === 'Admin') {
+                            $roleClass = 'bg-[#F3E8FF] text-[#9333EA]'; // soft purple
+                        } elseif ($role === 'Receptionist') {
+                            $roleClass = 'bg-[#DBEAFE] text-[#2563EB]'; // soft blue
+                        } elseif ($role === 'Delivery Staff') {
+                            $roleClass = 'bg-[#DCFCE7] text-[#16A34A]'; // soft green
+                        } elseif ($role === 'Ironing Staff' || $role === 'Presser') {
+                            $roleClass = 'bg-[#E0E7FF] text-[#4F46E5]'; // soft indigo
+                        }
+
+                        $status = $emp->status ?? 'Active';
+                        $statusClass = $status === 'Active' 
+                            ? 'bg-[#DCFCE7] text-[#16A34A]' 
+                            : 'bg-[#FEE2E2] text-[#DC2626]';
+
+                        $defaultAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=2563EB&color=fff';
+                        $avatarUrl = $emp->avatar ?: $defaultAvatar;
+                    @endphp
+                    <tr class="hover:bg-slate-50/60 transition employee-row"
+                        id="employee-row-{{ $emp->id }}"
+                        data-name="{{ strtolower($emp->name ?? '') }}"
+                        data-role="{{ $emp->role ?? '' }}"
+                        data-phone="{{ $emp->phone ?? '' }}"
+                        data-email="{{ strtolower($emp->email ?? '') }}"
+                        data-status="{{ $emp->status ?? '' }}">
+                        
+                        <!-- # Column -->
+                        <td class="py-4 px-6 text-gray-500 font-medium text-xs">
+                            {{ $loop->iteration ?? ($index + 1) }}
+                        </td>
+
+                        <!-- Name Column with Avatar -->
                         <td class="py-4 px-6">
                             <div class="flex items-center space-x-3.5">
-                                <img src="{{ $emp->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode($emp->name) . '&background=0D8ABC&color=fff' }}" 
-                                     alt="{{ $emp->name }}" 
-                                     class="w-10 h-10 rounded-full object-cover border border-gray-200">
-                                <div>
-                                    <div class="font-bold text-gray-900">{{ $emp->name }}</div>
-                                    <div class="text-xs text-gray-400">{{ $emp->email }}</div>
-                                </div>
+                                <img src="{{ $avatarUrl }}" alt="{{ $emp->name }}" onerror="this.src='{{ $defaultAvatar }}'"
+                                     class="w-10 h-10 rounded-full object-cover border border-gray-100 shadow-2xs">
+                                <span class="font-bold text-gray-900 text-sm whitespace-nowrap">{{ $emp->name }}</span>
                             </div>
                         </td>
-                        <td class="py-4 px-6 font-mono text-xs font-semibold text-gray-600">
-                            {{ $emp->employee_id ?? ('EMP' . str_pad($emp->id, 3, '0', STR_PAD_LEFT)) }}
-                        </td>
-                        <td class="py-4 px-6">
-                            @php
-                                $roleBadge = 'bg-blue-50 text-blue-700 border-blue-200';
-                                if ($emp->role === 'Manager') $roleBadge = 'bg-purple-50 text-purple-700 border-purple-200';
-                                elseif ($emp->role === 'Delivery Staff') $roleBadge = 'bg-amber-50 text-amber-700 border-amber-200';
-                                elseif ($emp->role === 'Presser') $roleBadge = 'bg-teal-50 text-teal-700 border-teal-200';
-                            @endphp
-                            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold border {{ $roleBadge }}">
+
+                        <!-- Role Column -->
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold {{ $roleClass }}">
                                 {{ $emp->role }}
                             </span>
                         </td>
-                        <td class="py-4 px-6">
-                            <div class="flex items-center space-x-2 text-gray-600">
-                                <i class="fa-solid fa-phone text-xs text-gray-400"></i>
-                                <span>{{ $emp->phone }}</span>
-                            </div>
+
+                        <!-- Phone Column -->
+                        <td class="py-4 px-6 text-gray-600 font-medium whitespace-nowrap">
+                            {{ $emp->phone }}
                         </td>
-                        <td class="py-4 px-6">
-                            @if(($emp->status ?? 'Active') === 'Active')
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
-                                    Active
-                                </span>
-                            @elseif(($emp->status ?? '') === 'On Leave')
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
-                                    On Leave
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>
-                                    Inactive
-                                </span>
-                            @endif
+
+                        <!-- Email Column -->
+                        <td class="py-4 px-6 text-gray-600 whitespace-nowrap">
+                            {{ $emp->email }}
                         </td>
-                        <td class="py-4 px-6 text-right">
-                            <div class="flex items-center justify-end space-x-2">
+
+                        <!-- Status Column -->
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            <span class="inline-block px-3.5 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
+                                {{ $emp->status }}
+                            </span>
+                        </td>
+
+                        <!-- Actions Column: 3 colored icons (Eye, Pencil, Trash) -->
+                        <td class="py-4 px-6 text-center whitespace-nowrap">
+                            <div class="flex items-center justify-center space-x-2">
+                                <!-- View / Watch Button (Cyan/Sky) -->
                                 <button type="button" 
-                                        onclick="openEditEmployeeModal({{ json_encode($emp) }})" 
-                                        class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition cursor-pointer" 
-                                        title="Edit">
-                                    <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                        data-id="{{ $emp->id }}"
+                                        data-employee-id="{{ $emp->employee_id ?? ('EMP' . str_pad($emp->id, 3, '0', STR_PAD_LEFT)) }}"
+                                        data-name="{{ $emp->name }}"
+                                        data-role="{{ $emp->role }}"
+                                        data-phone="{{ $emp->phone }}"
+                                        data-email="{{ $emp->email }}"
+                                        data-address="{{ $emp->address ?? 'Phnom Penh, Cambodia' }}"
+                                        data-status="{{ $emp->status }}"
+                                        data-schedule="{{ $emp->work_schedule ?? 'Full Time (08:00 AM - 05:00 PM)' }}"
+                                        data-details="{{ $emp->job_role_details ?? '' }}"
+                                        data-avatar="{{ $avatarUrl }}"
+                                        data-attendance="{{ $emp->attendance_status ?? ($emp->status === 'Active' ? 'Present' : 'Absent') }}"
+                                        onclick="handleViewEmployeeClick(this)"
+                                        class="w-8 h-8 rounded-lg bg-[#0EA5E9] hover:bg-sky-600 text-white flex items-center justify-center shadow-2xs transition active:scale-90 cursor-pointer" 
+                                        title="View Details">
+                                    <i class="fa-solid fa-eye text-xs"></i>
                                 </button>
-                                <form method="POST" action="{{ route('employees.destroy', $emp->id) }}" onsubmit="return confirm('Are you sure you want to remove this employee?');" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer" title="Delete">
-                                        <i class="fa-solid fa-trash-can text-sm"></i>
-                                    </button>
-                                </form>
+
+                                <!-- Edit Button (Emerald Green) -->
+                                <button type="button" 
+                                        data-id="{{ $emp->id }}"
+                                        data-name="{{ $emp->name }}"
+                                        data-role="{{ $emp->role }}"
+                                        data-phone="{{ $emp->phone }}"
+                                        data-email="{{ $emp->email }}"
+                                        data-address="{{ $emp->address ?? 'Phnom Penh, Cambodia' }}"
+                                        data-status="{{ $emp->status }}"
+                                        data-schedule="{{ $emp->work_schedule ?? 'Full Time (08:00 AM - 05:00 PM)' }}"
+                                        data-details="{{ $emp->job_role_details ?? '' }}"
+                                        data-avatar="{{ $avatarUrl }}"
+                                        onclick="handleEditEmployeeClick(this)"
+                                        class="w-8 h-8 rounded-lg bg-[#10B981] hover:bg-emerald-600 text-white flex items-center justify-center shadow-2xs transition active:scale-90 cursor-pointer" 
+                                        title="Edit Employee">
+                                    <i class="fa-solid fa-pencil text-xs"></i>
+                                </button>
+
+                                <!-- Delete Button (Rose Red) -->
+                                <button type="button" 
+                                        data-id="{{ $emp->id }}"
+                                        data-name="{{ $emp->name }}"
+                                        onclick="handleDeleteEmployeeClick(this)"
+                                        class="w-8 h-8 rounded-lg bg-[#EF4444] hover:bg-rose-600 text-white flex items-center justify-center shadow-2xs transition active:scale-90 cursor-pointer" 
+                                        title="Delete Employee">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="6" class="py-12 text-center text-gray-400 font-medium">
+                    <tr id="noResultsRow">
+                        <td colspan="7" class="py-12 text-center text-gray-400 font-medium">
                             <i class="fa-solid fa-user-slash text-3xl mb-3 text-gray-300 block"></i>
-                            No employees found matching the criteria.
+                            No employees found.
                         </td>
                     </tr>
                     @endforelse
@@ -248,151 +283,955 @@
             </table>
         </div>
 
-        @if(method_exists($employees, 'links'))
-        <div class="p-6 border-t border-gray-100">
-            {{ $employees->links() }}
+        <!-- Table Footer & Pagination -->
+        <div class="mt-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-gray-500">
+            <div id="tableInfoText">
+                Showing 1 - {{ count($employees) }} of {{ $stats['total'] ?? count($employees) }} employees
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button type="button" class="text-gray-400 hover:text-gray-700 font-medium px-2 py-1 transition cursor-pointer">
+                    &lt; Previous
+                </button>
+                <button type="button" class="w-7 h-7 rounded-lg bg-[#2563EB] text-white font-bold flex items-center justify-center text-xs shadow-2xs">
+                    1
+                </button>
+                <button type="button" class="text-gray-400 hover:text-gray-700 font-medium px-2 py-1 transition cursor-pointer">
+                    Next &gt;
+                </button>
+            </div>
         </div>
-        @endif
+
     </div>
+
 </div>
 
-<!-- ADD EMPLOYEE MODAL -->
-<div id="addEmployeeModal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl animate-fade-in border border-gray-100">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900">Add New Staff Member</h3>
-            <button onclick="closeAddEmployeeModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+<!-- ========================================== -->
+<!-- 1. ADD NEW EMPLOYEE MODAL (IMAGE 2 EXACT)  -->
+<!-- ========================================== -->
+<div id="addEmployeeModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl animate-fade-in border border-gray-100 my-8">
+        
+        <!-- Modal Header -->
+        <div class="flex items-start justify-between pb-4">
+            <div class="flex items-center space-x-3">
+                <div class="text-[#2563EB] text-2xl flex-shrink-0">
+                    <i class="fa-solid fa-user-plus"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-extrabold text-[#0F172A] tracking-tight leading-tight">Add New Employee</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Fill in the information below to add a new employee.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeAddEmployeeModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-light leading-none -mt-1 cursor-pointer">
+                &times;
+            </button>
         </div>
 
-        <form action="{{ route('employees.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4 mt-4">
+        <!-- Form -->
+        <form id="addEmployeeForm" action="" method="POST" enctype="multipart/form-data" class="space-y-3.5 mt-2">
             @csrf
+
+            <!-- 1. Full Name -->
             <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Full Name</label>
-                <input type="text" name="name" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none">
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Full Name <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-regular fa-user text-sm"></i>
+                    </div>
+                    <input type="text" 
+                           name="name" 
+                           required 
+                           placeholder="Enter full name" 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
             </div>
 
+            <!-- 2. Role -->
             <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Email Address</label>
-                <input type="email" name="email" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Role</label>
-                    <select name="role" required class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none bg-white">
-                        <option value="Laundry Staff">Laundry Staff</option>
-                        <option value="Presser">Presser</option>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Role <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-users text-xs"></i>
+                    </div>
+                    <select name="role" 
+                            required 
+                            class="appearance-none w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition cursor-pointer">
+                        <option value="" disabled selected>Select role</option>
                         <option value="Receptionist">Receptionist</option>
+                        <option value="Laundry Staff">Laundry Staff</option>
+                        <option value="Ironing Staff">Ironing Staff</option>
                         <option value="Delivery Staff">Delivery Staff</option>
                         <option value="Manager">Manager</option>
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                        <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Status</label>
-                    <select name="status" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none bg-white">
-                        <option value="Active">Active</option>
-                        <option value="On Leave">On Leave</option>
-                        <option value="Inactive">Inactive</option>
+            </div>
+
+            <!-- 3. Phone Number -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Phone Number <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-phone text-xs"></i>
+                    </div>
+                    <input type="text" 
+                           name="phone" 
+                           required 
+                           placeholder="Enter phone number" 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- 4. Email -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Email <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-regular fa-envelope text-xs"></i>
+                    </div>
+                    <input type="email" 
+                           name="email" 
+                           required 
+                           placeholder="Enter email address" 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- 5. Address -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Address
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-location-dot text-xs"></i>
+                    </div>
+                    <input type="text" 
+                           name="address" 
+                           placeholder="Enter address" 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- 6. Password -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Password <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-lock text-xs"></i>
+                    </div>
+                    <input type="password" 
+                           id="addEmpPassword"
+                           name="password" 
+                           placeholder="Enter password" 
+                           class="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                    <button type="button" 
+                            onclick="togglePasswordVisibility('addEmpPassword', this)" 
+                            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer">
+                        <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 7. Confirm Password -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Confirm Password
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-lock text-xs"></i>
+                    </div>
+                    <input type="password" 
+                           id="addEmpConfirmPassword"
+                           name="confirm_password" 
+                           placeholder="Confirm password" 
+                           class="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                    <button type="button" 
+                            onclick="togglePasswordVisibility('addEmpConfirmPassword', this)" 
+                            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer">
+                        <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 8. Status (Radio Buttons) -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Status <span class="text-rose-500">*</span>
+                </label>
+                <div class="flex items-center space-x-6 pt-1">
+                    <label class="flex items-center space-x-2.5 cursor-pointer">
+                        <input type="radio" name="status" value="Active" checked class="w-4 h-4 text-[#2563EB] focus:ring-blue-500 border-gray-300">
+                        <span class="text-sm font-medium text-gray-700">Active</span>
+                    </label>
+                    <label class="flex items-center space-x-2.5 cursor-pointer">
+                        <input type="radio" name="status" value="Inactive" class="w-4 h-4 text-[#2563EB] focus:ring-blue-500 border-gray-300">
+                        <span class="text-sm font-medium text-gray-700">Inactive</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 9. Work Schedule -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Work Schedule <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-regular fa-calendar-days text-xs"></i>
+                    </div>
+                    <select name="work_schedule" 
+                            required 
+                            class="appearance-none w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition cursor-pointer">
+                        <option value="" disabled selected>Select work schedule</option>
+                        <option value="Morning Shift (07:00 AM - 03:00 PM)">Morning Shift (07:00 AM - 03:00 PM)</option>
+                        <option value="Afternoon Shift (01:00 PM - 09:00 PM)">Afternoon Shift (01:00 PM - 09:00 PM)</option>
+                        <option value="Night Shift (09:00 PM - 05:00 AM)">Night Shift (09:00 PM - 05:00 AM)</option>
+                        <option value="Full Time (08:00 AM - 05:00 PM)">Full Time (08:00 AM - 05:00 PM)</option>
+                        <option value="Flexible Shift">Flexible Shift</option>
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                        <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                    </div>
                 </div>
             </div>
 
+            <!-- 10. Job Role Details (optional) -->
             <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Phone Number</label>
-                <input type="text" name="phone" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none">
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Job Role Details <span class="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <div class="relative">
+                    <textarea name="job_role_details" 
+                              rows="3" 
+                              maxlength="500" 
+                              oninput="document.getElementById('addRoleNotesCount').innerText = this.value.length + '/500'"
+                              placeholder="Add notes (optional)..." 
+                              class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition resize-none"></textarea>
+                    <div class="text-right text-[11px] text-gray-400 mt-1" id="addRoleNotesCount">
+                        0/500
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Avatar Photo (optional)</label>
-                <input type="file" name="avatar" accept="image/*" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-            </div>
-
-            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-gray-100">
-                <button type="button" onclick="closeAddEmployeeModal()" class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium">Cancel</button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-medium shadow-sm">Save Employee</button>
+            <!-- Modal Footer Buttons -->
+            <div class="flex items-center justify-between pt-3 border-t border-gray-100 gap-3">
+                <button type="button" 
+                        onclick="closeAddEmployeeModal()" 
+                        class="w-1/2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 text-sm font-semibold transition cursor-pointer text-center">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="w-1/2 py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-semibold shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95">
+                    <i class="fa-solid fa-bookmark text-xs"></i>
+                    <span>Save Employee</span>
+                </button>
             </div>
         </form>
+
     </div>
 </div>
 
-<!-- EDIT EMPLOYEE MODAL -->
-<div id="editEmployeeModal" class="hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl animate-fade-in border border-gray-100">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900">Edit Employee</h3>
-            <button onclick="closeEditEmployeeModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+<!-- ========================================== -->
+<!-- 2. EDIT / UPDATE EMPLOYEE MODAL           -->
+<!-- ========================================== -->
+<div id="editEmployeeModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl animate-fade-in border border-gray-100 my-8">
+        
+        <!-- Modal Header -->
+        <div class="flex items-start justify-between pb-4">
+            <div class="flex items-center space-x-3">
+                <div class="text-emerald-600 text-2xl flex-shrink-0">
+                    <i class="fa-solid fa-user-pen"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-extrabold text-[#0F172A] tracking-tight leading-tight">Edit Employee</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Update staff details, assigned role and shift schedule.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeEditEmployeeModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-light leading-none -mt-1 cursor-pointer">
+                &times;
+            </button>
         </div>
 
-        <form id="editEmployeeForm" method="POST" enctype="multipart/form-data" class="space-y-4 mt-4">
+        <!-- Edit Form -->
+        <form id="editEmployeeForm" method="POST" enctype="multipart/form-data" class="space-y-3.5 mt-2">
             @csrf
             @method('PUT')
+
+            <!-- Full Name -->
             <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Full Name</label>
-                <input type="text" id="editEmpName" name="name" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none">
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Full Name <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-regular fa-user text-sm"></i>
+                    </div>
+                    <input type="text" 
+                           id="editEmpName"
+                           name="name" 
+                           required 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
             </div>
 
+            <!-- Role -->
             <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Email Address</label>
-                <input type="email" id="editEmpEmail" name="email" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Role</label>
-                    <select id="editEmpRole" name="role" required class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none bg-white">
-                        <option value="Laundry Staff">Laundry Staff</option>
-                        <option value="Presser">Presser</option>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Role <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-users text-xs"></i>
+                    </div>
+                    <select id="editEmpRole"
+                            name="role" 
+                            required 
+                            class="appearance-none w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition cursor-pointer">
                         <option value="Receptionist">Receptionist</option>
+                        <option value="Laundry Staff">Laundry Staff</option>
+                        <option value="Ironing Staff">Ironing Staff</option>
                         <option value="Delivery Staff">Delivery Staff</option>
                         <option value="Manager">Manager</option>
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                        <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Phone Number <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-phone text-xs"></i>
+                    </div>
+                    <input type="text" 
+                           id="editEmpPhone"
+                           name="phone" 
+                           required 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Email <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-regular fa-envelope text-xs"></i>
+                    </div>
+                    <input type="email" 
+                           id="editEmpEmail"
+                           name="email" 
+                           required 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Address
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-location-dot text-xs"></i>
+                    </div>
+                    <input type="text" 
+                           id="editEmpAddress"
+                           name="address" 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition">
+                </div>
+            </div>
+
+            <!-- Status (Radio) -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Status <span class="text-rose-500">*</span>
+                </label>
+                <div class="flex items-center space-x-6 pt-1">
+                    <label class="flex items-center space-x-2.5 cursor-pointer">
+                        <input type="radio" id="editEmpStatusActive" name="status" value="Active" class="w-4 h-4 text-[#2563EB] focus:ring-blue-500 border-gray-300">
+                        <span class="text-sm font-medium text-gray-700">Active</span>
+                    </label>
+                    <label class="flex items-center space-x-2.5 cursor-pointer">
+                        <input type="radio" id="editEmpStatusInactive" name="status" value="Inactive" class="w-4 h-4 text-[#2563EB] focus:ring-blue-500 border-gray-300">
+                        <span class="text-sm font-medium text-gray-700">Inactive</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Work Schedule -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Work Schedule <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-regular fa-calendar-days text-xs"></i>
+                    </div>
+                    <select id="editEmpSchedule"
+                            name="work_schedule" 
+                            required 
+                            class="appearance-none w-full pl-10 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition cursor-pointer">
+                        <option value="Morning Shift (07:00 AM - 03:00 PM)">Morning Shift (07:00 AM - 03:00 PM)</option>
+                        <option value="Afternoon Shift (01:00 PM - 09:00 PM)">Afternoon Shift (01:00 PM - 09:00 PM)</option>
+                        <option value="Night Shift (09:00 PM - 05:00 AM)">Night Shift (09:00 PM - 05:00 AM)</option>
+                        <option value="Full Time (08:00 AM - 05:00 PM)">Full Time (08:00 AM - 05:00 PM)</option>
+                        <option value="Flexible Shift">Flexible Shift</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                        <i class="fa-solid fa-chevron-down text-[11px]"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Role Details -->
+            <div>
+                <label class="block text-xs font-bold text-gray-800 mb-1.5">
+                    Job Role Details <span class="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <div class="relative">
+                    <textarea id="editEmpJobDetails"
+                              name="job_role_details" 
+                              rows="3" 
+                              maxlength="500" 
+                              oninput="document.getElementById('editRoleNotesCount').innerText = this.value.length + '/500'"
+                              class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition resize-none"></textarea>
+                    <div class="text-right text-[11px] text-gray-400 mt-1" id="editRoleNotesCount">
+                        0/500
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer Buttons -->
+            <div class="flex items-center justify-between pt-3 border-t border-gray-100 gap-3">
+                <button type="button" 
+                        onclick="closeEditEmployeeModal()" 
+                        class="w-1/2 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 text-sm font-semibold transition cursor-pointer text-center">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="w-1/2 py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-semibold shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95">
+                    <i class="fa-solid fa-check text-xs"></i>
+                    <span>Update Employee</span>
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 3. VIEW / WATCH EMPLOYEE PROFILE & ATTENDANCE -->
+<!-- ========================================== -->
+<div id="viewEmployeeModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl animate-fade-in border border-gray-100 my-8">
+        
+        <!-- Header -->
+        <div class="flex items-start justify-between pb-4 border-b border-gray-100">
+            <div class="flex items-center space-x-4">
+                <img id="viewEmpAvatar" 
+                     src="" 
+                     alt="" 
+                     class="w-14 h-14 rounded-full object-cover border-2 border-blue-500/20 shadow-xs">
+                <div>
+                    <h3 id="viewEmpName" class="text-xl font-extrabold text-gray-900 leading-tight"></h3>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <span id="viewEmpRole" class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold"></span>
+                        <span id="viewEmpStatus" class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold"></span>
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="closeViewEmployeeModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-light leading-none cursor-pointer">
+                &times;
+            </button>
+        </div>
+
+        <!-- Body Details -->
+        <div class="py-4 space-y-4 text-sm">
+            <div class="grid grid-cols-2 gap-3 bg-gray-50/80 p-3.5 rounded-2xl border border-gray-100">
+                <div>
+                    <span class="text-xs text-gray-400 block font-medium">Employee ID</span>
+                    <span id="viewEmpId" class="font-mono font-bold text-gray-800 text-sm"></span>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Status</label>
-                    <select id="editEmpStatus" name="status" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none bg-white">
-                        <option value="Active">Active</option>
-                        <option value="On Leave">On Leave</option>
-                        <option value="Inactive">Inactive</option>
-                    </select>
+                    <span class="text-xs text-gray-400 block font-medium">Phone Number</span>
+                    <span id="viewEmpPhone" class="font-semibold text-gray-800 text-sm"></span>
+                </div>
+                <div class="col-span-2">
+                    <span class="text-xs text-gray-400 block font-medium">Email Address</span>
+                    <span id="viewEmpEmail" class="font-medium text-gray-800 text-sm"></span>
+                </div>
+                <div class="col-span-2">
+                    <span class="text-xs text-gray-400 block font-medium">Address</span>
+                    <span id="viewEmpAddress" class="font-medium text-gray-800 text-sm"></span>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Phone Number</label>
-                <input type="text" id="editEmpPhone" name="phone" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none">
+            <!-- Work Schedule & Assigned Role -->
+            <div class="bg-blue-50/50 p-3.5 rounded-2xl border border-blue-100/60 space-y-2">
+                <div class="flex items-center space-x-2 text-blue-800 font-semibold text-xs">
+                    <i class="fa-regular fa-clock"></i>
+                    <span>Shift Schedule & Role Assignment</span>
+                </div>
+                <div class="text-gray-700 text-xs">
+                    <span class="font-bold text-gray-900 block" id="viewEmpSchedule"></span>
+                    <p class="text-gray-600 mt-1" id="viewEmpDetails"></p>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Avatar Photo (optional)</label>
-                <input type="file" name="avatar" accept="image/*" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            <!-- Attendance Management Section -->
+            <div class="bg-emerald-50/50 p-3.5 rounded-2xl border border-emerald-100/60">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <span class="text-xs text-emerald-800 block font-bold">Shift Attendance</span>
+                        <span id="viewEmpAttendanceStatus" class="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                            Present
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" 
+                                onclick="updateAttendance('Present')" 
+                                class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-2xs cursor-pointer">
+                            Present
+                        </button>
+                        <button type="button" 
+                                onclick="updateAttendance('Late')" 
+                                class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs transition shadow-2xs cursor-pointer">
+                            Late
+                        </button>
+                        <button type="button" 
+                                onclick="updateAttendance('Absent')" 
+                                class="px-3 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs transition shadow-2xs cursor-pointer">
+                            Absent
+                        </button>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-gray-100">
-                <button type="button" onclick="closeEditEmployeeModal()" class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium">Cancel</button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-medium shadow-sm">Update Employee</button>
+        <!-- Footer -->
+        <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-xs text-gray-400">Live attendance & roster sync</span>
+            <div class="flex items-center space-x-2">
+                <button type="button" 
+                        id="viewModalEditBtn"
+                        class="px-5 py-2.5 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-semibold text-sm transition shadow-2xs cursor-pointer">
+                    Edit Employee
+                </button>
+                <button type="button" 
+                        onclick="closeViewEmployeeModal()" 
+                        class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 font-semibold text-sm transition cursor-pointer">
+                    Close
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 4. DELETE CONFIRMATION MODAL               -->
+<!-- ========================================== -->
+<div id="deleteEmployeeModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center border border-gray-100 animate-fade-in">
+        <div class="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4 text-2xl">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 mb-1">Delete Employee</h3>
+        <p class="text-xs text-gray-500 mb-6">Are you sure you want to remove <span id="deleteEmpNameSpan" class="font-bold text-gray-800"></span>? This action cannot be undone.</p>
+        
+        <form id="deleteEmployeeForm" method="POST" action="">
+            @csrf
+            @method('DELETE')
+            <div class="flex items-center justify-center space-x-3">
+                <button type="button" onclick="closeDeleteEmployeeModal()" class="w-1/2 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-semibold transition cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold transition shadow-2xs cursor-pointer">
+                    Yes, Delete
+                </button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- JAVASCRIPT LOGIC -->
 <script>
+    let currentViewingEmployee = null;
+
+    /**
+     * Resolves the exact employee endpoint relative to current browser URL.
+     * Works seamlessly on localhost, XAMPP subdirectories, and artisan serve.
+     */
+    function getAppEndpoint(subpath = '') {
+        const cleanPath = window.location.pathname.replace(/\/+$/, '');
+        let base = cleanPath;
+        const match = cleanPath.match(/^(.*?\/(?:employee|employees))(?:\/.*)?$/);
+        if (match) {
+            base = match[1];
+        }
+        if (subpath) {
+            return (base + '/' + subpath).replace(/\/+/g, '/');
+        }
+        return base;
+    }
+
+    // Extract employee data safely from element attributes
+    function getEmployeeFromButton(btn) {
+        return {
+            id: btn.getAttribute('data-id') || '',
+            employee_id: btn.getAttribute('data-employee-id') || '',
+            name: btn.getAttribute('data-name') || '',
+            role: btn.getAttribute('data-role') || 'Laundry Staff',
+            phone: btn.getAttribute('data-phone') || '',
+            email: btn.getAttribute('data-email') || '',
+            address: btn.getAttribute('data-address') || 'Phnom Penh, Cambodia',
+            status: btn.getAttribute('data-status') || 'Active',
+            work_schedule: btn.getAttribute('data-schedule') || 'Full Time (08:00 AM - 05:00 PM)',
+            job_role_details: btn.getAttribute('data-details') || '',
+            avatar: btn.getAttribute('data-avatar') || '',
+            attendance_status: btn.getAttribute('data-attendance') || 'Present'
+        };
+    }
+
+    function handleViewEmployeeClick(btn) {
+        const emp = getEmployeeFromButton(btn);
+        openViewEmployeeModal(emp);
+    }
+
+    function handleEditEmployeeClick(btn) {
+        const emp = getEmployeeFromButton(btn);
+        openEditEmployeeModal(emp);
+    }
+
+    function handleDeleteEmployeeClick(btn) {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        confirmDeleteEmployee(id, name);
+    }
+
+    // Toggle Password Visibility
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Modal Handlers: Add
     function openAddEmployeeModal() {
+        const form = document.getElementById('addEmployeeForm');
+        if (form) {
+            form.action = getAppEndpoint();
+        }
         document.getElementById('addEmployeeModal').classList.remove('hidden');
     }
     function closeAddEmployeeModal() {
         document.getElementById('addEmployeeModal').classList.add('hidden');
     }
+
+    // Modal Handlers: Edit
     function openEditEmployeeModal(emp) {
         document.getElementById('editEmpName').value = emp.name || '';
-        document.getElementById('editEmpEmail').value = emp.email || '';
         document.getElementById('editEmpRole').value = emp.role || 'Laundry Staff';
-        document.getElementById('editEmpStatus').value = emp.status || 'Active';
         document.getElementById('editEmpPhone').value = emp.phone || '';
-        document.getElementById('editEmployeeForm').action = '/employees/' + emp.id;
+        document.getElementById('editEmpEmail').value = emp.email || '';
+        document.getElementById('editEmpAddress').value = emp.address || 'Phnom Penh, Cambodia';
+        document.getElementById('editEmpSchedule').value = emp.work_schedule || 'Full Time (08:00 AM - 05:00 PM)';
+        document.getElementById('editEmpJobDetails').value = emp.job_role_details || '';
+        document.getElementById('editRoleNotesCount').innerText = (emp.job_role_details ? emp.job_role_details.length : 0) + '/500';
+
+        if (emp.status === 'Inactive') {
+            document.getElementById('editEmpStatusInactive').checked = true;
+        } else {
+            document.getElementById('editEmpStatusActive').checked = true;
+        }
+
+        const editForm = document.getElementById('editEmployeeForm');
+        if (editForm) {
+            editForm.action = getAppEndpoint(emp.id);
+        }
         document.getElementById('editEmployeeModal').classList.remove('hidden');
     }
     function closeEditEmployeeModal() {
         document.getElementById('editEmployeeModal').classList.add('hidden');
     }
+
+    // Modal Handlers: View Profile & Attendance
+    function openViewEmployeeModal(emp) {
+        currentViewingEmployee = emp;
+        document.getElementById('viewEmpName').innerText = emp.name;
+        document.getElementById('viewEmpId').innerText = emp.employee_id || ('EMP' + String(emp.id).padStart(3, '0'));
+        document.getElementById('viewEmpPhone').innerText = emp.phone;
+        document.getElementById('viewEmpEmail').innerText = emp.email;
+        document.getElementById('viewEmpAddress').innerText = emp.address || 'Phnom Penh, Cambodia';
+        document.getElementById('viewEmpSchedule').innerText = emp.work_schedule || 'Standard Shift';
+        document.getElementById('viewEmpDetails').innerText = emp.job_role_details || 'Assigned to active laundry station duties.';
+        
+        const avatarImg = document.getElementById('viewEmpAvatar');
+        avatarImg.src = emp.avatar || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(emp.name) + '&background=2563EB&color=fff');
+        
+        // Role pill
+        const roleSpan = document.getElementById('viewEmpRole');
+        roleSpan.innerText = emp.role;
+        roleSpan.className = 'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ';
+        if (emp.role === 'Manager') roleSpan.className += 'bg-[#F3E8FF] text-[#9333EA]';
+        else if (emp.role === 'Receptionist') roleSpan.className += 'bg-[#DBEAFE] text-[#2563EB]';
+        else if (emp.role === 'Delivery Staff') roleSpan.className += 'bg-[#DCFCE7] text-[#16A34A]';
+        else if (emp.role === 'Ironing Staff') roleSpan.className += 'bg-[#E0E7FF] text-[#4F46E5]';
+        else roleSpan.className += 'bg-[#FEF3C7] text-[#D97706]';
+
+        // Status pill
+        const statusSpan = document.getElementById('viewEmpStatus');
+        statusSpan.innerText = emp.status;
+        statusSpan.className = 'inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ' + 
+            (emp.status === 'Active' ? 'bg-[#DCFCE7] text-[#16A34A]' : 'bg-[#FEE2E2] text-[#DC2626]');
+
+        // Attendance status
+        const attStatus = emp.attendance_status || (emp.status === 'Active' ? 'Present' : 'Absent');
+        setAttendanceBadge(attStatus);
+
+        // Connect Edit button in View Modal
+        document.getElementById('viewModalEditBtn').onclick = function() {
+            closeViewEmployeeModal();
+            openEditEmployeeModal(emp);
+        };
+
+        document.getElementById('viewEmployeeModal').classList.remove('hidden');
+    }
+    function closeViewEmployeeModal() {
+        document.getElementById('viewEmployeeModal').classList.add('hidden');
+    }
+
+    function setAttendanceBadge(status) {
+        const attSpan = document.getElementById('viewEmpAttendanceStatus');
+        attSpan.innerText = status;
+        if (status === 'Present') {
+            attSpan.className = 'inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800';
+        } else if (status === 'Late') {
+            attSpan.className = 'inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800';
+        } else {
+            attSpan.className = 'inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800';
+        }
+    }
+
+    // Update Attendance AJAX
+    function updateAttendance(status) {
+        if (!currentViewingEmployee) return;
+        const empId = currentViewingEmployee.id;
+        const token = document.querySelector('input[name="_token"]')?.value || '';
+
+        setAttendanceBadge(status);
+        currentViewingEmployee.attendance_status = status;
+
+        fetch(getAppEndpoint(empId + '/attendance'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ attendance_status: status })
+        })
+        .then(res => res.json())
+        .then(data => {
+            setAttendanceBadge(data.attendance_status || status);
+            // Also update row in table if present
+            const rowBtn = document.querySelector(`button[data-id="${empId}"][title="View Details"]`);
+            if (rowBtn) {
+                rowBtn.setAttribute('data-attendance', data.attendance_status || status);
+            }
+        })
+        .catch(err => {
+            setAttendanceBadge(status);
+        });
+    }
+
+    // Modal Handlers: Delete Confirmation
+    function confirmDeleteEmployee(id, name) {
+        document.getElementById('deleteEmpNameSpan').innerText = name;
+        const deleteForm = document.getElementById('deleteEmployeeForm');
+        if (deleteForm) {
+            deleteForm.action = getAppEndpoint(id);
+        }
+        document.getElementById('deleteEmployeeModal').classList.remove('hidden');
+    }
+    function closeDeleteEmployeeModal() {
+        document.getElementById('deleteEmployeeModal').classList.add('hidden');
+    }
+
+    // Client-side Instant Filter & Search Table
+    function filterEmployeeTable() {
+        const searchVal = (document.getElementById('employeeSearchInput').value || '').trim().toLowerCase();
+        const roleVal = document.getElementById('roleFilterSelect').value;
+        const statusVal = document.getElementById('statusFilterSelect').value;
+
+        const rows = document.querySelectorAll('.employee-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = row.getAttribute('data-name') || '';
+            const role = row.getAttribute('data-role') || '';
+            const phone = row.getAttribute('data-phone') || '';
+            const email = row.getAttribute('data-email') || '';
+            const status = row.getAttribute('data-status') || '';
+
+            const matchesSearch = !searchVal || 
+                name.includes(searchVal) || 
+                phone.includes(searchVal) || 
+                email.includes(searchVal) || 
+                role.toLowerCase().includes(searchVal);
+
+            const matchesRole = (roleVal === 'All Roles' || !roleVal) || (role === roleVal);
+            const matchesStatus = (statusVal === 'All Status' || !statusVal) || (status === statusVal);
+
+            if (matchesSearch && matchesRole && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const infoText = document.getElementById('tableInfoText');
+        if (infoText) {
+            infoText.innerText = `Showing 1 - ${visibleCount} of ${visibleCount} employees`;
+        }
+    }
+
+    // Form Event Submissions with AJAX & Native Fail-Safe
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Add Employee Form
+        const addForm = document.getElementById('addEmployeeForm');
+        if (addForm) {
+            addForm.action = getAppEndpoint();
+            addForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalHtml = submitBtn ? submitBtn.innerHTML : '';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Saving...</span>';
+                }
+
+                const formData = new FormData(this);
+                fetch(getAppEndpoint(), {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    closeAddEmployeeModal();
+                    window.location.reload();
+                })
+                .catch(err => {
+                    // Fallback to standard form submit
+                    addForm.submit();
+                });
+            });
+        }
+
+        // 2. Edit Employee Form
+        const editForm = document.getElementById('editEmployeeForm');
+        if (editForm) {
+            editForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalHtml = submitBtn ? submitBtn.innerHTML : '';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Updating...</span>';
+                }
+
+                const formData = new FormData(this);
+                const targetAction = this.action || getAppEndpoint();
+
+                fetch(targetAction, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    closeEditEmployeeModal();
+                    window.location.reload();
+                })
+                .catch(err => {
+                    editForm.submit();
+                });
+            });
+        }
+
+        // 3. Delete Employee Form
+        const deleteForm = document.getElementById('deleteEmployeeForm');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Deleting...</span>';
+                }
+
+                const formData = new FormData(this);
+                const targetAction = this.action || getAppEndpoint();
+
+                fetch(targetAction, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    closeDeleteEmployeeModal();
+                    window.location.reload();
+                })
+                .catch(err => {
+                    deleteForm.submit();
+                });
+            });
+        }
+    });
 </script>
 @endsection
